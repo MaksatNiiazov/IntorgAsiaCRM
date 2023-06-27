@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    <table>
+        <thead>
+            <tr>
+                <th>Имя услуги</th>
+                <th>Код</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services_after %}
+            <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
+                {% csrf_token %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.id }}</td>
+                    <td>{{ service.price }}</td>
+                    <td>
+                        <label>
+                            <input type="hidden" value="{{ order.id }}" name="order" required>
+                            <input type="hidden" value="{{ service.id }}" name="service" required>
+                            <input type="number" value="{{ order.count }}" name="count" required>
+                        </label>
+                    </td>
+
+                    <td>
+                        <label>
+                            <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
+                            {% if service.orderservice_set.first.confirmed %} checked{% endif %}>
+                        </label>
+                    </td>
+                </tr>
+            </form>
+            {% endfor %}
+            <tr><td>Черта-----------</td></tr>
+            {% for service in services_before %}
+            <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
+                {% csrf_token %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td># {{ service.id }}</td>
+                    <td>{{ service.price }}</td>
+                    <td>
+                        <label>
+                            <input type="hidden" value="{{ order.id }}" name="order" required>
+                            <input type="hidden" value="{{ service.id }}" name="service" required>
+                        </label>
+                        <label>
+                            <input type="number" value="{{ order.good_quality }}" name="count" required>
+                        </label>
+
+                    </td>
+
+                    <td>
+                        <label>
+                            <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
+                            {% if service.orderservice_set.first.confirmed %} checked{% endif %}>
+                        </label>
+                    </td>
+                </tr>
+            </form>
+            {% endfor %}
+        </tbody>
+    </table>
+      <form action="{% url 'dispatch_next' order.id %}" method="post">
+        {% csrf_token %}
+     <button type="submit">Следующая стадия </button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $(".submit-checkbox").change(function() {
+                var serviceId = $(this).data("service-id");
+                var formId = "#service-form-" + serviceId;
+                var formData = $(formId).serialize();
+
+                $.ajax({
+                    url: "{% url 'add_service' order.id %}",
+                    method: "POST",
+                    data: formData,
+                    success: function(response) {
+                        // Обработка успешного ответа от сервера (если необходимо)
+                    },
+                    error: function(xhr, errmsg, err) {
+                        // Обработка ошибки (если необходимо)
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

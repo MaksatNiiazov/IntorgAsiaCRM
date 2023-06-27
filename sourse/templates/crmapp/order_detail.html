@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block css %}
+        <link rel="stylesheet" href="{% static 'css/order_detail.css' %}">
+{% endblock %}
+
+
+{% block content %}
+    <div class="flex">
+<div class="order-detail">
+  <h1>Заказ №{{ order.id }}</h1>
+  <p><span>Стадия:</span> {{ order.get_stage_display }}</p>
+  <p><span>Касса:</span> {{ order.cashbox }}</p>
+  <p><span>Дата:</span> {{ order.date }}</p>
+  <p><span>Время:</span> {{ order.time }}</p>
+  <p><span>Клиент:</span> {{ order.client }}</p>
+  <p><span>Стоимость:</span> {{ order.amount }}</p>
+  <p><span>Себестоимость:</span> {{ order.cost_price }}</p>
+  <p><span>Количество услуг:</span> {{ order.count }}</p>
+
+  <!-- Add more fields as needed -->
+</div>
+  <!-- Display the order services -->
+<div class="order-services">
+  <a href="{% url 'add_service'  order.id%}" class="add-service-link">Add Service</a>
+
+<table>
+  <thead>
+    <tr>
+        <th>Работник</th>
+      <th>Услуга</th>
+      <th>Код</th>
+      <th>Цена за ед</th>
+      <th>Общая цена</th>
+      <th>Количество</th>
+      <th>Удалить</th>
+
+    </tr>
+  </thead>
+  <tbody>
+
+
+          {% for order_service in services %}
+      <tr>
+
+          <form method="post" action="{% url 'delete_service' order_service.id %}">
+            {% csrf_token %}
+            <td>{{ order_service.employer }}</td>
+            <td>{{ order_service.service }}</td>
+            <td>{{ order_service.service.id }}</td>
+            <td>{{ order_service.service.price }}</td>
+            <td>{{ order_service.salary }}</td>
+            <td>{{ order_service.count }}</td>
+          <td><input type="submit" value="Удалить"></td>
+          </form>
+              {% empty %}
+            <td>No order services found.</td>
+                    </tr>
+
+    {% endfor %}
+
+  </tbody>
+</table>
+</div>
+</div>
+{% endblock %}

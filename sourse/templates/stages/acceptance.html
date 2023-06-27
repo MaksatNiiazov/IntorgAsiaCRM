@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="input">
+        <label for="create-user"></label>
+        <a href="{% url 'register' %}"><button>Создать Клиента</button></a>
+    </div>
+    <form action="{% url 'acceptance' %}" method="post">
+    {% csrf_token %}
+        <div class="input">
+            <label for="search-input"></label>
+            <input type="text" id="search-input" placeholder="Искать по имени"><br>
+            <label for="select-user"></label>
+            <select name="client" id="select-user">
+                <option value="">Выберите клиента</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    <div class="input">
+        <label for="132132"></label>
+        <input name="name" type="text" id="132132" placeholder="Товар"><br>
+        <input name="count" type="number" id="132132" placeholder="Количество">
+
+    </div>
+        <input type="submit" value="Создать приемку">
+    </form>
+{% endblock %}
+
+{% block js %}
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const selectUser = document.getElementById('select-user');
+        const options = selectUser.options;
+
+        searchInput.addEventListener('input', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+
+            for (let i = 0; i < options.length; i++) {
+                const optionText = options[i].text.toLowerCase();
+                const optionValue = options[i].value;
+
+                if (optionText.includes(searchTerm)) {
+                    options[i].style.display = '';
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+
+            // Автоматически выбрать клиента, если только один остается видимым
+            let visibleOptionsCount = 0;
+            let lastVisibleOptionIndex = 0;
+
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].style.display !== 'none') {
+                    visibleOptionsCount++;
+                    lastVisibleOptionIndex = i;
+                }
+            }
+
+            if (visibleOptionsCount === 1) {
+                options[lastVisibleOptionIndex].selected = true;
+            }
+        });
+    </script>
+{% endblock %}

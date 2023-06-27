@@ -1,0 +1,140 @@
+{% extends 'templates/base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block content %}
+
+{% if error_message %}
+    <p class="error">{{ error_message }}</p>
+{% endif %}
+      <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+     <form action="{% url 'database_loading_next' order_id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Следующая стадия</button>
+    </form>
+    <div class="import">
+        <h2>Оприходование товара</h2>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="file" accept=".xlsx, .xls">
+            <input type="submit" value="Загрузить">
+        </form>
+    </div>
+    <div>
+<div class="next-stage">
+</div>
+    <div class="table-container">
+<table>
+  <thead>
+    <tr>
+      <th data-label="Штрихкод">Штрихкод</th>
+      <th data-label="Артикул">Артикул</th>
+      <th data-label="Наименование">Наименование</th>
+      <th data-label="Декларированное кол-во">Декларированное кол-во</th>
+      <th data-label="Размер">Размер</th>
+      <th data-label="Цвет">Цвет</th>
+      <th data-label="Состав">Состав</th>
+      <th data-label="Бренд">Бренд</th>
+      <th data-label="Страна">Страна</th>
+      <th data-label="Комментарий">Комментарий</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <form action="{% url 'product_add' %}" method="post">
+      {% csrf_token %}
+      <tr>
+        <td data-label="Штрихкод">
+          <label>
+            <input type="hidden" name="order" value="{{ order_id }}">
+            <input type="text" name="barcode" required value="{{ product.barcode }}" placeholder="Штрихкод">
+          </label>
+        </td>
+        <td data-label="Артикул">
+          <label>
+            <input type="hidden" name="order" value="{{ order_id }}">
+            <input type="text" name="article" required value="{{ product.article }}" placeholder="Артикул">
+          </label>
+        </td>
+        <td data-label="Наименование">
+          <label>
+            <input type="hidden" name="order" value="{{ order_id }}">
+            <input type="text" name="name" required value="{{ product.name }}" placeholder="Наименование">
+          </label>
+        </td>
+        <td data-label="Декларированное кол-во">
+          <label>
+            <input type="number" required name="declared_quantity" value="{{ product.declared_quantity }}" placeholder="Количество">
+          </label>
+        </td>
+        <td data-label="Размер">
+          <label>
+            <input type="text" name="size" value="{{ product.size }}" placeholder="Размер">
+          </label>
+        </td>
+        <td data-label="Цвет">
+          <label>
+            <input type="text" name="color" value="{{ product.color }}" placeholder="Цвет">
+          </label>
+        </td>
+        <td data-label="Состав">
+          <label>
+            <input type="text" name="composition" value="{{ product.composition }}" placeholder="Состав">
+          </label>
+        </td>
+        <td data-label="Бренд">
+          <label>
+            <input type="text" name="brand" value="{{ product.brand }}" placeholder="Бренд">
+          </label>
+        </td>
+        <td data-label="Страна">
+          <label>
+            <input type="text" name="country" value="{{ product.country }}" placeholder="Страна">
+          </label>
+        </td>
+        <td data-label="Комментарий">
+          <label>
+            <input type="text" name="comment" value="{{ product.comment }}" placeholder="Комментарий">
+          </label>
+        </td>
+        <td>
+          <button type="submit">Добавить</button>
+        </td>
+      </tr>
+    </form>
+
+    {% for product in products %}
+    <tr>
+      <td data-label="Штрихкод">{{ product.barcode }}</td>
+      <td data-label="Артикул">{{ product.article }}</td>
+      <td data-label="Наименование">{{ product.name }}</td>
+      <td data-label="Декларированное кол-во">{{ product.declared_quantity }}</td>
+      <td data-label="Размер">{{ product.size }}</td>
+      <td data-label="Цвет">{{ product.color }}</td>
+      <td data-label="Состав">{{ product.composition }}</td>
+      <td data-label="Бренд">{{ product.brand }}</td>
+      <td data-label="Страна">{{ product.country }}</td>
+      <td data-label="Комментарий">{{ product.comment }}</td>
+      <td>
+        <form action="{% url 'product_delete' product.id %}" method="post">
+          {% csrf_token %}
+          <button type="submit">Удалить</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+    </div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
+{% endblock %}

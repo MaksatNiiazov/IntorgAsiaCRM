@@ -1,0 +1,71 @@
+<div class="services__pagging pagging">
+    <ul class="pagging__list">
+        {% if page_obj.has_previous %}
+            <li class="pagging__item">
+                <a href="?page={{ page_obj.previous_page_number }}" class="pagging__link">&laquo;</a>
+            </li>
+        {% endif %}
+
+        {% for page in paginator.page_range %}
+            {% if page == page_obj.number %}
+                <li class="pagging__item -active">
+                    <span class="pagging__link">{{ page }}</span>
+                </li>
+            {% else %}
+                {% if page > page_obj.number|add:'-3' and page < page_obj.number|add:'3' %}
+                    <li class="pagging__item">
+                        <a href="?page={{ page }}" class="pagging__link">{{ page }}</a>
+                    </li>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="pagging__item">
+                <a href="?page={{ page_obj.next_page_number }}" class="pagging__link">&raquo;</a>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+
+<style>
+    .services__pagging {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .pagging__list {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+
+    .pagging__item {
+        display: inline-block;
+        margin: 0;
+        padding: 0;
+    }
+
+    .pagging__link {
+        display: inline-block;
+        padding: 5px 10px;
+        margin-right: 5px;
+        font-size: 14px;
+        color: #333;
+        text-decoration: none;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        background-color: #fff;
+        transition: background-color 0.2s ease;
+    }
+
+    .pagging__link:hover,
+    .pagging__link.-active {
+        background-color: #b8c1ff;
+    }
+
+    .pagging__item.-active .pagging__link {
+        background-color: #1170ff;
+        color: #fff;
+    }
+</style>

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Касса
+{% endblock %}
+
+{% block content %}
+<table>
+  <thead>
+    <tr>
+      <th>Имя услуги</th>
+      <th>Код</th>
+      <th>Цена</th>
+      <th>Применить</th>
+    </tr>
+  </thead>
+  <tbody>
+    <form method="post" action="{% url 'cashbox_create' %}">
+    {% csrf_token %}
+      <tr>
+        <td><input type="text" placeholder="Название" name="name"></td>
+        <td></td>
+        <td><input type="number" placeholder="Баланс" name="balance"></td>
+        <td><input type="submit" value="Добавить"></td>
+      </tr>
+    </form>
+
+    {% for cashbox in object_list %}
+      <tr>
+          <td>
+           {{ cashbox.name }}
+          </td>
+          <td>{{ cashbox.id }}</td>
+          <td>
+              {{cashbox.balance }}
+          </td>
+
+
+            <td>
+                <a href="{% url 'cashbox_detail' cashbox.id %}"><input type="submit" value="Операция"></a>
+            </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'includes/paginate.html' %}
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'templates/base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block content %}
+    <form id="decrease-form" method="post" action="{% url 'decrease_product_count' order.id %}">
+        {% csrf_token %}
+        <label>
+            <input type="text" name="barcode" id="barcode" placeholder="Введите штрихкод" autofocus>
+        </label>
+        <button type="submit">Отправить</button>
+    </form>
+    {% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Штрихкод</th>
+                    <th>Артикул</th>
+                    <th>Продукт</th>
+                    <th>Цвет</th>
+                    <th>Размер</th>
+                    <th>Общ кол-во</th>
+                    <th>На отправку</th>
+                    <th>Кол-во брака</th>
+                    <th>На складе</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.barcode }}</td>
+                    <td>{{ product.article }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.color }}</td>
+                    <td>{{ product.size }}</td>
+                    <td>{{ product.actual_quantity }}</td>
+                    <td>{{ product.good_quality }}</td>
+                    <td>
+                               {{ product.defective }}
+
+                    </td>
+                <td>{{ product.count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% endblock %}
+{% block js %}
+    <script>
+        window.onload = function() {
+            document.getElementById("barcode").focus();
+        };
+    </script>
+{% endblock %}

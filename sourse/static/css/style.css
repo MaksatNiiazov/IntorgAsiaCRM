@@ -1,0 +1,95 @@
+/* Стилизация текстового поля (input type="text") */
+input[type="text"] {
+  width: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #111;
+    box-shadow:0 0 2px black;
+
+}
+
+/* Стилизация поля ввода для email (input type="email") */
+input[type="email"] {
+  width: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #111;
+    box-shadow:0 0 2px black;
+
+}
+
+/* Стилизация поля ввода для чисел (input type="number") */
+input[type="number"] {
+  width: 100px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #111;
+    box-shadow:0 0 2px black;
+
+}
+
+/* Стилизация флажка (input type="checkbox") */
+input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.3s ease;
+  cursor: pointer;
+    box-shadow:0 0 2px black;
+
+}
+
+input[type="checkbox"]:checked {
+  border-color: #007bff;
+  background-color: #007bff;
+    box-shadow:0 0 2px black;
+
+}
+
+/* Стилизация кнопки (input type="submit") */
+input[type="submit"] {
+  padding: 4px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+    box-shadow:0 0 2px black;
+
+}
+
+input[type="submit"]:hover {
+  background-color: #0056b3;
+    box-shadow:0 0 2px black;
+
+}
+
+button{
+  padding: 4px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+/* Стилизация текстового поля (input type="text") */
+

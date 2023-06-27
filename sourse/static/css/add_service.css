@@ -1,0 +1,35 @@
+
+.service-form {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.service-form label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.service-form select,
+.service-form input[type="number"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.service-form button {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.service-form button:hover {
+  background-color: #0056b3;
+}
+

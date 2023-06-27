@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Услуги
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Услуги
+{% endblock %}
+
+{% block content %}
+<table>
+  <thead>
+    <tr>
+      <th>Имя услуги</th>
+      <th>Код</th>
+      <th>Цена</th>
+      <th>Себестоимость</th>
+        <th>До/После(черты)</th>
+      <th>Применить</th>
+      <th>Удалить</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <form method="post" action="{% url 'service_create' %}">
+        {% csrf_token %}
+        <td><label>
+            <input type="text" placeholder="Название" name="name" required>
+        </label></td>
+        <td></td>
+        <td><label>
+            <input type="number" placeholder="Цена" name="price" required>
+        </label></td>
+        <td><label>
+            <input type="number" placeholder="Себестоимость" name="cost_price" required>
+        </label></td>
+          <td>
+              <label>
+                  <input type="radio" name="gender" value="True">
+              </label>
+              <label>
+                  <input type="radio" name="gender" value="False">
+              </label>
+          </td>
+        <td><input type="submit" value="Добавить"></td>
+      </form>
+    </tr>
+    {% for service in service_list %}
+    <tr>
+      <form method="post" action="{% url 'service_update' service.id %}">
+        {% csrf_token %}
+        <td><label>
+            <input type="text" value="{{ service.name }}" name="name" required>
+        </label></td>
+        <td>{{ service.id }}</td>
+        <td><label>
+            <input type="number" value="{{ service.price }}" name="price" required>
+        </label></td>
+        <td><label>
+            <input type="number" value="{{ service.cost_price }}" name="cost_price" required>
+        </label></td>
+          <td>
+              <label>
+                  <input type="radio" name="gender"
+                         {% if service.before_defective %}
+                             checked
+                          {% endif %}
+                         value="True">
+              </label>
+              <label>
+                  <input type="radio" name="gender"
+                          {% if not service.before_defective %}
+                             checked
+                          {% endif %}
+                         value="False">
+              </label>
+          </td>
+
+        <td><input type="submit" value="Изменить"></td>
+      </form>
+      <form action="{% url 'service_delete' service.id %}" method="post">
+        {% csrf_token %}
+        <td><input type="submit" value="Удалить"></td>
+      </form>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'includes/paginate.html' %}
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Orders
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/main_page.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block page_title %}
+Заказы
+{% endblock %}
+{% block content %}
+
+<form method="GET" action="{% url 'statistic_page' %}">
+  <div><label for="filter_type">Фильтр</label><br>
+      <select name="filter_type" id="filter_type">
+    {#    <option value="day" {% if filter_type == 'day' %}selected{% endif %}  >День</option>#}
+        <option value="week" {% if filter_type == 'week' %}selected {% elif not filter_type %} selected{% endif %}>Неделя</option>
+        <option value="month" {% if filter_type == 'month' %}selected{% endif %}>Месяц</option>
+        <option value="quarter" {% if filter_type == 'quarter' %}selected{% endif %}>Квартал</option>
+        <option value="year" {% if filter_type == 'year' %}selected{% endif %}>Год</option>
+      </select>
+  </div>
+    <div>
+      <label for="start_date">От: {{ start_date }}</label> <br>
+      <input type="date" name="start_date" id="start_date">
+    </div>
+    <div>
+      <label for="end_date">До: {{ end_date }}</label> <br>
+      <input type="date" name="end_date" id="end_date">
+    </div>
+
+  <button type="submit">Применить фильтр</button>
+</form>
+    <div class="main-content">
+    <div class="total-info">
+        <div class="info-item"><p>Выручка</p><span> {{ total_amount }}</span></div>
+        <div class="info-item"><p>Себистоимость</p><span>{{ total_cost_price }}</span></div>
+        <div class="info-item"><p>Прибыль</p><span> {{ profit }}</span></div>
+        <div class="info-item"><p>Сделок</p><span> {{ total_count }}</span></div>
+
+    </div>
+        <div class="graph-wrapper">
+            <canvas id="myChart"></canvas>
+        </div>
+  </div>
+{% endblock %}
+{% block js %}
+<script>
+  // Получите ссылку на элемент canvas
+  var ctx = document.getElementById('myChart').getContext('2d');
+
+  // Создайте новый график, передав контекст рисования
+  var myChart = new Chart(ctx, {
+    type: 'line', // тип графика (линейный)
+    data: {
+      labels: [
+          {% for result in object_list %}
+                '{{ result.day }}/{{ result.month }}/{{ result.year }}',
+          {% endfor %}
+
+      ], // метки по оси X
+      datasets: [{
+        label: 'Выручка', // название набора данных
+        data: [
+          {% for result in object_list %}
+                {{ result.total_amount }},
+          {% endfor %}
+
+        ], // значения по оси Y
+        backgroundColor: 'rgba(0, 123, 255, 0.5)', // цвет заливки области под графиком
+        borderColor: 'rgba(0, 123, 255, 1)', // цвет линии графика
+        borderWidth: 1 // толщина линии графика
+      },
+      {
+        label: 'Себистоимость', // название набора данных
+        data: [
+          {% for result in object_list %}
+                {{ result.total_cost_price }},
+          {% endfor %}
+
+        ], // значения по оси Y
+        backgroundColor: 'rgba(255,0,242,0.5)', // цвет заливки области под графиком
+        borderColor: 'rgb(255,0,144)', // цвет линии графика
+        borderWidth: 1 // толщина линии графика
+      },
+      {
+        label: 'Прибыть', // название набора данных
+        data: [
+          {% for result in object_list %}
+                {{ result.profit }},
+          {% endfor %}
+
+        ], // значения по оси Y
+        backgroundColor: 'rgba(55,255,0,0.5)', // цвет заливки области под графиком
+        borderColor: 'rgb(47,255,0)', // цвет линии графика
+        borderWidth: 1 // толщина линии графика
+      },
+      {
+        label: 'Сделок', // название набора данных
+        data: [
+          {% for result in object_list %}
+                {{ result.total_count }},
+          {% endfor %}
+
+        ], // значения по оси Y
+        backgroundColor: 'rgba(255,88,0,0.5)', // цвет заливки области под графиком
+        borderColor: 'rgb(255,145,0)', // цвет линии графика
+        borderWidth: 1 // толщина линии графика
+      }
+      ]
+
+    },
+
+    options: {
+      responsive: true, // сделать график отзывчивым
+      scales: {
+        y: {
+          beginAtZero: true // начинать отображение оси Y с нуля
+        }
+      }
+    }
+  });
+</script>
+
+{% endblock %}

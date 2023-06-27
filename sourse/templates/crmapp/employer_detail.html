@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+
+{% block content %}
+ <div class="">
+    <div><p>{{ user.username }}</p></div>
+  </div>
+  <div class="">
+    <div><p>{{ user.first_name }} {{ user.last_name }}</p></div>
+  </div>
+  <div class="">
+    <div><p>{{ user.money }}</p> </div>
+  </div>
+  <div class="">
+    <div><p>{{ user.services_count }}</p> </div>
+  </div>
+  <div class="">
+    <div><p>{{ user.joined_date }}</p> </div>
+  </div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Услуга</th>
+      <th>Дата</th>
+      <th>Количество</th>
+      <th>Зарплата</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for service in services %}
+    <tr>
+      <td>{{ service.service }}</td>
+      <td>{{ service.date }}</td>
+      <td>{{ service.count }}</td>
+      <td>{{ service.salary }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

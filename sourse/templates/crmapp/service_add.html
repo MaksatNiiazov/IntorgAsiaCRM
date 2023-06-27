@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/add_service.css' %}">
+{% endblock %}
+{% block content %}
+<form method="post" class="service-form">
+  {% csrf_token %}
+  <p>
+    <input type="hidden" value="{{ order_id }}" name="order">
+  </p>
+  <p>
+    <label for="id_service">Service:</label>
+    <select id="id_service" name="service" class="form-control">
+      {% for service in services %}
+        <option value="{{ service.pk }}">{{ service.name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="id_employer">Employer:</label>
+    <select name="employer" required="" id="id_employer" class="form-control">
+      {% for employer in employers %}
+        <option value="{{ employer.id }}">{{ employer.first_name }} {{ employer.last_name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="id_count">Count:</label>
+    <input type="number" name="count" value="0" required="" id="id_count" class="form-control">
+  </p>
+
+  <button type="submit" class="btn btn-primary">Add Service</button>
+</form>
+
+{% endblock %}

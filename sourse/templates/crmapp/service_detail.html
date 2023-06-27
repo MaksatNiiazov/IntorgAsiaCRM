@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ service.name }}</h1>
+
+{% if service.pk %}
+  <form method="post" action="{% url 'service_update' pk=service.pk %}">
+{% else %}
+  <form method="post" action="{% url 'service_create' %}">
+{% endif %}
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Сохранить</button>
+</form>
+
+
+{% endblock %}

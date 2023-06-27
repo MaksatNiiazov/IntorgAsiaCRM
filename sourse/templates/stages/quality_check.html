@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block content %}
+
+      <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+    <div class="table-container">
+  <table>
+  <thead>
+  <tr>
+  <th>Штрихкод</th>
+  <th>Продукт</th>
+  <th>Размер</th>
+  <th>Цвет</th>
+  <th>Кол-во</th>
+  <th>Работник</th>
+  <th>Передать</th>
+</tr>
+  </thead>
+  <tbody>
+          {% for product in products %}
+<form action="{% url 'quality_check_update' order.id %}" method="post">
+  {% csrf_token %}
+
+    <tr>
+      <td>
+        <input readonly name="product" type="hidden" value="{{ product.id }}">{{ product.barcode }}
+      </td>
+      <td>
+          <input readonly name="order" type="hidden" value="{{ order.id }}">{{ product.name }}
+      </td>
+      <td>{{ product.size }}</td>
+      <td>{{ product.color }}</td>
+      <td>{{ product.actual_quantity }}</td>
+      <td>
+        <label for="user">Рабочий:</label>
+        <select name="user" id="user">
+          {% for worker in workers %}
+            <option value="{{ worker.id }}">{{ worker }}</option>
+          {% endfor %}
+        </select>
+      </td>
+      <td colspan="5">
+        <input type="submit" value="Отдать">
+      </td>
+    </tr>
+              </form>
+          {% endfor %}
+      </tbody>
+          </table>
+            </div>
+            <div class="table-container">
+                <table>
+                  <thead>
+                    <tr>
+
+                        <th>Сотрудник</th>
+                        <th>Продукт</th>
+                            <th>Штрихкод</th>
+
+                        <th>Цвет</th>
+                        <th>Размер</th>
+                        <th>Добавить услугу</th>
+                        <th>Общ кол-во</th>
+                        <th>Кол-во брака</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+
+                {% for product in products_in_work %}
+                <tr>
+                    <td>{{ product.emp.first.user }}</td>
+                    <td>{{ product.name }}</td>
+                <td>{{ product.barcode }}</td>
+                    <td>
+                        <label>{{ product.color }}</label>
+                    </td>
+                    <td>
+                        <label>{{ product.size }}</label>
+                    </td>
+                <td>
+                    <a href="{% url 'add_service' order.id %}">Добавить услугу</a>
+                </td>
+                    <td>{{ product.actual_quantity }}</td>
+                    <td>
+                        <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post" action="{% url 'defective_check_update' product.id %}">
+                            {% csrf_token %}
+                            <label>
+                                <input type="number" max="{{ product.actual_quantity }}" name="defective" value="{{ product.defective }}" onchange="updateDefectiveQuantity({{ product.id }})">
+
+                                <input type="checkbox" class="submit-checkbox"
+                                       {% if product.defective_check %}
+                                        checked
+                                       {% endif %}
+                                       data-form-id="update-form-{{ product.id }}">
+                            </label>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            </div>
+    <br>
+<form action="{% url 'quality_check_next' order_id %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Следующая стадия</button>
+    </form>
+    <br>
+{% endblock %}
+
+{% block js %}
+     <script>
+        // Add event listeners to the checkboxes
+        const checkboxes = document.querySelectorAll('.submit-checkbox');
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const formId = this.getAttribute('data-form-id');
+                const form = document.getElementById(formId);
+                submitFormViaAjax(form);
+            });
+        });
+
+        // Function to submit form data via AJAX
+        function submitFormViaAjax(form) {
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+            xhr.open(form.method, form.action);
+            xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // Handle successful response
+                } else {
+                    // Handle error response
+                }
+            };
+            xhr.send(formData);
+        }
+    </script>
+    <script src="{% static 'js/tables.js' %}"></script>
+{% endblock %}

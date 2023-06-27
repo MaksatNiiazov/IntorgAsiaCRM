@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+
+{% block page_title %}
+Работники
+{% endblock %}
+
+{% block content %}
+
+
+<table>
+  <thead>
+    <tr>
+      <th>Имя</th>
+      <th>Номер телефона</th>
+      <th>Кол-во выполненных услуг</th>
+      <th>Зарплата</th>
+      <th>Оплатить</th>
+
+    </tr>
+  </thead>
+  <tbody>
+    {% for employer in object_list %}
+      <tr>
+        <td><a href="{% url 'employer_detail' employer.id %}">{{ employer.first_name }} {{ employer.last_name }}</a></td>
+        <td>{{ employer.phone_number }}</td>
+        <td>{{ employer.services_count }}</td>
+        <td>{{ employer.money }}</td>
+        <td><button type="button">Оплатить</button></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% include 'includes/paginate.html' %}
+
+{% endblock %}
