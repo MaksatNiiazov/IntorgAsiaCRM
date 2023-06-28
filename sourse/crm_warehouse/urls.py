@@ -19,7 +19,7 @@ urlpatterns = [
     path('invoice_generation/<int:pk>/', InvoiceGenerationView.as_view(), name='invoice_generation'),
     path('defective_check/update/<int:pk>/', DefectiveCheckUpdateView.as_view(), name='defective_check_update'),
 
-    # path('invoice_generation/create/<int:pk>/', InvoiceGenerationCreateView.as_view(), name='invoice_generation_create'),
+    path('set_of_service/create/<int:pk>/', SetOfServiceCreateView.as_view(), name='set_of_service_create'),
 
     path('dispatch/<int:pk>/', DispatchView.as_view(), name='dispatch'),
     path('product/decrease/<int:pk>/', DecreaseProductCountView.as_view(), name='decrease_product_count'),

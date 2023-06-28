@@ -1,0 +1,88 @@
+{% extends 'templates/base.html' %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+
+{% block content %}
+
+    {% for set in sets %}
+        <h5>{{ set.name }}</h5>
+        {% for service in set.services.all %}
+            <p>{{ service.service }}</p>
+        {% endfor %}
+        
+    {% endfor %}
+    
+
+<form id="service-form" method="post" action="{% url 'set_of_service_create' order_id %}">
+  {% csrf_token %}
+    <label>
+        <input type="text" name="name" placeholder="Набор сервисов" required>
+    </label>
+    <table>
+    <thead>
+      <tr>
+        <th>Имя услуги</th>
+        <th>Код</th>
+        <th>Цена</th>
+        <th>Выбрать</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for service in services_after %}
+      <tr>
+        <td>{{ service.name }}</td>
+        <td>#{{ service.id }}</td>
+        <td>{{ service.price }}</td>
+        <td>
+          <label>
+            <input type="checkbox" name="services" value="{{ service.id }}">
+          </label>
+        </td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td>Черта-----------</td>
+      </tr>
+      {% for service in services_before %}
+      <tr>
+        <td>{{ service.name }}</td>
+        <td>#{{ service.id }}</td>
+        <td>{{ service.price }}</td>
+        <td>
+          <label>
+            <input type="checkbox" name="services" value="{{ service.id }}">
+          </label>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <input type="submit" value="Отправить">
+</form>
+
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
+    <script>
+      // Add event listener to the form submit event
+      document.getElementById('service-form').addEventListener('submit', function(event) {
+        // Get the selected checkboxes
+        var checkboxes = document.querySelectorAll('input[type="checkbox"][name="services"]:checked');
+
+        // Check if at least one checkbox is selected
+        if (checkboxes.length === 0) {
+          // Prevent form submission
+          event.preventDefault();
+
+          // Show an alert or provide feedback to the user
+          alert("Выберите как минимум одну услугу.");
+        }
+      });
+    </script>
+{% endblock %}
+
+{% endblock %}

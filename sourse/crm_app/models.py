@@ -62,11 +62,19 @@ class Order(models.Model):
         self.save()
 
 
+class Consumables(models.Model):
+    name = models.CharField(max_length=50)
+    count = models.IntegerField(default=0)
+    price = models.IntegerField(default=0)
+    cost_price = models.IntegerField(default=0)
+
+
 class Service(models.Model):
     name = models.CharField(max_length=124)
     before_defective = models.BooleanField(default=False)
     price = models.IntegerField()
     cost_price = models.IntegerField()
+    consumables = models.ForeignKey(Consumables, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'

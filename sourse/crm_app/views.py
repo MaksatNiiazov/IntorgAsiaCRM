@@ -144,7 +144,6 @@ class OrderServiceCreateView(CreateView):
         emp_serv = OrderService.objects.get_or_create(order=order, service=service, employer=employer)[0]
         worker = CustomUser.objects.get(id=employer.pk)
         client = CustomUser.objects.get(id=order.client_id)
-        # cashbox = Cashbox.objects.get(id=order.cashbox_id)
         emp_serv.confirmed_switch()
 
         old_count = emp_serv.count or 0
@@ -167,8 +166,7 @@ class OrderServiceCreateView(CreateView):
         client.money -= old_amount
         client.services_count -= old_count
         client.save()
-        # cashbox.balance -= old_amount
-        # cashbox.save()
+
 
         update_order.count += new_count
         update_order.amount += new_amount
@@ -183,8 +181,7 @@ class OrderServiceCreateView(CreateView):
         client.money += new_amount
         client.services_count += new_count
         client.save()
-        # cashbox.balance += new_amount
-        # cashbox.save()
+
 
         return redirect('order_detail', pk=order.pk)
 

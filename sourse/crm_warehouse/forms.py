@@ -1,5 +1,5 @@
 from django import forms
-from .models import CustomUser
+from .models import CustomUser, SetOfServices
 from crm_app.models import Order, OrderService
 from crm_warehouse.models import Product, EmployerProduct
 

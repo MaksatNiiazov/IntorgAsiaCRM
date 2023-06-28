@@ -6,71 +6,71 @@
 
 {% block content %}
 
-    <table>
-        <thead>
+<table>
+    <thead>
+        <tr>
+            <th data-label="Имя услуги">Имя услуги</th>
+            <th data-label="Код">Код</th>
+            <th data-label="Цена">Цена</th>
+            <th data-label="Количество">Количество</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in services_after %}
+        <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
+            {% csrf_token %}
             <tr>
-                <th>Имя услуги</th>
-                <th>Код</th>
-                <th>Цена</th>
-                <th>Количество</th>
-                <th></th>
+                <td data-label="Имя услуги">{{ service.name }}</td>
+                <td data-label="Код">{{ service.id }}</td>
+                <td data-label="Цена">{{ service.price }}</td>
+                <td data-label="Количество">
+                    <label>
+                        <input type="hidden" value="{{ order.id }}" name="order" required>
+                        <input type="hidden" value="{{ service.id }}" name="service" required>
+                        <input type="number" value="{{ order.count }}" name="count" required>
+                    </label>
+                </td>
+                <td>
+                    <label>
+                        <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
+                            {% if service.orderservice_set.first.confirmed %} checked{% endif %}>
+                    </label>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            {% for service in services_after %}
-            <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
-                {% csrf_token %}
-                <tr>
-                    <td>{{ service.name }}</td>
-                    <td>{{ service.id }}</td>
-                    <td>{{ service.price }}</td>
-                    <td>
-                        <label>
-                            <input type="hidden" value="{{ order.id }}" name="order" required>
-                            <input type="hidden" value="{{ service.id }}" name="service" required>
-                            <input type="number" value="{{ order.count }}" name="count" required>
-                        </label>
-                    </td>
-
-                    <td>
-                        <label>
-                            <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
+        </form>
+        {% endfor %}
+        <tr>
+            <td>Черта-----------</td>
+        </tr>
+        {% for service in services_before %}
+        <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
+            {% csrf_token %}
+            <tr>
+                <td data-label="Имя услуги">{{ service.name }}</td>
+                <td data-label="Код"># {{ service.id }}</td>
+                <td data-label="Цена">{{ service.price }}</td>
+                <td data-label="Количество">
+                    <label>
+                        <input type="hidden" value="{{ order.id }}" name="order" required>
+                        <input type="hidden" value="{{ service.id }}" name="service" required>
+                    </label>
+                    <label>
+                        <input type="number" value="{{ order.good_quality }}" name="count" required>
+                    </label>
+                </td>
+                <td>
+                    <label>
+                        <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
                             {% if service.orderservice_set.first.confirmed %} checked{% endif %}>
-                        </label>
-                    </td>
-                </tr>
-            </form>
-            {% endfor %}
-            <tr><td>Черта-----------</td></tr>
-            {% for service in services_before %}
-            <form id="service-form-{{ service.id }}" method="post" action="{% url 'add_service' order.id %}">
-                {% csrf_token %}
-                <tr>
-                    <td>{{ service.name }}</td>
-                    <td># {{ service.id }}</td>
-                    <td>{{ service.price }}</td>
-                    <td>
-                        <label>
-                            <input type="hidden" value="{{ order.id }}" name="order" required>
-                            <input type="hidden" value="{{ service.id }}" name="service" required>
-                        </label>
-                        <label>
-                            <input type="number" value="{{ order.good_quality }}" name="count" required>
-                        </label>
+                    </label>
+                </td>
+            </tr>
+        </form>
+        {% endfor %}
+    </tbody>
+</table>
 
-                    </td>
-
-                    <td>
-                        <label>
-                            <input type="checkbox" class="submit-checkbox" data-service-id="{{ service.id }}"
-                            {% if service.orderservice_set.first.confirmed %} checked{% endif %}>
-                        </label>
-                    </td>
-                </tr>
-            </form>
-            {% endfor %}
-        </tbody>
-    </table>
       <form action="{% url 'dispatch_next' order.id %}" method="post">
         {% csrf_token %}
      <button type="submit">Следующая стадия </button>

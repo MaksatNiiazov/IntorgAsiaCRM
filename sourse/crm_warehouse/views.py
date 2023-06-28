@@ -12,8 +12,8 @@ from django.contrib import messages
 
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
-from crm_warehouse.models import Product, EmployerProduct, ProductInEP
-from crm_app.models import Order, OrderStages, Service
+from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet
+from crm_app.models import Order, OrderStages, Service, OrderService
 from users.models import User as CustomUser
 
 
@@ -66,7 +66,6 @@ class AcceptanceView(View):
         }
         return render(request, redirect('dashboard'), context)
 
-
 class ImportExcelView(View):
     template_name = 'stages/database_loading.html'
 
@@ -116,7 +115,21 @@ class ImportExcelView(View):
                         declared_quantity = row.get('Заявленное количество', 0)
                         if isinstance(declared_quantity, (float, int)) and math.isnan(declared_quantity):
                             declared_quantity = 0
-                        comment = row.get('Комментарий (Тех задание)')
+
+                        size = row['Размер ']
+                        color = row['Цвет ']
+                        composition = row['Состав (Материал)']
+                        brand = row['Бренд']
+                        country = row['Страна']
+                        comment = row['Комментарий (Тех задание)']
+
+                        # Check if any field has the value "nan" and replace it with an empty string
+                        size = '' if pd.isna(size) else size
+                        color = '' if pd.isna(color) else color
+                        composition = '' if pd.isna(composition) else composition
+                        brand = '' if pd.isna(brand) else brand
+                        country = '' if pd.isna(country) else country
+                        comment = '' if pd.isna(comment) else comment
 
                         product = Product(
                             barcode=barcode,
@@ -126,13 +139,13 @@ class ImportExcelView(View):
                             count=count,
                             declared_quantity=declared_quantity,
                             actual_quantity=declared_quantity,
-                            size=row['Размер '],
-                            color=row['Цвет '],
-                            composition=row['Состав (Материал)'],
-                            brand=row['Бренд'],
+                            size=size,
+                            color=color,
+                            composition=composition,
+                            brand=brand,
                             defective=0,
                             good_quality=0,
-                            country=row['Страна'],
+                            country=country,
                             comment=comment,
 
                             confirmation=False,
@@ -151,7 +164,6 @@ class ImportExcelView(View):
                 context['error_message'] = error_message
 
         return render(request, self.template_name, context)
-
 
 class ProductDeleteView(View):
 
@@ -244,6 +256,7 @@ class QualityCheckView(DetailView):
         context['workers'] = CustomUser.objects.filter(user_type='worker')
         context['services'] = Service.objects.all()
         context['order_id'] = self.object.id
+        context['sets_of_services'] = SetOfServices.objects.filter(order_id=self.object.id)
 
         return context
 
@@ -262,6 +275,7 @@ class QualityUpdateView(CreateView):
         return context
 
     def form_valid(self, form):
+        print(self.request.POST.getlist('sets'))
         product_id = self.request.POST.get('product')
         product = Product.objects.get(id=product_id)
         product.in_work = True
@@ -285,6 +299,46 @@ class QualityUpdateView(CreateView):
 
     def form_invalid(self, form):
         return redirect('quality_check', self.object.id)
+
+
+class SetOfServiceCreateView(View):
+    def get(self, request, pk):
+        services_before = Service.objects.filter(before_defective=True)
+        services_after = Service.objects.filter(before_defective=False)
+        sets = SetOfServices.objects.filter(order_id=pk)
+
+        context = {
+            'order_id': pk,
+            'services_before': services_before,
+            'services_after': services_after,
+            'sets': sets,
+        }
+        return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
+
+    def post(self, request, pk):
+        services = Service.objects.filter(before_defective__in=[True, False])
+        services_before = services.filter(before_defective=True)
+        services_after = services.filter(before_defective=False)
+
+        name = self.request.POST.get('name')
+        services = self.request.POST.getlist('services')
+        set_of_services, _ = SetOfServices.objects.get_or_create(order_id=pk, name=name)
+
+        service_ids = [int(service) for service in services]
+        service_objects = Service.objects.in_bulk(service_ids)
+        service_in_set_objects = [ServiceInSet(set=set_of_services, service=service_objects[int(service)]) for service
+                                  in services]
+        ServiceInSet.objects.bulk_create(service_in_set_objects)
+
+        sets = SetOfServices.objects.filter(order_id=pk)
+
+        context = {
+            'order_id': pk,
+            'services_before': services_before,
+            'services_after': services_after,
+            'sets': sets
+        }
+        return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
 
 
 class InvoiceGenerationView(DetailView):
@@ -317,25 +371,68 @@ class DefectiveCheckUpdateView(UpdateView):
     form_class = DefectiveCheckForm
 
     def form_valid(self, form):
+        print(self.request.POST)
+        set_id = self.request.POST.get('set')
+        set = SetOfServices.objects.get(id=set_id)
+        services = set.services.all()
+        order_id = self.request.POST['order']
+        order = Order.objects.get(id=order_id)
+        employer_id = self.request.POST['employer']
+        employer = CustomUser.objects.get(id=employer_id)
+        worker = CustomUser.objects.get(id=employer_id)
+        client = CustomUser.objects.get(id=order.client_id)
+
         product = self.object
-        good_quality = product.actual_quantity - form.cleaned_data['defective']
-        product.good_quality = good_quality
-        product.defective = form.cleaned_data['defective']
-        product.count = good_quality
-        product.defective_check = True
-        product.save()
-        order = Order.objects.get(id=self.object.order.id)
-        order_items = Product.objects.filter(order=order)
-        total_good_quality = sum(item.good_quality for item in order_items)
-        total_defective = sum(item.defective for item in order_items)
-        order.good_quality = total_good_quality
-        order.defective = total_defective
-        order.count = total_good_quality + total_defective
-        order.save()
-        return redirect('quality_check', self.object.order.id)
+        if not product.defective_check:
+            good_quality = product.actual_quantity - form.cleaned_data['defective']
+            product.good_quality = good_quality
+            product.defective = form.cleaned_data['defective']
+            product.count = good_quality
+            product.defective_check = True
+            product.save()
 
+            order_items = Product.objects.filter(order=order)
+            total_good_quality = sum(item.good_quality for item in order_items)
+            total_defective = sum(item.defective for item in order_items)
+            order.good_quality = total_good_quality
+            order.defective = total_defective
+            order.count = total_good_quality + total_defective
+            order.save()
 
-# class InvoiceGenerationView(DetailView):
+            for service_id in services:
+                service = Service.objects.get(id=service_id.service.id)
+                order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
+                emp_serv = order_service
+                emp_serv.confirmed_switch()
+
+                if service.before_defective:
+                    new_count = product.good_quality + product.defective
+                else:
+                    new_count = product.good_quality
+                new_amount = new_count * service.price
+                new_cost = new_count * service.cost_price
+
+                update_order = Order.objects.get(id=order.pk)
+
+                update_order.count += new_count
+                update_order.amount += new_amount
+                update_order.cost_price += new_cost
+
+                emp_serv.count += new_count
+                emp_serv.salary += new_count * service.price
+
+                worker.money += new_cost
+                worker.services_count += new_count
+
+                client.money += new_amount
+                client.services_count += new_count
+                update_order.save()
+                emp_serv.save()
+                worker.save()
+                client.save()
+
+            return redirect('quality_check', self.object.order.id)
+
 
 
 class DispatchView(DetailView):

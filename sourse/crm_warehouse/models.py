@@ -42,14 +42,11 @@ class ProductInEP(models.Model):
     date = models.DateField(default=timezone.now)
 
 
-# Consumables
-
-
 class SetOfServices(models.Model):
     name = models.CharField(max_length=50)
-    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
 
 class ServiceInSet(models.Model):
-    set = models.ForeignKey(SetOfServices, on_delete=models.CASCADE)
+    set = models.ForeignKey(SetOfServices, on_delete=models.CASCADE, related_name='services')
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING)
