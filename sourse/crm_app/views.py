@@ -353,23 +353,3 @@ class CashBoxSubtractOperationView(CreateView):
 
 
 
-# def send_excel_document(request):
-#     # Создаем новый Excel-документ с помощью библиотеки openpyxl
-#     workbook = Workbook()
-#     sheet = workbook.active
-#
-#     # Заполняем документ данными (пример)
-#     sheet['A1'] = 'Hello'
-#     sheet['B1'] = 'World!'
-#
-#     # Создаем файл-объект в памяти (io.BytesIO) и сохраняем в него Excel-документ
-#     file_object = io.BytesIO()
-#     workbook.save(file_object)
-#     file_object.seek(0)
-#
-#     # Возвращаем файл-объект как HTTP-ответ с соответствующим заголовком
-#     response = FileResponse(file_object, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-#     response['Content-Disposition'] = 'attachment; filename="example.xlsx"'
-#
-#
-#

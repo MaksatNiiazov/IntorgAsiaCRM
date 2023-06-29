@@ -69,7 +69,15 @@ class Consumables(models.Model):
     cost_price = models.IntegerField(default=0)
 
 
+class ServiceType(models.Model):
+    type = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f'{self.type}'
+
+
 class Service(models.Model):
+    type = models.ForeignKey(ServiceType, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='services')
     name = models.CharField(max_length=124)
     before_defective = models.BooleanField(default=False)
     price = models.IntegerField()
@@ -95,6 +103,14 @@ class OrderService(models.Model):
             self.confirmed = True
         # elif confirmed:
         #     self.confirmed = False
+    def __str__(self):
+        return f'{self.order_id} | {self.service.name}'
+
+class ServiceOrder(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, related_name='services_in_order')
+    count = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0)
 
 
 class Cashbox(models.Model):

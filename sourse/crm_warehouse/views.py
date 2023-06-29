@@ -1,19 +1,25 @@
 import math
 import os
+import time
 from datetime import date
+from itertools import groupby
+from operator import attrgetter
 
 import pandas as pd
 from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill, Border, Side, Alignment
 
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
 from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet
-from crm_app.models import Order, OrderStages, Service, OrderService
+from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, ServiceType
 from users.models import User as CustomUser
 
 
@@ -66,6 +72,7 @@ class AcceptanceView(View):
         }
         return render(request, redirect('dashboard'), context)
 
+
 class ImportExcelView(View):
     template_name = 'stages/database_loading.html'
 
@@ -92,7 +99,7 @@ class ImportExcelView(View):
             excel_file = form.cleaned_data['file']
 
             try:
-                file_path = 'crm_warehouse/exel/'
+                file_path = 'crm_warehouse/excel/'
                 file_full_path = os.path.join(file_path, excel_file.name)
                 with open(file_full_path, 'wb') as file:
                     for chunk in excel_file.chunks():
@@ -231,6 +238,7 @@ class ProductUpdateView(UpdateView):
         return reverse('unpacking', self.object.order.id)
 
     def form_valid(self, form):
+
         product = self.object
         product.actual_quantity = form.cleaned_data['actual_quantity']
         product.good_quality = form.cleaned_data['actual_quantity']
@@ -294,6 +302,7 @@ class QualityUpdateView(CreateView):
             user=user,
             count=product.good_quality
         )
+       
 
         return redirect('quality_check', order.id)
 
@@ -341,37 +350,11 @@ class SetOfServiceCreateView(View):
         return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
 
 
-class InvoiceGenerationView(DetailView):
-    model = Order
-    template_name = 'stages/invoice_generation.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(InvoiceGenerationView, self).get_context_data()
-        context['order'] = self.object
-        context['services_before'] = Service.objects.filter(before_defective=True)
-        context['services_after'] = Service.objects.filter(before_defective=False)
-        context['workers'] = CustomUser.objects.filter(user_type='worker')
-        total_count = self.total_count()
-        context['total_count'] = total_count
-        return context
-
-    def total_count(self):
-        order_products = Order.objects.get(pk=self.object.id)
-        products = order_products.products.all()
-        total_count = 0
-
-        for product in products:
-            total_count += product.actual_quantity
-
-        return total_count
-
-
 class DefectiveCheckUpdateView(UpdateView):
     model = Product
     form_class = DefectiveCheckForm
 
     def form_valid(self, form):
-        print(self.request.POST)
         set_id = self.request.POST.get('set')
         set = SetOfServices.objects.get(id=set_id)
         services = set.services.all()
@@ -402,9 +385,10 @@ class DefectiveCheckUpdateView(UpdateView):
             for service_id in services:
                 service = Service.objects.get(id=service_id.service.id)
                 order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
+                service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
+                update_order = Order.objects.get(id=order.pk)
                 emp_serv = order_service
                 emp_serv.confirmed_switch()
-
                 if service.before_defective:
                     new_count = product.good_quality + product.defective
                 else:
@@ -412,11 +396,17 @@ class DefectiveCheckUpdateView(UpdateView):
                 new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
 
-                update_order = Order.objects.get(id=order.pk)
+                print(new_count, new_amount)
 
                 update_order.count += new_count
                 update_order.amount += new_amount
                 update_order.cost_price += new_cost
+
+                order_service.count += new_count
+
+                service_order.count += new_count
+                service_order.amount += new_amount
+                service_order.save()
 
                 emp_serv.count += new_count
                 emp_serv.salary += new_count * service.price
@@ -426,6 +416,7 @@ class DefectiveCheckUpdateView(UpdateView):
 
                 client.money += new_amount
                 client.services_count += new_count
+
                 update_order.save()
                 emp_serv.save()
                 worker.save()
@@ -434,6 +425,130 @@ class DefectiveCheckUpdateView(UpdateView):
             return redirect('quality_check', self.object.order.id)
 
 
+class InvoiceGenerationView(DetailView):
+    model = Order
+    template_name = 'stages/invoice_generation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceGenerationView, self).get_context_data()
+        context['order'] = self.object
+        context['services'] = ServiceOrder.objects.filter(order_id=self.object.id)
+        order = self.object
+        service_orders = order.serviceorder_set.order_by('service__type')  # Access related ServiceOrder objects
+        context['service_orders'] = service_orders
+        context['workers'] = CustomUser.objects.filter(user_type='worker')
+        total_count = self.total_count()
+        context['total_count'] = total_count
+        return context
+
+    def total_count(self):
+        order_products = Order.objects.get(pk=self.object.id)
+        products = order_products.products.all()
+        total_count = 0
+
+        for product in products:
+            total_count += product.actual_quantity
+
+        return total_count
+
+
+class InvoiceGenerationViewGenerate(View):
+
+    def post(self, request, order_id):
+        # Search for the file 'blank.xlsx' in the 'excel' directory and its subdirectories
+        file_name = 'blank.xlsx'
+        root_directory = 'excel'
+        file_path = None
+
+        for root, dirs, files in os.walk(root_directory):
+            if file_name in files:
+                file_path = os.path.join(root, file_name)
+                break
+
+        if not file_path:
+            return HttpResponse('File not found')
+
+        wb = load_workbook(file_path)
+
+        sheet = wb.active
+        order_obj = Order.objects.get(id=order_id)
+        order = order_obj.id
+        client = order_obj.client
+        date = order_obj.date
+        name = order_obj.name
+        count = order_obj.count
+        defective = order_obj.defective
+        good_q = order_obj.good_quality
+
+        sheet['B2'] = f'№{order}'
+        sheet['B3'] = f'{client}'
+        sheet['B4'] = 'ОсОО "Инторг Азия"'
+        sheet['B5'] = f'{date}'
+        sheet['B6'] = f'{name}'
+        sheet['B7'] = f'{count}'
+        sheet['B8'] = f'{defective}'
+        sheet['B9'] = f'{good_q}'
+
+        type_fill_color = "000000"  # Цвет фона для типов услуг
+        service_fill_color = "D0E0E3"  # Цвет фона для услуг
+        row = 13
+
+        service_orders = ServiceOrder.objects.filter(order=order_id).order_by('service__type__type', 'service__name')
+
+        for type_name, group in groupby(service_orders, key=lambda x: x.service.type.type):
+
+            # Установка фона для типа услуг
+            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                                 bottom=Side(style='thin'))
+            fill = PatternFill(start_color=type_fill_color, end_color=type_fill_color, fill_type="solid")
+            sheet[f'A{row}'].border = thin_border
+            sheet[f'A{row}'].fill = fill
+            sheet[f'A{row}'] = f'{type_name}'
+            row += 1
+
+            # Цикл по услугам внутри типа
+            for service_order in group:
+                # Установка фона для услуги
+                thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                                     bottom=Side(style='thin'))
+                fill = PatternFill(start_color=service_fill_color, end_color=service_fill_color, fill_type="solid")
+                sheet[f'A{row}'].border = thin_border
+                sheet[f'A{row}'].fill = fill
+                sheet[f'A{row}'] = f'{service_order.service.name}'
+                sheet[f'B{row}'].border = thin_border
+                sheet[f'B{row}'] = f'{service_order.count}'
+                sheet[f'C{row}'].border = thin_border
+                sheet[f'C{row}'] = f'{service_order.service.price}'
+
+                total = service_order.count * service_order.service.price
+                sheet[f'D{row}'].border = thin_border
+                sheet[f'D{row}'] = f'{total}'
+
+                row += 1
+
+        # Save the workbook
+        new_file_path = f'excel/blank{order_id}.xlsx'
+        wb.save(new_file_path)
+        wb.close()
+
+        # Delete the newly generated file
+        max_retries = 3
+        retry_delay = 1  # Delay in seconds
+        retry_count = 0
+
+        with open(new_file_path, 'rb') as f:
+            response = HttpResponse(f.read(),
+                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+
+        while retry_count < max_retries:
+            try:
+                os.remove(new_file_path)
+                break
+            except PermissionError:
+                retry_count += 1
+                time.sleep(retry_delay)
+        return response
 
 class DispatchView(DetailView):
     model = Order

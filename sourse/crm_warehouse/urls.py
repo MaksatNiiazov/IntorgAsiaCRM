@@ -15,10 +15,10 @@ urlpatterns = [
 
     path('quality_check/<int:pk>/', QualityCheckView.as_view(), name='quality_check'),
     path('quality_check/update/<int:pk>/', QualityUpdateView.as_view(), name='quality_check_update'),
-
-    path('invoice_generation/<int:pk>/', InvoiceGenerationView.as_view(), name='invoice_generation'),
     path('defective_check/update/<int:pk>/', DefectiveCheckUpdateView.as_view(), name='defective_check_update'),
 
+    path('invoice_generation/<int:pk>/', InvoiceGenerationView.as_view(), name='invoice_generation'),
+    path('invoise_generation/create/<order_id>/', InvoiceGenerationViewGenerate.as_view(), name='invoise_create'),
     path('set_of_service/create/<int:pk>/', SetOfServiceCreateView.as_view(), name='set_of_service_create'),
 
     path('dispatch/<int:pk>/', DispatchView.as_view(), name='dispatch'),

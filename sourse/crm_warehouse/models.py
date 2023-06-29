@@ -27,6 +27,9 @@ class Product(models.Model):
     defective_check = models.BooleanField(default=False)
     in_work = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class EmployerProduct(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
