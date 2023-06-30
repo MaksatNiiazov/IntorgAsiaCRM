@@ -1,7 +1,12 @@
 from django import forms
 
-from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOperation
+from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOperation, ServiceType
 
+
+class ServiceTypeForm(forms.ModelForm):
+    class Meta:
+        model = ServiceType
+        fields = ['type', ]
 
 class ServiceForm(forms.ModelForm):
     class Meta:

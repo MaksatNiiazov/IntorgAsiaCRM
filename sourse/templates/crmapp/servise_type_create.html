@@ -1,7 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-
-
-
+<h3>Добавить тип услуг</h3>
+    <form action="{% url 'service_type_create' %}">
+{{ form.type }}
+        <input type="submit" value="Добавить">
+</form>
 {% endblock %}

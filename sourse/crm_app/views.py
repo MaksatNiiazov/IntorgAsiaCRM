@@ -2,7 +2,7 @@ import calendar
 
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm
+from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
     ServiceType
 from datetime import date, timedelta, datetime
@@ -233,7 +233,10 @@ class ServiceListView(ListView):
 
 
 class ServiceTypeCreateView(CreateView):
-    pass
+    model = ServiceType
+    form_class = ServiceTypeForm
+    template_name = 'crmapp/servise_type_create.html'
+
 
 
 class ServiceCreateView(CreateView):

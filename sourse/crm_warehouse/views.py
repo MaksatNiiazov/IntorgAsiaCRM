@@ -376,9 +376,7 @@ class DefectiveCheckUpdateView(UpdateView):
             total_defective = sum(item.defective for item in order_items)
             order.good_quality = total_good_quality
             order.defective = total_defective
-            print(total_good_quality, total_defective)
             order.count = total_good_quality + total_defective
-            print(order.count)
             order.save()
 
             for service_id in services:
@@ -397,8 +395,6 @@ class DefectiveCheckUpdateView(UpdateView):
 
                 update_order.amount += new_amount
                 update_order.cost_price += new_cost
-
-                order_service.count += new_count
 
                 service_order.count += new_count
                 service_order.amount += new_amount
