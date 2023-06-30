@@ -63,6 +63,7 @@ class AcceptanceView(View):
             order.month = date.today().month
             order.year = date.today().year
             order.day = date.today().day
+            order.save()
             return redirect('dashboard')
 
         users = CustomUser.objects.filter(user_type='client')

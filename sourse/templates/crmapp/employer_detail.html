@@ -21,24 +21,40 @@
     <div><p>{{ user.joined_date }}</p> </div>
   </div>
 
+
 <table>
   <thead>
-    <tr>
-      <th>Услуга</th>
-      <th>Дата</th>
-      <th>Количество</th>
-      <th>Зарплата</th>
-    </tr>
+{#    <tr>#}
+{#      <th>Услуга</th>#}
+{#      <th>Дата</th>#}
+{#      <th>Количество</th>#}
+{#      <th>Зарплата</th>#}
+{#    </tr>#}
   </thead>
   <tbody>
-{% for service in services %}
-    <tr>
-      <td>{{ service.service }}</td>
-      <td>{{ service.date }}</td>
-      <td>{{ service.count }}</td>
-      <td>{{ service.salary }}</td>
-    </tr>
-    {% endfor %}
+      {% for order in orders %}
+          <tr>
+          <th>
+              Заказ №{{ order.order.id }}
+          </th>
+                            <th>{{ order.date }}</th>
+
+          </tr>
+        {% for service in orders %}
+            {% if service.order == order.order %}
+                <tr>
+                  <td>{{ service.service }}</td>
+                  <td>{{ service.count }}</td>
+                  <td>{{ service.salary }}</td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+                    <tr>
+          <td>
+          </td>
+          </tr>
+      {% endfor %}
+
   </tbody>
 </table>
 

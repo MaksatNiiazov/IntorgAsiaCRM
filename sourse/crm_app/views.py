@@ -273,8 +273,7 @@ class EmployerDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['services'] = OrderService.objects.filter(employer=self.object.id)
-        print(OrderService.objects.filter(employer=self.object.id))
+        context['orders'] = OrderService.objects.filter(employer=self.object.id)
         return context
 
 
