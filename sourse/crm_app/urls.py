@@ -11,6 +11,8 @@ urlpatterns = [
 
     path('services/', ServiceListView.as_view(), name='service_list'),
     path('service/create/', ServiceCreateView.as_view(), name='service_create'),
+    path('service-type/create/', ServiceTypeCreateView.as_view(), name='service_type_create'),
+
     path('service/update/<int:pk>/', ServiceUpdateView.as_view(), name='service_update'),
     path('service/delete/<int:pk>/', ServiceDeleteView.as_view(), name='service_delete'),
 

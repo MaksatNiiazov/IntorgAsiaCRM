@@ -6,7 +6,7 @@ from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOp
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'price', 'cost_price']
+        fields = ['name', 'price', 'type', 'cost_price']
 
 
 class CashboxForm(forms.ModelForm):

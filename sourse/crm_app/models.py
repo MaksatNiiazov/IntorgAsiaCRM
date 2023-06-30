@@ -15,7 +15,7 @@ class OrderStages(models.TextChoices):
 
 
 class Order(models.Model):
-    stage = models.CharField(max_length=20, choices=OrderStages.choices, default=OrderStages.ACCEPTANCE)
+    stage = models.CharField(max_length=20, choices=OrderStages.choices, default=OrderStages.DATABASE_LOADING)
     name = models.CharField(max_length=50, blank=True)
     cashbox = models.ForeignKey("Cashbox", on_delete=models.PROTECT, blank=True, null=True)
     amount = models.IntegerField(default=0)
@@ -105,6 +105,7 @@ class OrderService(models.Model):
         #     self.confirmed = False
     def __str__(self):
         return f'{self.order_id} | {self.service.name}'
+
 
 class ServiceOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

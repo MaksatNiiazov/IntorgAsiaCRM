@@ -3,7 +3,8 @@ import calendar
 from django.shortcuts import redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm
-from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory
+from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
+    ServiceType
 from datetime import date, timedelta, datetime
 from django.db.models import Sum, Count
 
@@ -224,6 +225,15 @@ class ServiceListView(ListView):
     model = Service
     template_name = 'crmapp/service_list.html'
     paginate_by = 20
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(ServiceListView, self).get_context_data()
+        context['types'] = ServiceType.objects.all()
+        return context
+
+
+class ServiceTypeCreateView(CreateView):
+    pass
 
 
 class ServiceCreateView(CreateView):

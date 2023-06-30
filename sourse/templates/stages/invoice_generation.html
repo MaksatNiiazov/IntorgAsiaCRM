@@ -79,7 +79,7 @@
 </table>
     </div>
     </div>
-      <form action="{% url 'dispatch_next' order.id %}" method="post">
+      <form action="{% url 'invoice_generation_next' order.id %}" method="post">
         {% csrf_token %}
      <button type="submit">Следующая стадия </button>
     </form>

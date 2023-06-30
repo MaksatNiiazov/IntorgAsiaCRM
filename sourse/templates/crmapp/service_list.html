@@ -15,30 +15,38 @@
 <table>
   <thead>
     <tr>
-      <th>Имя услуги</th>
-      <th>Код</th>
-      <th>Цена</th>
-      <th>Себестоимость</th>
-        <th>До/После(черты)</th>
-      <th>Применить</th>
-      <th>Удалить</th>
+        <th data-label="Тип услуги">Тип услуги</th>
+        <th data-label="Имя услуги">Имя услуги</th>
+        <th data-label="Код">Код</th>
+        <th data-label="Цена">Цена</th>
+        <th data-label="Себестоимость">Себестоимость</th>
+        <th data-label="До/После(черты)">До/После(черты)</th>
+        <th data-label="Применить">Применить</th>
+        <th data-label="Удалить">Удалить</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <form method="post" action="{% url 'service_create' %}">
         {% csrf_token %}
-        <td><label>
+          <td data-label="Тип услуги">
+              <label for=""></label><select name="type" id="">
+                  {% for type in types %}
+                      <option value="{{ type.id }}">{{ type.type }}</option>
+                  {% endfor %}
+              </select>
+          </td>
+        <td data-label="Имя услуги"><label>
             <input type="text" placeholder="Название" name="name" required>
         </label></td>
         <td></td>
-        <td><label>
+        <td data-label="Цена"><label>
             <input type="number" placeholder="Цена" name="price" required>
         </label></td>
-        <td><label>
+        <td data-label="Себестоимость"><label>
             <input type="number" placeholder="Себестоимость" name="cost_price" required>
         </label></td>
-          <td>
+          <td data-label="До/После(черты)">
               <label>
                   <input type="radio" name="gender" value="True">
               </label>
@@ -53,17 +61,27 @@
     <tr>
       <form method="post" action="{% url 'service_update' service.id %}">
         {% csrf_token %}
-        <td><label>
+      <td data-label="Тип услуги">
+           <label for=""></label><select name="type" id="">
+                  {% for type in types %}
+                      {% if service.type == type %}
+                       selected
+                      {% endif %}
+                      <option value="{{ type.id }}">{{ type.type }}</option>
+                  {% endfor %}
+              </select>
+      </td>
+        <td data-label="Имя услуги"><label>
             <input type="text" value="{{ service.name }}" name="name" required>
         </label></td>
-        <td>{{ service.id }}</td>
-        <td><label>
+        <td data-label="Код">{{ service.id }}</td>
+        <td data-label="Цена"><label>
             <input type="number" value="{{ service.price }}" name="price" required>
         </label></td>
-        <td><label>
+        <td data-label="Себестоимость"><label>
             <input type="number" value="{{ service.cost_price }}" name="cost_price" required>
         </label></td>
-          <td>
+          <td data-label="До/После(черты)">
               <label>
                   <input type="radio" name="gender"
                          {% if service.before_defective %}

@@ -51,11 +51,11 @@
       <div class="order">
           <a href="{% url 'acceptance' %}"><button>Создать приемку</button></a></div>
    </div>
-<div class="stage" id="acceptance" data-url="/acceptance/">
+<div class="stage" id="database_loading" data-url="/database_loading/">
   <h3>Оприходование товара</h3>
 
   {% for order in orders %}
-  {% if order.stage == 'acceptance' %}
+  {% if order.stage == 'database_loading' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
       <a href="{% url 'import_excel' order.id %}"><button>Проверка</button></a></div>
@@ -63,10 +63,10 @@
   {% endfor %}
 </div>
 
-<div class="stage" id="database_loading" data-url="/database_loading/">
+<div class="stage" id="unpacking" data-url="/unpacking/">
   <h3>Ручная сортировка</h3>
   {% for order in orders %}
-  {% if order.stage == 'database_loading' %}
+  {% if order.stage == 'unpacking' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Заявленное количество - {{ order.total_declared_quantity }}ед </span>
       <a href="{% url 'unpacking' order.id %}"><button>Проверка</button></a>
@@ -75,10 +75,10 @@
   {% endfor %}
 </div>
 
-<div class="stage" id="unpacking" data-url="/unpacking/">
+<div class="stage" id="quality_check" data-url="/quality_check/">
   <h3>Процессы ОТК</h3>
   {% for order in orders %}
-  {% if order.stage == 'unpacking' %}
+  {% if order.stage == 'quality_check' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Фактическое количество - {{ order.total_actual_quantity }}ед </span>
       <a href="{% url 'quality_check' order.id %}"><button>Проверка</button></a>
@@ -87,26 +87,14 @@
   {% endfor %}
 </div>
 
-<div class="stage" id="quality_check" data-url="/quality_check/">
-  <h3>Генерация счета</h3>
-  {% for order in orders %}
-  {% if order.stage == 'quality_check' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-              <a href="{% url 'invoice_generation' order.id %}"><button>Проверка</button></a>
-    </div>
-  {% endif %}
-  {% endfor %}
-</div>
-
 <div class="stage" id="invoice_generation" data-url="/invoice_generation/">
-  <h3>Отправка</h3>
+  <h3>Генерация счета</h3>
   {% for order in orders %}
   {% if order.stage == 'invoice_generation' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                <a href="{% url 'invoice_generation' order.id %}"><button>Проверка</button></a>
-</div>
+              <a href="{% url 'invoice_generation' order.id %}"><button>Проверка</button></a>
+    </div>
   {% endif %}
   {% endfor %}
 </div>
@@ -117,9 +105,21 @@
   {% if order.stage == 'dispatch' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                  <a href="{% url 'dispatch' order.id %}"><button>Проверка</button></a>
-    </div>
+                <a href="{% url 'dispatch' order.id %}"><button>Проверка</button></a>
+</div>
   {% endif %}
   {% endfor %}
 </div>
+
+{#<div class="stage" id="dispatch" data-url="/dispatch/">#}
+{#  <h3>Отправка</h3>#}
+{#  {% for order in orders %}#}
+{#  {% if order.stage == 'dispatch' %}#}
+{#  <div class="order" id="{{ order.id }}" draggable="true">#}
+{#  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>#}
+{#                  <a href="{% url 'dispatch' order.id %}"><button>Проверка</button></a>#}
+{#    </div>#}
+{#  {% endif %}#}
+{#  {% endfor %}#}
+{#</div>#}
 {% endblock %}

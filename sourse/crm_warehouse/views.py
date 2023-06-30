@@ -221,10 +221,6 @@ class UnpackingView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(UnpackingView, self).get_context_data()
         context['products'] = Product.objects.filter(order_id=self.object.id)
-        # confirmation = all(product.confirmation for product in self.object.products.all())
-        # if confirmation:
-        #     context['confirmation'] = True
-        #     print(123)
 
         return context
 
@@ -302,7 +298,7 @@ class QualityUpdateView(CreateView):
             user=user,
             count=product.good_quality
         )
-       
+
 
         return redirect('quality_check', order.id)
 
@@ -347,7 +343,7 @@ class SetOfServiceCreateView(View):
             'services_after': services_after,
             'sets': sets
         }
-        return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
+        return redirect('quality_check', pk)
 
 
 class DefectiveCheckUpdateView(UpdateView):
@@ -379,7 +375,9 @@ class DefectiveCheckUpdateView(UpdateView):
             total_defective = sum(item.defective for item in order_items)
             order.good_quality = total_good_quality
             order.defective = total_defective
+            print(total_good_quality, total_defective)
             order.count = total_good_quality + total_defective
+            print(order.count)
             order.save()
 
             for service_id in services:
@@ -396,9 +394,6 @@ class DefectiveCheckUpdateView(UpdateView):
                 new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
 
-                print(new_count, new_amount)
-
-                update_order.count += new_count
                 update_order.amount += new_amount
                 update_order.cost_price += new_cost
 
@@ -593,7 +588,7 @@ class DatabaseLoadingNextStage(View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         if order.products.count() > 0:
-            if order.stage == 'acceptance':
+            if order.stage == 'database_loading':
                 order.transition_to_next_stage()
             return redirect(reverse('dashboard'))
 
@@ -610,7 +605,7 @@ class UnpackingNextStage(View):
         all_confirmed = all(product.confirmation for product in products)
 
         if all_confirmed:
-            if order.stage == 'database_loading':
+            if order.stage == 'unpacking':
                 order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))
 
@@ -630,7 +625,7 @@ class QualityCheckNextStage(View):
         if all_in_work:
             all_defective_checked = all(product.defective_check for product in products)
             if all_defective_checked:
-                if order.stage == 'unpacking':
+                if order.stage == 'quality_check':
                     order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))
             else:
@@ -646,7 +641,7 @@ class QualityCheckNextStage(View):
 class InvoiceGenerationNextStage(View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
-        if order.stage == 'quality_check':
+        if order.stage == 'invoice_generation':
             order.transition_to_next_stage()
         return redirect(reverse('dashboard'))
 
@@ -654,6 +649,6 @@ class InvoiceGenerationNextStage(View):
 class DispatchNextStage(View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
-        if order.stage == 'invoice_generation':
+        if order.stage == 'dispatch':
             order.transition_to_next_stage()
         return redirect(reverse('dashboard'))
