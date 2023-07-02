@@ -15,20 +15,20 @@
 <table>
   <thead>
     <tr>
-      <th>Имя</th>
-      <th>Номер телефона</th>
-      <th>Кол-во выполненных услуг</th>
-      <th>Зарплата</th>
+      <th data-label="Имя">Имя</th>
+      <th data-label="Номер телефона">Номер телефона</th>
+      <th data-label="Кол-во выполненных услуг">Кол-во выполненных услуг</th>
+      <th data-label="Зарплата">Зарплата</th>
 
     </tr>
   </thead>
   <tbody>
     {% for employer in object_list %}
       <tr>
-        <td><a href="{% url 'employer_detail' employer.id %}">{{ employer.first_name }} {{ employer.last_name }}</a></td>
-        <td>{{ employer.phone_number }}</td>
-        <td>{{ employer.services_count }}</td>
-        <td>{{ employer.money }}</td>
+        <td data-label="Имя"><a href="{% url 'employer_detail' employer.id %}">{{ employer.first_name }} {{ employer.last_name }}</a></td>
+        <td data-label="Номер телефона">{{ employer.phone_number }}</td>
+        <td data-label="Кол-во выполненных услуг">{{ employer.services_count }}</td>
+        <td data-label="Зарплата">{{ employer.money }}</td>
       </tr>
     {% endfor %}
   </tbody>

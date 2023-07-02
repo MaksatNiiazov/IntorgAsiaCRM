@@ -37,6 +37,12 @@ class EmployerProduct(models.Model):
     count = models.IntegerField(default=0)
 
 
+class ProductInOrder(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    count = models.IntegerField(default=0)
+
+
 class ProductInEP(models.Model):
     ep = models.ForeignKey(EmployerProduct, on_delete=models.CASCADE, related_name='products')
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='employer_products')

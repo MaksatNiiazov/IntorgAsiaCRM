@@ -16,7 +16,7 @@ from openpyxl.styles import PatternFill, Border, Side, Font
 
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
-from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet
+from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder
 from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder
 from users.models import User as CustomUser
 
@@ -358,7 +358,6 @@ class DefectiveCheckUpdateView(UpdateView):
         employer = CustomUser.objects.get(id=employer_id)
         worker = CustomUser.objects.get(id=employer_id)
         client = CustomUser.objects.get(id=order.client_id)
-
         product = self.object
         if not product.defective_check:
             good_quality = product.actual_quantity - form.cleaned_data['defective']
@@ -375,6 +374,13 @@ class DefectiveCheckUpdateView(UpdateView):
             order.defective = total_defective
             order.count = total_good_quality + total_defective
             order.save()
+            product_in_order = ProductInOrder.objects.create(
+                order=order,
+                product=product,
+                count=total_good_quality
+            )
+            product.save()
+
             emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
             for service_id in services:
@@ -573,12 +579,14 @@ class DecreaseProductCountView(UpdateView):
     def form_valid(self, form):
         order = self.object
         barcode = form.cleaned_data['barcode']
-        print(barcode)
         product = Product.objects.get(barcode=barcode, order=order)
+        product_in_order = ProductInOrder.objects.get(order=order, product=product)
 
         if product.count > 0:
+            product_in_order.count -= 1
             product.count -= 1
             product.save()
+            product_in_order.save()
             return redirect('dispatch', order.id)
         else:
             messages.error(self.request, 'Product count is already 0.')
