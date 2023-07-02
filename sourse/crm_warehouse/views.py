@@ -139,7 +139,7 @@ class ImportExcelView(View):
 
                         product = Product(
                             barcode=barcode,
-                            article=row['Артикул ВБ (Номенклатура)'],
+                            article=row['Ваш артикул на ВБ (Номенклатура)'],
                             order_id=order_id,
                             name=row['Название товара'],
                             count=count,

@@ -44,7 +44,7 @@ class RegisterView(View):
             email = EmailMessage(mail_subject, message, to=[to_email])
             # email.send()
 
-            return redirect('dashboard')
+            return redirect('acceptance')
         else:
             print(form.errors)
         return render(request, 'registration/registration.html', {'form': form})
