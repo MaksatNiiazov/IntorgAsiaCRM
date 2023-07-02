@@ -11,7 +11,7 @@
             <label for="search-input"></label>
             <input type="text" id="search-input" placeholder="Искать по имени"><br>
             <label for="select-user"></label>
-            <select name="client" id="select-user">
+            <select required name="client" id="select-user">
                 <option value="">Выберите клиента</option>
                 {% for user in users %}
                     <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
@@ -20,8 +20,8 @@
         </div>
     <div class="input">
         <label for="132132"></label>
-        <input name="name" type="text" id="132132" placeholder="Товар"><br>
-        <input name="count" type="number" id="132132" placeholder="Количество">
+        <input required name="name" type="text" id="132132" placeholder="Товар"><br>
+        <input required name="count" type="number" id="132132" placeholder="Количество">
 
     </div>
         <input type="submit" value="Создать приемку">
