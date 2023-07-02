@@ -47,7 +47,14 @@ class RegisterView(View):
             return redirect('acceptance')
         else:
             print(form.errors)
-        return render(request, 'registration/registration.html', {'form': form})
+            context = {
+                'form': SignupForm,
+                'referrals': User.objects.all(),
+                'errors': form.errors,
+                'form': form
+            }
+
+        return render(request, 'registration/registration.html', context)
 
 
 def activate(request, uidb64, token):

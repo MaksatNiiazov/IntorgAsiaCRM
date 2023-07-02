@@ -245,12 +245,27 @@ class ServiceCreateView(CreateView):
     template_name = 'crmapp/service_list.html'
     success_url = '/services/'
 
+    def form_valid(self, form):
+
+        response = super().form_valid(form)
+        object = self.object
+        object.before_defective = (self.request.POST.get('gender'))
+        object.save()
+        return response
+
 
 class ServiceUpdateView(UpdateView):
     model = Service
     form_class = ServiceForm
     template_name = 'crmapp/service_list.html'
     success_url = '/services/'
+
+    def form_valid(self, form):
+        object = self.object
+        object.before_defective = (self.request.POST.get('gender'))
+        object.save()
+        response = super().form_valid(form)
+        return response
 
 
 class ServiceDeleteView(DeleteView):

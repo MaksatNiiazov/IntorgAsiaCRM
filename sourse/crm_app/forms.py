@@ -8,6 +8,7 @@ class ServiceTypeForm(forms.ModelForm):
         model = ServiceType
         fields = ['type', ]
 
+
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
