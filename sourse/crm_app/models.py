@@ -103,6 +103,7 @@ class OrderService(models.Model):
             self.confirmed = True
         # elif confirmed:
         #     self.confirmed = False
+
     def __str__(self):
         return f'{self.order_id} | {self.service.name}'
 
@@ -112,6 +113,14 @@ class ServiceOrder(models.Model):
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, related_name='services_in_order')
     count = models.IntegerField(default=0)
     amount = models.IntegerField(default=0)
+
+
+class EmployerOrder(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_orders')
+    user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='employer_orders')
+    date = models.DateField(blank=True, null=True)
+    count = models.IntegerField(default=0)
+    salary = models.IntegerField(default=0)
 
 
 class Cashbox(models.Model):
@@ -142,14 +151,10 @@ class CashboxOperation(models.Model):
 
 
 class ModelChangeLog(models.Model):
-    MODEL_CHOICES = (
-        ('Created', 'Created'),
-        ('Updated', 'Updated'),
-        ('Deleted', 'Deleted'),
-    )
+
     model_name = models.CharField(max_length=100)
     user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
-    change_type = models.CharField(max_length=10, choices=MODEL_CHOICES)
+    change_type = models.CharField(max_length=10)
     old_value = models.CharField(max_length=100, blank=True)
     new_value = models.CharField(max_length=100, blank=True)
     change_timestamp = models.DateTimeField(default=timezone.now)

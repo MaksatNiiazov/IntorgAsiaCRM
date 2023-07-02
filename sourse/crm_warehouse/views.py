@@ -3,8 +3,6 @@ import os
 import time
 from datetime import date
 from itertools import groupby
-from operator import attrgetter
-
 import pandas as pd
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -14,12 +12,12 @@ from django.views import View
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Alignment
+from openpyxl.styles import PatternFill, Border, Side, Font
 
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
 from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet
-from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, ServiceType
+from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder
 from users.models import User as CustomUser
 
 
@@ -378,6 +376,7 @@ class DefectiveCheckUpdateView(UpdateView):
             order.defective = total_defective
             order.count = total_good_quality + total_defective
             order.save()
+            emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
             for service_id in services:
                 service = Service.objects.get(id=service_id.service.id)
@@ -392,6 +391,9 @@ class DefectiveCheckUpdateView(UpdateView):
                     new_count = product.good_quality
                 new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
+
+                emp_order.salary += new_cost
+                emp_order.count += new_count
 
                 update_order.amount += new_amount
                 update_order.cost_price += new_cost
@@ -410,6 +412,7 @@ class DefectiveCheckUpdateView(UpdateView):
                 client.services_count += new_count
 
                 update_order.save()
+                emp_order.save()
                 emp_serv.save()
                 worker.save()
                 client.save()
@@ -481,8 +484,6 @@ class InvoiceGenerationViewGenerate(View):
         sheet['B8'] = f'{defective}'
         sheet['B9'] = f'{good_q}'
 
-        type_fill_color = "000000"  # Цвет фона для типов услуг
-        service_fill_color = "D0E0E3"  # Цвет фона для услуг
         row = 13
 
         service_orders = ServiceOrder.objects.filter(order=order_id).order_by('service__type__type', 'service__name')
@@ -492,7 +493,9 @@ class InvoiceGenerationViewGenerate(View):
             # Установка фона для типа услуг
             thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                                  bottom=Side(style='thin'))
-            fill = PatternFill(start_color=type_fill_color, end_color=type_fill_color, fill_type="solid")
+            fill = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
+            font = Font(color="FFFFFF")
+            sheet[f'A{row}'].font = font
             sheet[f'A{row}'].border = thin_border
             sheet[f'A{row}'].fill = fill
             sheet[f'A{row}'] = f'{type_name}'
@@ -503,16 +506,22 @@ class InvoiceGenerationViewGenerate(View):
                 # Установка фона для услуги
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                                      bottom=Side(style='thin'))
-                fill = PatternFill(start_color=service_fill_color, end_color=service_fill_color, fill_type="solid")
+                fill_2 = PatternFill(start_color='D0E0E3', end_color='D0E0E3', fill_type="solid")
+                font = Font(color="000000")
+                sheet[f'A{row}'].font = font
                 sheet[f'A{row}'].border = thin_border
-                sheet[f'A{row}'].fill = fill
+                sheet[f'A{row}'].fill = fill_2
                 sheet[f'A{row}'] = f'{service_order.service.name}'
+                sheet[f'B{row}'].fill = fill_2
                 sheet[f'B{row}'].border = thin_border
                 sheet[f'B{row}'] = f'{service_order.count}'
+                sheet[f'C{row}'].fill = fill_2
                 sheet[f'C{row}'].border = thin_border
                 sheet[f'C{row}'] = f'{service_order.service.price}'
 
                 total = service_order.count * service_order.service.price
+                sheet[f'D{row}'].fill = fill_2
+
                 sheet[f'D{row}'].border = thin_border
                 sheet[f'D{row}'] = f'{total}'
 
@@ -541,6 +550,7 @@ class InvoiceGenerationViewGenerate(View):
                 retry_count += 1
                 time.sleep(retry_delay)
         return response
+
 
 class DispatchView(DetailView):
     model = Order

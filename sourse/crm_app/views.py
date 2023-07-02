@@ -1,10 +1,11 @@
 import calendar
 
 from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
-    ServiceType
+    ServiceType, ServiceOrder, EmployerOrder
 from datetime import date, timedelta, datetime
 from django.db.models import Sum, Count
 
@@ -183,7 +184,6 @@ class OrderServiceCreateView(CreateView):
         client.services_count += new_count
         client.save()
 
-
         return redirect('order_detail', pk=order.pk)
 
     def form_invalid(self, form):
@@ -236,7 +236,7 @@ class ServiceTypeCreateView(CreateView):
     model = ServiceType
     form_class = ServiceTypeForm
     template_name = 'crmapp/servise_type_create.html'
-
+    success_url = '/services/'
 
 
 class ServiceCreateView(CreateView):
@@ -271,13 +271,23 @@ class EmployerDetailView(DetailView):
     model = CustomUser
     template_name = 'crmapp/employer_detail.html'
 
-    def get_queryset(self):
-        return CustomUser.objects.filter(user_type='worker')
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['orders'] = OrderService.objects.filter(employer=self.object.id)
+        context['orders'] = EmployerOrder.objects.filter(user_id=self.object.id)
         return context
+
+
+class PayASalaryView(View):
+
+    def post(self, request, pk):
+        emp_order = EmployerOrder.objects.get(id=pk)
+        user = CustomUser.objects.get(id=emp_order.user.id)
+        user.money -= emp_order.salary
+        emp_order.salary -= emp_order.salary
+        user.save()
+        emp_order.save()
+
+        return redirect('employer_detail', emp_order.user.id)
 
 
 class ClientListView(ListView):

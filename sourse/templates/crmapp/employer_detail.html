@@ -22,40 +22,39 @@
   </div>
 
 
-<table>
-  <thead>
-{#    <tr>#}
-{#      <th>Услуга</th>#}
-{#      <th>Дата</th>#}
-{#      <th>Количество</th>#}
-{#      <th>Зарплата</th>#}
-{#    </tr>#}
-  </thead>
-  <tbody>
-      {% for order in orders %}
+    <table>
+      <thead>
+        <tr>
+          <th data-label="Номер заказа">Номер заказа</th>
+          <th data-label="Дата">Дата</th>
+          <th data-label="Зарплата">Зарплата</th>
+          <th data-label="Выплатить">Выплатить</th>
+        </tr>
+      </thead>
+      <tbody>
+     {% for order in orders %}
           <tr>
-          <th>
-              Заказ №{{ order.order.id }}
-          </th>
-                            <th>{{ order.date }}</th>
+            <td data-label="Номер заказа"><a href="{% url  'employer_order_detail' user.id order.order.id %}">№{{ order.order.id }}</a></td>
+            <td data-label="Дата">{{ order.order.date }}</td>
+            <td data-label="Зарплата">{{ order.salary }}</td>
+            <td data-label="Выплатить">
+                {% if order.salary == 0 %}
+                    <input type="submit" disabled value="Выплаченно">
+                {% else %}
+                    <form action="{% url 'pay_a_salary' order.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="submit" value="Выплатить">
+                </form>
+                {% endif %}
 
+            </td>
           </tr>
-        {% for service in orders %}
-            {% if service.order == order.order %}
-                <tr>
-                  <td>{{ service.service }}</td>
-                  <td>{{ service.count }}</td>
-                  <td>{{ service.salary }}</td>
-                </tr>
-            {% endif %}
+        {% empty %}
+          <tr>
+            <td colspan="4">Нет доступных заказов.</td>
+          </tr>
         {% endfor %}
-                    <tr>
-          <td>
-          </td>
-          </tr>
-      {% endfor %}
-
-  </tbody>
-</table>
+      </tbody>
+    </table>
 
 {% endblock %}

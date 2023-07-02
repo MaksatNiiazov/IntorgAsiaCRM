@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOperation, ServiceType
+from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOperation, ServiceType, EmployerOrder
 
 
 class ServiceTypeForm(forms.ModelForm):

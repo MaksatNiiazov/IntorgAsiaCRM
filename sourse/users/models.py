@@ -48,7 +48,7 @@ class UserType(models.TextChoices):
 
 class User(AbstractBaseUser, PermissionsMixin):
     disabled = models.BooleanField(default=False)
-    username = models.CharField(max_length=100, blank=True, null=True, default='user', unique=True)
+    username = models.CharField(max_length=100, blank=True, null=True, unique=True)
     first_name = models.CharField(max_length=254)
     last_name = models.CharField(max_length=254)
     phone_number = models.CharField(max_length=254, null=True, unique=True)
