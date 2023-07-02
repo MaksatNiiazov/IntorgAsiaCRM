@@ -51,7 +51,6 @@ class RegisterView(View):
                 'form': SignupForm,
                 'referrals': User.objects.all(),
                 'errors': form.errors,
-                'form': form
             }
 
         return render(request, 'registration/registration.html', context)
