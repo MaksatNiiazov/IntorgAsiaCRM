@@ -45,7 +45,8 @@ class RegisterView(View):
             # email.send()
 
             return redirect('dashboard')
-
+        else:
+            print(form.errors)
         return render(request, 'registration/registration.html', {'form': form})
 
 
