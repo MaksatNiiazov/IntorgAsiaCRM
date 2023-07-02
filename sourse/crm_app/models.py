@@ -81,7 +81,7 @@ class Service(models.Model):
     name = models.CharField(max_length=124)
     before_defective = models.BooleanField(default=False)
     price = models.IntegerField()
-    cost_price = models.IntegerField()
+    cost_price = models.FloatField()
     consumables = models.ForeignKey(Consumables, on_delete=models.DO_NOTHING, blank=True, null=True)
 
     def __str__(self):
