@@ -171,6 +171,7 @@ class ImportExcelView(View):
 
         return render(request, self.template_name, context)
 
+
 class ProductDeleteView(View):
 
     def post(self, request, pk):
@@ -297,8 +298,6 @@ class QualityUpdateView(CreateView):
             user=user,
             count=product.good_quality
         )
-
-
         return redirect('quality_check', order.id)
 
     def form_invalid(self, form):
@@ -320,9 +319,9 @@ class SetOfServiceCreateView(View):
         return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
 
     def post(self, request, pk):
-        services = Service.objects.filter(before_defective__in=[True, False])
-        services_before = services.filter(before_defective=True)
-        services_after = services.filter(before_defective=False)
+        # services = Service.objects.filter(before_defective__in=[Tfore_defective=True)
+        # services_after = services.filter(before_defective=False)rue, False])
+        # services_before = services.filter(be
 
         name = self.request.POST.get('name')
         services = self.request.POST.getlist('services')
@@ -334,14 +333,14 @@ class SetOfServiceCreateView(View):
                                   in services]
         ServiceInSet.objects.bulk_create(service_in_set_objects)
 
-        sets = SetOfServices.objects.filter(order_id=pk)
+        # sets = SetOfServices.objects.filter(order_id=pk)
 
-        context = {
-            'order_id': pk,
-            'services_before': services_before,
-            'services_after': services_after,
-            'sets': sets
-        }
+        # context = {
+        #     'order_id': pk,
+        #     'services_before': services_before,
+        #     'services_after': services_after,
+        #     'sets': sets
+        # }
         return redirect('quality_check', pk)
 
 
@@ -469,7 +468,7 @@ class InvoiceGenerationViewGenerate(View):
         order_obj = Order.objects.get(id=order_id)
         order = order_obj.id
         client = order_obj.client
-        date = order_obj.date
+        date_ = order_obj.date
         name = order_obj.name
         count = order_obj.count
         defective = order_obj.defective
@@ -478,7 +477,7 @@ class InvoiceGenerationViewGenerate(View):
         sheet['B2'] = f'№{order}'
         sheet['B3'] = f'{client}'
         sheet['B4'] = 'ОсОО "Инторг Азия"'
-        sheet['B5'] = f'{date}'
+        sheet['B5'] = f'{date_}'
         sheet['B6'] = f'{name}'
         sheet['B7'] = f'{count}'
         sheet['B8'] = f'{defective}'
@@ -498,6 +497,10 @@ class InvoiceGenerationViewGenerate(View):
             sheet[f'A{row}'].font = font
             sheet[f'A{row}'].border = thin_border
             sheet[f'A{row}'].fill = fill
+            sheet[f'B{row}'].fill = fill
+            sheet[f'C{row}'].fill = fill
+            sheet[f'D{row}'].fill = fill
+
             sheet[f'A{row}'] = f'{type_name}'
             row += 1
 

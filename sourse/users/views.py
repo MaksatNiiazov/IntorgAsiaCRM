@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 from django.views import View
 
@@ -10,14 +10,19 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.template.loader import render_to_string
+
+from users.models import User
 from users.token import account_activation_token
 from django.core.mail import EmailMessage
 
 
 class RegisterView(View):
     def get(self, request):
-        form = SignupForm()
-        return render(request, 'registration/registration.html', {'form': form})
+        context = {
+            'form': SignupForm,
+            'referrals': User.objects.all()
+        }
+        return render(request, 'registration/registration.html', context)
 
     def post(self, request):
         form = SignupForm(request.POST)
@@ -39,7 +44,7 @@ class RegisterView(View):
             email = EmailMessage(mail_subject, message, to=[to_email])
             # email.send()
 
-            return render(request, "registration/confirm.html")
+            return redirect('dashboard')
 
         return render(request, 'registration/registration.html', {'form': form})
 

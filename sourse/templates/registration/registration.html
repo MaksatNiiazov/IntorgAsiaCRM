@@ -1,4 +1,13 @@
 {% extends 'base.html' %}
+{% block css %}
+    <style>
+        form p{
+            display: flex;
+            justify-content: space-between;
+            max-width: 450px;
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
     <div class="container">
@@ -6,18 +15,55 @@
          <div class="page__login login login_registration">
             <div class="login__container -container">
                <div class="login__form">
-                  <form method="POST" class="login-form">
-                     {% csrf_token %}
-                     {{ form.as_p }}
+                <form method="POST" class="login-form">
+                    {% csrf_token %}
+                     <p>
+                        <label for="id_username">Логин:</label>
+                        <input type="text" name="username" maxlength="100" required autofocus="" id="id_username">
+                      </p>
+                      <p>
+                        <label for="id_first_name">Имя:</label>
+                        <input type="text" name="first_name" maxlength="254" required="" id="id_first_name">
+                      </p>
+                      <p>
+                        <label for="id_last_name">Фамилия:</label>
+                        <input type="text" name="last_name" maxlength="254" required="" id="id_last_name">
+                      </p>
+                      <p>
+                        <label for="id_phone_number">Номер телефона:</label>
+                        <input type="text" name="phone_number" maxlength="254" required="" id="id_phone_number">
+                      </p>
+                      <p>
+                        <label for="id_user_type">Тип юзера:</label>
+                        <select name="user_type" id="id_user_type">
+                      <option value="worker">Работник</option>
+                      <option value="client" selected="">Клиент</option>
+                      <option value="manager">Менеджер</option>
+                      <option value="admin">Админ</option>
+                    </select>
+                      </p>
+                      <p>
+                        <label for="id_referral">Реферал:</label>
+                        <select name="referral" id="id_referral">
+                            <option value="">Отсутствует</option>
+                            {% for referral in referrals %}
+                                <option value="{{ referral.id }}">{{ referral }}</option>
+                            {% endfor %}
+                        </select>
+                      </p>
+                      <p>
+                        <label for="id_password1">Пароль:</label>
+                        <input type="password" name="password1" autocomplete="new-password" required="" id="id_password1">
+                      <p>
+                        <label for="id_password2">Повторите пароль:</label>
+                        <input type="password" name="password2" autocomplete="new-password" required="" id="id_password2">
+                      </p>
                       <input type="submit">
                   </form>
-
                </div>
-
                </div>
             </div>
          </div>
       </div>
-   </div>
-    </div>
+
 {% endblock %}
