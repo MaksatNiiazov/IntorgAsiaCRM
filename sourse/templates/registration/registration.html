@@ -21,22 +21,18 @@
                <div class="login__form">
                 <form method="post" class="login-form">
                     {% csrf_token %}
-                     <p>
-                        <label for="id_username">Телефон WhatsApp (логин):</label>
-                        <input type="text" name="username" maxlength="100" required autofocus="" id="id_username">
-                      </p>
-{#                      <p>#}
-{#                        <label for="id_first_name">Email:</label>#}
-{#                        <input type="text" name="email" maxlength="254" required="" id="id_first_name">#}
-{#                      </p>#}
                       <p>
-                        <label for="id_first_name">Имя:</label>
-                        <input type="text" name="first_name" maxlength="254" required="" id="id_first_name">
-                      </p>
-                      <p>
-                        <label for="id_last_name">Фамилия:</label>
-                        <input type="text" name="last_name" maxlength="254" required="" id="id_last_name">
-                      </p>
+                                <label for="id_username">Телефон WhatsApp (логин)</label>
+                                <input type="text" name="username" maxlength="100" required autofocus="" id="id_username" value="{{ request.POST.username }}">
+                            </p>
+                            <p>
+                                <label for="id_first_name">Имя:</label>
+                                <input type="text" name="first_name" maxlength="254" required="" id="id_first_name" value="{{ request.POST.first_name }}">
+                            </p>
+                            <p>
+                                <label for="id_last_name">Фамилия:</label>
+                                <input type="text" name="last_name" maxlength="254" required="" id="id_last_name" value="{{ request.POST.last_name }}">
+                            </p>
 
                       <p>
                         <label for="id_user_type">Тип юзера:</label>

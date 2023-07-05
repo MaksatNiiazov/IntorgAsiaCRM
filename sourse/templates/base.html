@@ -32,7 +32,11 @@
         <img src="{% static 'imgs/icons/logo.png' %}" alt=""><a href="{% url 'dashboard' %}">IntorgAsia</a>
       </div>
       <div class="search_bar">
-        <input type="text" placeholder="Search" />
+      <div class="page_title">
+            {% block page_title %}
+            123123123
+            {% endblock %}
+      </div>
       </div>
       <div class="navbar_content">
         <i class="bi bi-grid"></i>

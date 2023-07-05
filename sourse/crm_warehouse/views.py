@@ -14,7 +14,7 @@ from django.views import View
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
-from openpyxl.styles import PatternFill, Border, Side, Font
+from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
@@ -496,6 +496,7 @@ class InvoiceGenerationViewGenerate(View):
             thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                                  bottom=Side(style='thin'))
             fill = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
+            alignment = Alignment(horizontal='center')
             font = Font(color="FFFFFF")
             sheet[f'A{row}'].font = font
             sheet[f'A{row}'].border = thin_border
@@ -503,6 +504,7 @@ class InvoiceGenerationViewGenerate(View):
             sheet[f'B{row}'].fill = fill
             sheet[f'C{row}'].fill = fill
             sheet[f'D{row}'].fill = fill
+
 
             sheet[f'A{row}'] = f'{type_name}'
             row += 1
@@ -519,15 +521,18 @@ class InvoiceGenerationViewGenerate(View):
                 sheet[f'B{row}'].fill = fill_2
                 sheet[f'B{row}'].border = thin_border
                 sheet[f'B{row}'] = f'{service_order.count}'
+
                 sheet[f'C{row}'].fill = fill_2
                 sheet[f'C{row}'].border = thin_border
+                sheet[f'C{row}'].alignment = alignment
                 sheet[f'C{row}'] = f'{service_order.service.price}'
 
                 total = service_order.count * service_order.service.price
                 sheet[f'D{row}'].fill = fill_2
-
+                sheet[f'D{row}'].alignment = alignment
                 sheet[f'D{row}'].border = thin_border
                 sheet[f'D{row}'] = f'{total}'
+
 
                 row += 1
 
