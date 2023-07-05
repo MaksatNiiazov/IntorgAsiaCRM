@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block css %}
+    <style>
+        form p{
+            display: flex;
+            justify-content: space-between;
+            max-width: 450px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    {% if errors %}
+        {{ errors }}
+    {% endif %}
+
+    <div class="container">
+        <div class="page">
+            <div class="page__login login login_registration">
+                <div class="login__container -container">
+                    <div class="login__form">
+                        <form method="post" class="login-form">
+                            {% csrf_token %}
+                            <p>
+                                <label for="id_username">Телефон WhatsApp (логин)</label>
+                                <input type="text" name="username" maxlength="100" required autofocus="" id="id_username" value="{{ form.username }}">
+                            </p>
+                            <p>
+                                <label for="id_first_name">Имя:</label>
+                                <input type="text" name="first_name" maxlength="254" required="" id="id_first_name" value="{{ form.first_name }}">
+                            </p>
+                            <p>
+                                <label for="id_last_name">Фамилия:</label>
+                                <input type="text" name="last_name" maxlength="254" required="" id="id_last_name" value="{{ form.last_name }}">
+                            </p>
+
+                            <p>
+                                <input type="hidden" name="user_type" value="worker">
+                            </p>
+
+                            <p>
+                                <label for="id_password1">Пароль:</label>
+                                <input type="password" name="password1" autocomplete="new-password" required="" id="id_password1">
+                            <p>
+                                <label for="id_password2">Повторите пароль:</label>
+                                <input type="password" name="password2" autocomplete="new-password" required="" id="id_password2">
+                            </p>
+                            <input type="submit">
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

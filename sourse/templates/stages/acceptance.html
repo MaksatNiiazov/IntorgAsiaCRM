@@ -1,67 +1,111 @@
 {% extends 'base.html' %}
+{% load static %}
 
+{% block title %}
+Создание приемки
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/select_search.css' %}">
+
+    <style>
+    .acceptance{
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .acceptance_create{
+        margin-left: 30px;
+    }
+    #create-user-btn{
+        margin-left: 30px;
+    }
+    #create-user-form{
+        margin-left: 30px;
+    }
+    </style>
+{% endblock %}
+<h1>Создание приемки</h1>
 {% block content %}
-    <div class="input">
-        <label for="create-user"></label>
-        <a href="{% url 'register' %}"><button>Создать Клиента</button></a>
-    </div>
-    <form action="{% url 'acceptance' %}" method="post">
-    {% csrf_token %}
-        <div class="input">
-            <label for="search-input"></label>
-            <input type="text" id="search-input" placeholder="Искать по имени"><br>
-            <label for="select-user"></label>
-            <select required name="client" id="select-user">
-                <option value="">Выберите клиента</option>
-                {% for user in users %}
-                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    <div class="input">
-        <label for="132132"></label>
-        <input required name="name" type="text" id="132132" placeholder="Товар"><br>
-        <input required name="count" type="number" id="132132" placeholder="Количество">
+<div class="acceptance">
+    <div class="acceptance_create">
 
+        <form action="{% url 'acceptance' %}" method="post">
+        {% csrf_token %}
+
+
+            <div class="input">
+                  <label for="search-input"></label>
+                    <select required name="client" class="search-input">
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
+                        {% endfor %}
+                    </select>
+                <label for="132132"></label>
+                <input required name="name" type="text" id="132132" placeholder="Товар"><br>
+                <input required name="count" type="number" id="132132" placeholder="Кол-во">
+            </div>
+            <input type="submit" value="Создать приемку">
+        </form>
     </div>
-        <input type="submit" value="Создать приемку">
-    </form>
+<div>
+    <button id="create-user-btn">Новый Клиент</button>
+    <div id="create-user-form" style="display: none;">
+        <form method="post" class="login-form" action="{% url 'register' %}">
+            {% csrf_token %}
+            <p>
+                <label for="id_username"></label>
+                <input type="text" name="username" maxlength="100" required autofocus="" id="id_username" placeholder="Телефон WhatsApp (логин)">
+            </p>
+            <p>
+                <label for="id_first_name"></label>
+                <input type="text" name="first_name" maxlength="254" required="" id="id_first_name" placeholder="Имя">
+            </p>
+            <p>
+                <label for="id_last_name"></label>
+                <input type="text" name="last_name" maxlength="254" required="" id="id_last_name" placeholder="Фамилия">
+            </p>
+            <p><input type="hidden" name="user_type" value="client"></p>
+            <p>
+                <label for="id_referral"></label>
+                <select name="referral" id="id_referral">
+                    <option value="">Реферал</option>
+                    {% for referral in referrals %}
+                        <option value="{{ referral.id }}">{{ referral }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>
+                <label for="id_password1"></label>
+                <input type="password" name="password1" autocomplete="new-password" required="" id="id_password1" placeholder="Пароль">
+            <p>
+                <label for="id_password2"></label>
+                <input type="password" name="password2" autocomplete="new-password" required="" id="id_password2" placeholder="Повторите пароль:">
+            </p>
+            <input type="submit" value="Создать">
+        </form>
+    </div>
+</div>
+</div>
+
 {% endblock %}
 
 {% block js %}
-    <script>
-        const searchInput = document.getElementById('search-input');
-        const selectUser = document.getElementById('select-user');
-        const options = selectUser.options;
 
-        searchInput.addEventListener('input', function() {
-            const searchTerm = searchInput.value.toLowerCase();
+<script src="{% static 'js/packets/jquery.min.js' %}"></script>
+    <script src="{% static 'js/packets/microplugin.js' %}"></script>
+<script src="{% static 'js/packets/sifter.min.js' %}"></script>
 
-            for (let i = 0; i < options.length; i++) {
-                const optionText = options[i].text.toLowerCase();
-                const optionValue = options[i].value;
+<script src="{% static 'js/packets/selectize.min.js' %}"></script>
+<script>
+$(document).ready(function(){
+	$('.search-input').selectize();
+});
+const createUserBtn = document.getElementById('create-user-btn');
+const createUserForm = document.getElementById('create-user-form');
 
-                if (optionText.includes(searchTerm)) {
-                    options[i].style.display = '';
-                } else {
-                    options[i].style.display = 'none';
-                }
-            }
 
-            // Автоматически выбрать клиента, если только один остается видимым
-            let visibleOptionsCount = 0;
-            let lastVisibleOptionIndex = 0;
 
-            for (let i = 0; i < options.length; i++) {
-                if (options[i].style.display !== 'none') {
-                    visibleOptionsCount++;
-                    lastVisibleOptionIndex = i;
-                }
-            }
-
-            if (visibleOptionsCount === 1) {
-                options[lastVisibleOptionIndex].selected = true;
-            }
-        });
-    </script>
+createUserBtn.addEventListener('click', function() {
+    createUserForm.style.display = 'block';
+});
+</script>
 {% endblock %}

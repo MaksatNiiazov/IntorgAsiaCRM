@@ -54,23 +54,25 @@
 <table>
   <thead>
     <tr>
-      <th>Service</th>
-      <th>Type</th>
-      <th>Count</th>
-      <th>Amount</th>
+      <th>Сервис</th>
+      <th>Тип</th>
+      <th>Кол-во</th>
+      <th>Цена за ед.</th>
+      <th>Стоимость</th>
     </tr>
   </thead>
   <tbody>
     {% regroup service_orders by service.service.type as service_type_list %}
     {% for service_type in service_type_list %}
       <tr>
-        <th colspan="4">{{  service_order.service.type }}</th>
+        <th colspan="5">{{  service_order.service.type }}</th>
       </tr>
       {% for service_order in service_type.list %}
         <tr>
           <td>{{ service_order.service }}</td>
           <td>{{ service_order.service.type }}</td>
           <td>{{ service_order.count }}</td>
+            <td>{{ service_order.service.price }}</td>
           <td>{{ service_order.amount }}</td>
         </tr>
       {% endfor %}
@@ -79,9 +81,10 @@
 </table>
     </div>
     </div>
+    <div class="next_stage">
       <form action="{% url 'invoice_generation_next' order.id %}" method="post">
         {% csrf_token %}
      <button type="submit">Следующая стадия </button>
     </form>
-
+    </div>
 {% endblock %}

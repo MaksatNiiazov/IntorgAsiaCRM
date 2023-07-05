@@ -3,10 +3,12 @@ import os
 import time
 from datetime import date
 from itertools import groupby
+from urllib.parse import quote
+
 import pandas as pd
 from django.db.models import Sum, F
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.views import View
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
@@ -47,6 +49,8 @@ class AcceptanceView(View):
         users = CustomUser.objects.filter(user_type='client')
         context = {
             'users': users,
+            'referrals': CustomUser.objects.all(),
+
         }
         return render(request, self.template_name, context)
 
@@ -64,12 +68,10 @@ class AcceptanceView(View):
             order.save()
             return redirect('dashboard')
 
-        users = CustomUser.objects.filter(user_type='client')
-        context = {
-            'users': users,
-            'form': form,
-        }
-        return render(request, redirect('dashboard'), context)
+        else:
+            print(form.errors)
+
+            return redirect('dashboard')
 
 
 class ImportExcelView(View):
@@ -338,13 +340,14 @@ class DefectiveCheckUpdateView(UpdateView):
 
     def form_valid(self, form):
         set_id = self.request.POST.get('set')
-        set = SetOfServices.objects.select_related('services').get(id=set_id)
+        set = SetOfServices.objects.get(id=set_id)
+        services = set.services.all()
         order_id = self.request.POST['order']
-        order = Order.objects.select_related('client').get(id=order_id)
+        order = Order.objects.get(id=order_id)
         employer_id = self.request.POST['employer']
         employer = CustomUser.objects.get(id=employer_id)
         worker = CustomUser.objects.get(id=employer_id)
-        client = order.client
+        client = CustomUser.objects.get(id=order.client_id)
         product = self.object
         if not product.defective_check:
             good_quality = product.actual_quantity - form.cleaned_data['defective']
@@ -355,75 +358,69 @@ class DefectiveCheckUpdateView(UpdateView):
             product.save()
 
             order_items = Product.objects.filter(order=order)
-            total_good_quality = order_items.aggregate(Sum('good_quality'))['good_quality__sum']
-            total_defective = order_items.aggregate(Sum('defective'))['defective__sum']
+            total_good_quality = sum(item.good_quality for item in order_items)
+            total_defective = sum(item.defective for item in order_items)
             order.good_quality = total_good_quality
             order.defective = total_defective
             order.count = total_good_quality + total_defective
             order.save()
-
             product_in_order = ProductInOrder.objects.create(
                 order=order,
                 product=product,
                 count=total_good_quality
             )
+            product.save()
 
-            emp_order, _ = EmployerOrder.objects.get_or_create(order=order, user=worker)
+            emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
-            services = set.services.all()
-            order_services = []
-            service_orders = []
-            emp_services = []
-
-            for service in services:
-                order_service = OrderService(order=order, service=service, employer=employer)
-                service_order = ServiceOrder(order=order, service=service)
+            for service_id in services:
+                service = Service.objects.get(id=service_id.service.id)
+                order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
+                service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
+                update_order = Order.objects.get(id=order.pk)
                 emp_serv = order_service
-
+                emp_serv.confirmed_switch()
                 if service.before_defective:
-                    new_count = F('good_quality') + F('defective')
+                    new_count = product.good_quality + product.defective
                 else:
-                    new_count = F('good_quality')
-
+                    new_count = product.good_quality
                 new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
 
                 emp_order.salary += new_cost
                 emp_order.count += new_count
 
-                order.amount += new_amount
-                order.cost_price += new_cost
+                update_order.amount += new_amount
+                update_order.cost_price += new_cost
 
                 service_order.count += new_count
                 service_order.amount += new_amount
+                service_order.save()
 
                 emp_serv.count += new_count
                 emp_serv.salary += new_count * service.price
 
-                order_services.append(order_service)
-                service_orders.append(service_order)
-                emp_services.append(emp_serv)
+                worker.money += new_cost
+                worker.services_count += new_count
 
-            OrderService.objects.bulk_create(order_services)
-            ServiceOrder.objects.bulk_create(service_orders)
+                client.money += new_amount
+                client.services_count += new_count
 
-            Product.objects.filter(order=order).update(good_quality=good_quality)
-            emp_services_qs = OrderService.objects.filter(order=order, employer=employer)
-            emp_services_qs.update(count=F('count') + new_count, salary=F('salary') + F('service__price') * new_count)
+                update_order.save()
+                emp_order.save()
+                emp_serv.save()
+                worker.save()
+                client.save()
 
-            emp_order.save()
+            return redirect('quality_check', self.object.order.id)
 
-            worker.money = F('money') + new_cost
-            worker.services_count = F('services_count') + new_count
-            worker.save()
+        else:
+            return super().form_valid(form)
 
-            client.money = F('money') + new_amount
-            client.services_count = F('services_count') + new_count
-            client.save()
+    def get_object(self, queryset=None):
+        obj = get_object_or_404(Product, pk=self.kwargs['pk'])
+        return obj
 
-            order.save()
-
-            return redirect('quality_check', order.id)
 
 class InvoiceGenerationView(DetailView):
     model = Order
@@ -510,9 +507,7 @@ class InvoiceGenerationViewGenerate(View):
             sheet[f'A{row}'] = f'{type_name}'
             row += 1
 
-            # Цикл по услугам внутри типа
             for service_order in group:
-                # Установка фона для услуги
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                                      bottom=Side(style='thin'))
                 fill_2 = PatternFill(start_color='D0E0E3', end_color='D0E0E3', fill_type="solid")
@@ -549,8 +544,10 @@ class InvoiceGenerationViewGenerate(View):
         with open(new_file_path, 'rb') as f:
             response = HttpResponse(f.read(),
                                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename=export.xlsx'
+            filename = f'Счет№{order_id}_{order_obj.day}/{order_obj.month}/{order_obj.year}_{order_obj.client}_{order_obj.amount}.xlsx'
+            quoted_filename = quote(filename, encoding='utf-8')
 
+            response['Content-Disposition'] = f'attachment; filename="{quoted_filename}"'
         while retry_count < max_retries:
             try:
                 os.remove(new_file_path)

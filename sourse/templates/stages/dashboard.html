@@ -6,8 +6,8 @@
   .stage {
     background-color: rgba(255, 255, 255, 0);
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    margin: 5px 0;
+    box-shadow: 0 0 7px rgba(0, 0, 0, 0.7);
+    margin: 15px 0;
     padding: 5px;
   }
 
@@ -52,24 +52,24 @@
           <a href="{% url 'acceptance' %}"><button>Создать приемку</button></a></div>
    </div>
 <div class="stage" id="database_loading" data-url="/database_loading/">
-  <h3>Оприходование товара</h3>
+  <h3>Регистрация товара</h3>
 
   {% for order in orders %}
   {% if order.stage == 'database_loading' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-      <a href="{% url 'import_excel' order.id %}"><button>Проверка</button></a></div>
+      <a href="{% url 'import_excel' order.id %}"><button>Внести товар</button></a></div>
   {% endif %}
   {% endfor %}
 </div>
 
 <div class="stage" id="unpacking" data-url="/unpacking/">
-  <h3>Ручная сортировка</h3>
+  <h3>Пересчёт и сортировка</h3>
   {% for order in orders %}
   {% if order.stage == 'unpacking' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Заявленное количество - {{ order.total_declared_quantity }}ед </span>
-      <a href="{% url 'unpacking' order.id %}"><button>Проверка</button></a>
+      <a href="{% url 'unpacking' order.id %}"><button>Указать количество</button></a>
   </div>
   {% endif %}
   {% endfor %}
@@ -92,20 +92,20 @@
   {% for order in orders %}
   {% if order.stage == 'invoice_generation' %}
   <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-              <a href="{% url 'invoice_generation' order.id %}"><button>Проверка</button></a>
+  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • к отправке - {{ order.good_quality }}ед, брак - {{ order.defective }}ед</span>
+              <a href="{% url 'invoice_generation' order.id %}"><button>Cоздать счёт</button></a>
     </div>
   {% endif %}
   {% endfor %}
 </div>
 
 <div class="stage" id="dispatch" data-url="/dispatch/">
-  <h3>Отправка</h3>
+  <h3>Финальный пересчёт</h3>
   {% for order in orders %}
   {% if order.stage == 'dispatch' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                <a href="{% url 'dispatch' order.id %}"><button>Проверка</button></a>
+                <a href="{% url 'dispatch' order.id %}"><button>Считать</button></a>
 </div>
   {% endif %}
   {% endfor %}

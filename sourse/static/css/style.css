@@ -1,7 +1,31 @@
 /* Стилизация текстового поля (input type="text") */
 input[type="text"] {
+  margin-bottom: 4px;
   width: 200px;
   padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #111;
+    box-shadow:0 0 2px black;
+
+}
+/* Стилизация текстового поля (input type="text") */
+input[type="password"] {
+  margin-bottom: 4px;
+  width: 200px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #111;
+    box-shadow:0 0 2px black;
+
+}
+select{
+  margin-bottom: 4px;
+  width: 200px;
+  padding: 10px 0;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
@@ -12,6 +36,7 @@ input[type="text"] {
 
 /* Стилизация поля ввода для email (input type="email") */
 input[type="email"] {
+  margin-bottom: 4px;
   width: 200px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -24,6 +49,7 @@ input[type="email"] {
 
 /* Стилизация поля ввода для чисел (input type="number") */
 input[type="number"] {
+  margin-bottom: 4px;
   width: 100px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -36,6 +62,7 @@ input[type="number"] {
 
 /* Стилизация флажка (input type="checkbox") */
 input[type="checkbox"] {
+  margin-bottom: 4px;
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -51,6 +78,7 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
+  margin-bottom: 4px;
   border-color: #007bff;
   background-color: #007bff;
     box-shadow:0 0 2px black;
@@ -59,6 +87,7 @@ input[type="checkbox"]:checked {
 
 /* Стилизация кнопки (input type="submit") */
 input[type="submit"] {
+  margin-bottom: 4px;
   padding: 4px 20px;
   background-color: #007bff;
   color: #fff;
@@ -74,12 +103,14 @@ input[type="submit"] {
 }
 
 input[type="submit"]:hover {
+  margin-bottom: 4px;
   background-color: #0056b3;
     box-shadow:0 0 2px black;
 
 }
 
 button{
+  margin-bottom: 6px;
   padding: 4px 20px;
   background-color: #007bff;
   color: #fff;
@@ -93,3 +124,21 @@ button{
 }
 /* Стилизация текстового поля (input type="text") */
 
+
+.messages li{
+  color: red;
+  font-size: 30px;
+}
+
+.next_stage{
+    align-items: center;
+
+}
+.next_stage button{
+  display: block;
+    padding: 10px 10px;
+    margin: 5px auto;
+}
+a{
+  text-decoration: none;
+}

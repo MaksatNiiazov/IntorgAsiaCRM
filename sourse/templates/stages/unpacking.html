@@ -61,12 +61,14 @@
     {% endfor %}
   </tbody>
 </table>
+        <br>
+    <div class="next_stage">
      <form action="{% url 'unpacking_next' order.id %}" method="post">
             {% csrf_token %}
-            <button type="submit">Следующая стадия</button>
+            <button type="submit">подтвердить количество</button>
         </form>
     </div>
-
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script>
         function updateProduct(productId, checkbox) {

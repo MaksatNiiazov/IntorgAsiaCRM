@@ -31,17 +31,17 @@ class RegisterView(View):
             user.is_active = True
             user.save()
 
-            current_site = get_current_site(request)
-            mail_subject = 'Activation link has been sent to your email id'
-            message = render_to_string('registration/acc_active_email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                'token': account_activation_token.make_token(user),
-            })
+            # current_site = get_current_site(request)
+            # mail_subject = 'Activation link has been sent to your email id'
+            # message = render_to_string('registration/acc_active_email.html', {
+            #     'user': user,
+            #     'domain': current_site.domain,
+            #     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            #     'token': account_activation_token.make_token(user),
+            # })
 
-            to_email = form.cleaned_data.get('email')
-            email = EmailMessage(mail_subject, message, to=[to_email])
+            # to_email = form.cleaned_data.get('email')
+            # email = EmailMessage(mail_subject, message, to=[to_email])
             # email.send()
 
             return redirect('acceptance')
@@ -54,6 +54,34 @@ class RegisterView(View):
             }
 
         return render(request, 'registration/registration.html', context)
+
+
+class RegisterWorkerView(View):
+
+    def get(self, request):
+        context = {
+            'form': SignupForm,
+            'referrals': User.objects.all()
+        }
+        return render(request, 'registration/registration_worker.html', context)
+
+    def post(self, request):
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_active = True
+            user.save()
+
+            return redirect('dashboard')
+        else:
+            print(form.errors)
+            context = {
+                'form': SignupForm,
+                'referrals': User.objects.all(),
+                'errors': form.errors,
+            }
+
+        return render(request, 'registration/registration_worker.html', context)
 
 
 def activate(request, uidb64, token):

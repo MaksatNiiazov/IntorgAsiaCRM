@@ -3,12 +3,16 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
     <style>
+    h2{
+        text-align: center;
+    }
     .card_container{
         display: flex;
     }
     .card{
-        border: #4CAF50 1px solid;
+        border: #af4c4c 1px solid;
         margin: 0 10px 0 0 ;
+        padding: 10px;
     }
     .card_title{
         font-size: 20px;
@@ -27,6 +31,7 @@
     </ul>
 
     <div class="table-container">
+    <h2>Выдача</h2>
         <table>
             <thead>
                 <tr>
@@ -70,8 +75,9 @@
             </tbody>
         </table>
     </div>
-
-    <a href="{% url 'set_of_service_create' order_id %}">Создать набор услуг</a>
+    <div class="next_stage">
+    <a href="{% url 'set_of_service_create' order_id %}"><button>Создать набор услуг</button></a>
+    </div>
     <div class="card_container">
         {% for set in sets_of_services %}
         <div class="card">
@@ -88,6 +94,7 @@
     </div>
 
     <div class="table-container">
+    <h2>В работе</h2>
         <table>
             <thead>
                 <tr>
@@ -96,7 +103,7 @@
                     <th data-label="Штрихкод">Штрихкод</th>
                     <th data-label="Цвет">Цвет</th>
                     <th data-label="Размер">Размер</th>
-                    <th data-label="Добавить услугу">Добавить услугу</th>
+{#                    <th data-label="Добавить услугу">Добавить услугу</th>#}
                     <th data-label="Выбрать набор">Выбрать набор</th>
                     <th data-label="Общ кол-во">Общ кол-во</th>
                     <th data-label="Кол-во брака">Кол-во брака</th>
@@ -110,7 +117,7 @@
                     <td data-label="Штрихкод">{{ product.barcode }}</td>
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
                     <td data-label="Размер"><label>{{ product.size }}</label></td>
-                    <td data-label="Добавить услугу"><a href="{% url 'add_service' order.id %}">Добавить услугу</a></td>
+{#                    <td data-label="Добавить услугу"><a href="{% url 'add_service' order.id %}">Добавить услугу</a></td>#}
                     <td data-label="Выбрать набор">
                         <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post"
                             action="{% url 'defective_check_update' product.id %}">
@@ -133,7 +140,7 @@
                                 data-form-id="update-form-{{ product.id }}">
                         </label>
                     </td>
-                    </form>
+                        </form>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -141,10 +148,12 @@
     </div>
 
     <br>
+    <div class="next_stage">
     <form action="{% url 'quality_check_next' order_id %}" method="post">
         {% csrf_token %}
-        <button type="submit">Следующая стадия</button>
+        <button type="submit">Завершить работы</button>
     </form>
+    </div>
     <br>
 
 {% endblock %}
