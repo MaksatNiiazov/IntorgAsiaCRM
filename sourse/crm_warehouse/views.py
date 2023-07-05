@@ -4,7 +4,7 @@ import time
 from datetime import date
 from itertools import groupby
 import pandas as pd
-from django.db.models import Sum
+from django.db.models import Sum, F
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -319,10 +319,6 @@ class SetOfServiceCreateView(View):
         return render(request, 'stages/sets_of_services/set_of_srvices.html', context)
 
     def post(self, request, pk):
-        # services = Service.objects.filter(before_defective__in=[Tfore_defective=True)
-        # services_after = services.filter(before_defective=False)rue, False])
-        # services_before = services.filter(be
-
         name = self.request.POST.get('name')
         services = self.request.POST.getlist('services')
         set_of_services, _ = SetOfServices.objects.get_or_create(order_id=pk, name=name)
@@ -333,14 +329,6 @@ class SetOfServiceCreateView(View):
                                   in services]
         ServiceInSet.objects.bulk_create(service_in_set_objects)
 
-        # sets = SetOfServices.objects.filter(order_id=pk)
-
-        # context = {
-        #     'order_id': pk,
-        #     'services_before': services_before,
-        #     'services_after': services_after,
-        #     'sets': sets
-        # }
         return redirect('quality_check', pk)
 
 
@@ -350,14 +338,13 @@ class DefectiveCheckUpdateView(UpdateView):
 
     def form_valid(self, form):
         set_id = self.request.POST.get('set')
-        set = SetOfServices.objects.get(id=set_id)
-        services = set.services.all()
+        set = SetOfServices.objects.select_related('services').get(id=set_id)
         order_id = self.request.POST['order']
-        order = Order.objects.get(id=order_id)
+        order = Order.objects.select_related('client').get(id=order_id)
         employer_id = self.request.POST['employer']
         employer = CustomUser.objects.get(id=employer_id)
         worker = CustomUser.objects.get(id=employer_id)
-        client = CustomUser.objects.get(id=order.client_id)
+        client = order.client
         product = self.object
         if not product.defective_check:
             good_quality = product.actual_quantity - form.cleaned_data['defective']
@@ -368,62 +355,75 @@ class DefectiveCheckUpdateView(UpdateView):
             product.save()
 
             order_items = Product.objects.filter(order=order)
-            total_good_quality = sum(item.good_quality for item in order_items)
-            total_defective = sum(item.defective for item in order_items)
+            total_good_quality = order_items.aggregate(Sum('good_quality'))['good_quality__sum']
+            total_defective = order_items.aggregate(Sum('defective'))['defective__sum']
             order.good_quality = total_good_quality
             order.defective = total_defective
             order.count = total_good_quality + total_defective
             order.save()
+
             product_in_order = ProductInOrder.objects.create(
                 order=order,
                 product=product,
                 count=total_good_quality
             )
-            product.save()
 
-            emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
+            emp_order, _ = EmployerOrder.objects.get_or_create(order=order, user=worker)
 
-            for service_id in services:
-                service = Service.objects.get(id=service_id.service.id)
-                order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
-                service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
-                update_order = Order.objects.get(id=order.pk)
+            services = set.services.all()
+            order_services = []
+            service_orders = []
+            emp_services = []
+
+            for service in services:
+                order_service = OrderService(order=order, service=service, employer=employer)
+                service_order = ServiceOrder(order=order, service=service)
                 emp_serv = order_service
-                emp_serv.confirmed_switch()
+
                 if service.before_defective:
-                    new_count = product.good_quality + product.defective
+                    new_count = F('good_quality') + F('defective')
                 else:
-                    new_count = product.good_quality
+                    new_count = F('good_quality')
+
                 new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
 
                 emp_order.salary += new_cost
                 emp_order.count += new_count
 
-                update_order.amount += new_amount
-                update_order.cost_price += new_cost
+                order.amount += new_amount
+                order.cost_price += new_cost
 
                 service_order.count += new_count
                 service_order.amount += new_amount
-                service_order.save()
 
                 emp_serv.count += new_count
                 emp_serv.salary += new_count * service.price
 
-                worker.money += new_cost
-                worker.services_count += new_count
+                order_services.append(order_service)
+                service_orders.append(service_order)
+                emp_services.append(emp_serv)
 
-                client.money += new_amount
-                client.services_count += new_count
+            OrderService.objects.bulk_create(order_services)
+            ServiceOrder.objects.bulk_create(service_orders)
 
-                update_order.save()
-                emp_order.save()
-                emp_serv.save()
-                worker.save()
-                client.save()
+            Product.objects.filter(order=order).update(good_quality=good_quality)
+            emp_services_qs = OrderService.objects.filter(order=order, employer=employer)
+            emp_services_qs.update(count=F('count') + new_count, salary=F('salary') + F('service__price') * new_count)
 
-            return redirect('quality_check', self.object.order.id)
+            emp_order.save()
 
+            worker.money = F('money') + new_cost
+            worker.services_count = F('services_count') + new_count
+            worker.save()
+
+            client.money = F('money') + new_amount
+            client.services_count = F('services_count') + new_count
+            client.save()
+
+            order.save()
+
+            return redirect('quality_check', order.id)
 
 class InvoiceGenerationView(DetailView):
     model = Order

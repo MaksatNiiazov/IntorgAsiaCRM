@@ -81,8 +81,7 @@ class Service(models.Model):
     name = models.CharField(max_length=124)
     before_defective = models.BooleanField(default=False)
     price = models.IntegerField()
-    cost_price = models.FloatField()
-    consumables = models.ForeignKey(Consumables, on_delete=models.DO_NOTHING, blank=True, null=True)
+    cost_price = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __str__(self):
         return f'{self.name}'
@@ -163,7 +162,7 @@ class ModelChangeLog(models.Model):
         return f'{self.change_type} {self.model_name} at {self.change_timestamp}'
 
     @classmethod
-    def add_log(cls, model_name, user, change_type, old_value='', new_value=''):
+    def add_log(cls, model_name, user, change_type='', old_value='', new_value=''):
         log_entry = cls(
             model_name=model_name,
             user=user,
