@@ -3,6 +3,9 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
 {% endblock %}
+{% block page_title %}
+Финальный пересчёт
+{% endblock %}
 {% block content %}
     <form id="decrease-form" method="post" action="{% url 'decrease_product_count' order.id %}">
         {% csrf_token %}

@@ -1,6 +1,7 @@
 from django import forms
 
-from .models import Service, Cashbox, Order, OrderService, CustomUser, CashboxOperation, ServiceType, EmployerOrder
+from .models import Service, Cashbox, Order, CustomUser, CashboxOperation, ServiceType, EmployerOrder, \
+    Consumables, ServiceOrder
 
 
 class ServiceTypeForm(forms.ModelForm):
@@ -12,7 +13,13 @@ class ServiceTypeForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'price', 'type', 'cost_price']
+        fields = ['name', 'price', 'type', 'discount', 'single', 'cost_price']
+
+
+class ConsumablesForm(forms.ModelForm):
+    class Meta:
+        model = Consumables
+        fields = ['name', 'count', 'price', 'cost_price']
 
 
 class CashboxForm(forms.ModelForm):
@@ -39,8 +46,8 @@ class OrderForm(forms.ModelForm):
 
 class AddServiceForm(forms.ModelForm):
     class Meta:
-        model = OrderService
-        fields = ('order', 'service', 'count', 'employer',)
+        model = ServiceOrder
+        fields = ('order', 'service', 'count',)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

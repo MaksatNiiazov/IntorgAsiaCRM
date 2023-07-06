@@ -2,87 +2,10 @@
 {% load static %}
 
 {% block css %}
-    <style>
-    /* Styles for the cashbox section */
-.cashbox {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.info {
-  flex: 1;
-}
-
-.operations {
-  display: flex;
-  gap: 10px;
-}
-
-/* Styles for the tables */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-table th,
-table td {
-  padding: 8px;
-  text-align: left;
-}
-
-thead {
-  background-color: #f1f1f1;
-}
-
-/* Styles for the popup */
-.popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 20px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
-}
-
-.popup input,
-.popup select,
-.popup button {
-  margin-bottom: 10px;
-}
-
-.popup button {
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-/* Styles for the Add Operation buttons */
-button {
-  background-color: #4caf50;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-/* Styles for hiding and showing the popup */
-.popup-hidden {
-  display: none;
-}
-
-    </style>
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Касса
 {% endblock %}
 {% block content %}
     <div class="cashbox">
@@ -91,9 +14,6 @@ button:hover {
     <p>Текущий баланс: {{ object.balance }}</p>
     </div>
     <div class="operations">
-<button onclick="showPopup('addOperationFromPopup')">Add Operation (From)</button>
-<button onclick="showPopup('addOperationToPopup')">Add Operation (To)</button>
-
     </div>
     </div>
     <div class="cashbox-operations">
@@ -162,87 +82,4 @@ button:hover {
   </tbody>
 </table>
     </div>
-
-<!-- Попап для добавления операции cashbox_from -->
-<div id="addOperationFromPopup" style="display: none;">
-Операция прихода
-  <!-- Форма добавления операции -->
-  <form method="POST" action="{% url 'add_operation' %}">
-    {% csrf_token %}
-    <!-- Поля формы для ввода значений -->
-      <select name="user" id="">
-          {% for user in users %}
-              <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
-          {% endfor %}
-      </select>
-      <select name="category" id="">
-          {% for category in categories %}
-                <option value="{{ category.id }}">{{ category.category }}</option>
-          {% endfor %}
-      </select>
-    <input type="number" name="money" placeholder="Money" required>
-    <input type="text" name="comment" placeholder="Comment" required>
-      <select name="cashbox_to" id="">
-                      <option value="">-------</option>
-
-        {% for cashbox in cashboxes_to %}
-            <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
-        {% endfor %}
-
-      </select>
-    <input type="hidden" name="cashbox_from" value="{{ cashbox.id }}">
-    <button type="submit">Add Operation</button>
-  </form>
-</div>
-
-<!-- Попап для добавления операции cashbox_to -->
-<div id="addOperationToPopup" style="display: none;">
-Операция расхода
-
-  <!-- Форма добавления операции -->
-  <form method="POST" action="{% url 'add_operation' %}">
-    {% csrf_token %}
-    <!-- Поля формы для ввода значений -->
-      <select name="user" id="">
-
-          {% for user in users %}
-              <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
-          {% endfor %}
-      </select>
-
-      <select name="category" id="">
-          {% for category in categories %}
-                <option value="{{ category.id }}">{{ category.category }}</option>
-          {% endfor %}
-      </select>
-    <input type="number" name="money" placeholder="Money" required>
-    <input type="text" name="comment" placeholder="Comment" required>
-      <select name="cashbox_to" id="">
-          <option value="">-------</option>
-        {% for cashbox in cashboxes_to %}
-            <option value="-{{ cashbox.id }}">{{ cashbox.name }}</option>
-        {% endfor %}
-
-      </select>
-    <button type="submit">Add Operation</button>
-  </form>
-</div>
-{% endblock %}
-
-{% block js %}
-<script>
-function showPopup(popupId) {
-  var popup = document.getElementById(popupId);
-  popup.style.display = 'block';
-}
-
-// Function to hide a popup
-function hidePopup(popupId) {
-  var popup = document.getElementById(popupId);
-  popup.style.display = 'none';
-
-  // Remove the click event listener from the document
-  document.removeEventListener('click', hidePopup);
-}
-</script>
 {% endblock %}

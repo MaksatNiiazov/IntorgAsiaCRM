@@ -6,7 +6,7 @@ from itertools import groupby
 from urllib.parse import quote
 
 import pandas as pd
-from django.db.models import Sum, F
+from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -19,7 +19,8 @@ from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
 from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder
-from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder
+from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder, Consumables, \
+    OrderConsumables
 from users.models import User as CustomUser
 
 
@@ -308,8 +309,8 @@ class QualityUpdateView(CreateView):
 
 class SetOfServiceCreateView(View):
     def get(self, request, pk):
-        services_before = Service.objects.filter(before_defective=True)
-        services_after = Service.objects.filter(before_defective=False)
+        services_before = Service.objects.filter(before_defective=True, single=False)
+        services_after = Service.objects.filter(before_defective=False, single=False)
         sets = SetOfServices.objects.filter(order_id=pk)
 
         context = {
@@ -427,8 +428,10 @@ class InvoiceGenerationView(DetailView):
     template_name = 'stages/invoice_generation.html'
 
     def get_context_data(self, **kwargs):
-        context = super(InvoiceGenerationView, self).get_context_data()
+        context = super(InvoiceGenerationView, self).get_context_data(order_id=self.object.id)
         context['order'] = self.object
+        context['all_services'] = Service.objects.filter(single=True)
+
         context['services'] = ServiceOrder.objects.filter(order_id=self.object.id)
         order = self.object
         service_orders = order.serviceorder_set.order_by('service__type')  # Access related ServiceOrder objects
@@ -436,6 +439,8 @@ class InvoiceGenerationView(DetailView):
         context['workers'] = CustomUser.objects.filter(user_type='worker')
         total_count = self.total_count()
         context['total_count'] = total_count
+        context['consumables'] = Consumables.objects.all()
+        context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object)
         return context
 
     def total_count(self):
@@ -447,6 +452,27 @@ class InvoiceGenerationView(DetailView):
             total_count += product.actual_quantity
 
         return total_count
+
+
+class AddConsumables(View):
+    def post(self, request):
+        order = self.request.POST.get('order')
+        order_obj = Order.objects.get(order=order)
+        consumable = Consumables.objects.get(id=self.request.POST.get('consumable'))
+
+        order_consumable = OrderConsumables.objects.get_or_create(order_id=order, consumable_id=consumable.id)[0]
+        count = int(self.request.POST.get('count'))
+        price = consumable.price * count
+        cost_price = consumable.cost_price * count
+        order_consumable.count = count
+        order_consumable.price = price
+        order_consumable.cost_price = cost_price
+        order_consumable.save()
+        order_obj.amount += price
+        order_obj.cost_price += cost_price
+        order_obj.save()
+
+        return redirect('invoice_generation', order)
 
 
 class InvoiceGenerationViewGenerate(View):
@@ -489,32 +515,34 @@ class InvoiceGenerationViewGenerate(View):
         row = 13
 
         service_orders = ServiceOrder.objects.filter(order=order_id).order_by('service__type__type', 'service__name')
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                             bottom=Side(style='thin'))
+        fill = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
+        fill_bold = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
+
+        alignment = Alignment(horizontal='center')
+
+        fill_2 = PatternFill(start_color='D0E0E3', end_color='D0E0E3', fill_type="solid")
+        font = Font(color="FFFFFF")
+        font_bold = Font(color="FFFFFF", bold=True)
+
+        font_2 = Font(color="000000")
+        font_bold_2 = Font(color="000000", bold=True)
+
 
         for type_name, group in groupby(service_orders, key=lambda x: x.service.type.type):
 
-            # Установка фона для типа услуг
-            thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
-                                 bottom=Side(style='thin'))
-            fill = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
-            alignment = Alignment(horizontal='center')
-            font = Font(color="FFFFFF")
             sheet[f'A{row}'].font = font
             sheet[f'A{row}'].border = thin_border
             sheet[f'A{row}'].fill = fill
             sheet[f'B{row}'].fill = fill
             sheet[f'C{row}'].fill = fill
             sheet[f'D{row}'].fill = fill
-
-
             sheet[f'A{row}'] = f'{type_name}'
             row += 1
 
             for service_order in group:
-                thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
-                                     bottom=Side(style='thin'))
-                fill_2 = PatternFill(start_color='D0E0E3', end_color='D0E0E3', fill_type="solid")
-                font = Font(color="000000")
-                sheet[f'A{row}'].font = font
+                sheet[f'A{row}'].font = font_2
                 sheet[f'A{row}'].border = thin_border
                 sheet[f'A{row}'].fill = fill_2
                 sheet[f'A{row}'] = f'{service_order.service.name}'
@@ -532,9 +560,75 @@ class InvoiceGenerationViewGenerate(View):
                 sheet[f'D{row}'].alignment = alignment
                 sheet[f'D{row}'].border = thin_border
                 sheet[f'D{row}'] = f'{total}'
-
-
                 row += 1
+
+        сonsumables = OrderConsumables.objects.filter(order_id=order_id)
+        if сonsumables:
+            sheet[f'A{row}'].font = font
+            sheet[f'A{row}'].border = thin_border
+            sheet[f'A{row}'].alignment = alignment
+            sheet[f'A{row}'].fill = fill
+            sheet[f'B{row}'].fill = fill
+            sheet[f'C{row}'].fill = fill
+            sheet[f'D{row}'].fill = fill
+
+            sheet[f'A{row}'] = f'Расходные материалы'
+            row += 1
+
+            for consumable in сonsumables:
+                sheet[f'A{row}'].font = font_2
+                sheet[f'A{row}'].border = thin_border
+                sheet[f'A{row}'].fill = fill_2
+                sheet[f'A{row}'] = f'{consumable.consumable.name}'
+                sheet[f'B{row}'].fill = fill_2
+                sheet[f'B{row}'].border = thin_border
+                sheet[f'B{row}'] = f'{consumable.count}'
+
+                sheet[f'C{row}'].fill = fill_2
+                sheet[f'C{row}'].border = thin_border
+                sheet[f'C{row}'].alignment = alignment
+                sheet[f'C{row}'] = f'{consumable.consumable.price}'
+
+                total = consumable.count * consumable.consumable.price
+                sheet[f'D{row}'].fill = fill_2
+                sheet[f'D{row}'].alignment = alignment
+                sheet[f'D{row}'].border = thin_border
+                sheet[f'D{row}'] = f'{total}'
+                row += 1
+
+        sheet[f'A{row}'].font = font_bold
+        sheet[f'A{row}'].border = thin_border
+        sheet[f'A{row}'].alignment = alignment
+        sheet[f'A{row}'].fill = fill
+        sheet[f'B{row}'].fill = fill
+        sheet[f'C{row}'].fill = fill_2
+        sheet[f'C{row}'].font = font_bold_2
+        sheet[f'D{row}'].fill = fill_2
+        sheet[f'D{row}'].font = font_bold_2
+        sheet[f'A{row}'] = f'Способ оплаты'
+        sheet[f'C{row}'] = '1 ед'
+        sheet[f'D{row}'] = 'ИТОГО (руб):'
+        row += 1
+        sheet[f'A{row}'].font = font_bold_2
+        sheet[f'A{row}'].border = thin_border
+        sheet[f'A{row}'].fill = fill_2
+        sheet[f'B{row}'].fill = fill_2
+        sheet[f'B{row}'].border = thin_border
+        sheet[f'C{row}'].fill = fill_2
+        sheet[f'C{row}'].border = thin_border
+        sheet[f'D{row}'].font = font_bold_2
+        sheet[f'D{row}'].fill = fill_2
+        sheet[f'D{row}'].border = thin_border
+
+        sheet[f'A{row}'] = f'Карта Optima Bank Visa: 4169 6151 8154 5793 (по номеру +996-500-920-908)'
+        sheet[f'C{row}'] = ''
+        sheet[f'D{row}'] = f'{order_obj.amount}'
+        row += 1
+        sheet[f'A{row}'].font = font_2
+        sheet[f'A{row}'].border = thin_border
+        sheet[f'A{row}'].fill = fill_2
+        sheet[f'A{row}'] = f'Золотая Корона: Камалетдинова Алла Ивановна, КР, г. Бишкек'
+
 
         # Save the workbook
         new_file_path = f'excel/blank{order_id}.xlsx'

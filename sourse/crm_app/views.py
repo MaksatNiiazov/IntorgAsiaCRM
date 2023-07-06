@@ -3,9 +3,10 @@ import calendar
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm
+from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
+    ConsumablesForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
-    ServiceType, ServiceOrder, EmployerOrder
+    ServiceType, ServiceOrder, EmployerOrder, Consumables
 from datetime import date, timedelta, datetime
 from django.db.models import Sum, Count
 
@@ -133,7 +134,7 @@ class OrderCreateView(CreateView):
         return redirect('invoice_generation', pk=order.pk)
 
 
-class OrderServiceCreateView(CreateView):
+class AddServiceView(CreateView):
     template_name = 'crmapp/service_add.html'
     form_class = AddServiceForm
 
@@ -141,53 +142,42 @@ class OrderServiceCreateView(CreateView):
         order = form.cleaned_data['order']
         service = form.cleaned_data['service']
         count = form.cleaned_data['count']
-        employer = form.cleaned_data['employer']
         update_order = Order.objects.get(id=order.pk)
-        emp_serv = OrderService.objects.get_or_create(order=order, service=service, employer=employer)[0]
-        worker = CustomUser.objects.get(id=employer.pk)
-        client = CustomUser.objects.get(id=order.client_id)
-        emp_serv.confirmed_switch()
+        service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
+        client = update_order.client
 
-        old_count = emp_serv.count or 0
+        old_count = service_order.count or 0
         old_amount = old_count * service.price or 0
         old_cost = old_count * service.cost_price or 0
         new_count = count
         new_amount = count * service.price
         new_cost = count * service.cost_price
 
-        update_order.count -= old_count
-        update_order.amount -= old_amount
-        update_order.cost_price -= old_cost
-        update_order.save()
-        emp_serv.count -= old_count
-        emp_serv.salary -= old_count * service.price
-        emp_serv.save()
-        worker.money -= old_cost
-        worker.services_count -= old_count
-        worker.save()
-        client.money -= old_amount
-        client.services_count -= old_count
-        client.save()
+        # Вычисление изменений
+        count_diff = new_count - old_count
+        amount_diff = new_amount - old_amount
+        cost_diff = new_cost - old_cost
 
+        # Обновление полей
+        update_order.count += count_diff
+        update_order.amount += amount_diff
+        update_order.cost_price += cost_diff
 
-        update_order.count += new_count
-        update_order.amount += new_amount
-        update_order.cost_price += new_cost
-        update_order.save()
-        emp_serv.count += new_count
-        emp_serv.salary += new_count * service.price
-        emp_serv.save()
-        worker.money += new_cost
-        worker.services_count += new_count
-        worker.save()
-        client.money += new_amount
-        client.services_count += new_count
-        client.save()
+        service_order.count += count_diff
+        service_order.amount += amount_diff
 
-        return redirect('order_detail', pk=order.pk)
+        client.money += amount_diff
+
+        # Сохранение изменений
+        update_order.save(update_fields=['count', 'amount', 'cost_price'])
+        service_order.save(update_fields=['count', 'amount'])
+        client.save(update_fields=['money'])
+        return redirect('invoice_generation', pk=order.pk)
 
     def form_invalid(self, form):
+        order = form.cleaned_data['order']
         print(form.errors)
+        return redirect('invoice_generation', pk=order.pk)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -271,6 +261,29 @@ class ServiceUpdateView(UpdateView):
 class ServiceDeleteView(DeleteView):
     model = Service
     success_url = '/services/'
+
+
+class ConsumablesListView(ListView):
+    model = Consumables
+    template_name = 'crmapp/consumable_list.html'
+
+
+class ConsumablesCreateView(CreateView):
+    model = Consumables
+    form_class = ConsumablesForm
+    success_url = '/consumables/'
+
+
+class ConsumablesUpdateView(UpdateView):
+    model = Consumables
+    form_class = ConsumablesForm
+    template_name = 'crmapp/consumable_list.html'
+    success_url = '/consumables/'
+
+
+class ConsumablesDeleteView(DeleteView):
+    model = Consumables
+    success_url = '/consumables/'
 
 
 class EmployerListView(ListView):

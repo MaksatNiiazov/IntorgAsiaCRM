@@ -10,6 +10,3 @@ admin.site.register(EmployerProduct)
 admin.site.register(ProductInEP)
 admin.site.register(SetOfServices)
 admin.site.register(ServiceInSet)
-
-# SetOfServices
-# ServiceInSet

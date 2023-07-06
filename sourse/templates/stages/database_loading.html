@@ -3,8 +3,13 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
 {% endblock %}
+{% block title %}
+Регистрация товара
+{% endblock %}
+{% block page_title %}
+Регистрация товара
+{% endblock %}
 {% block content %}
-<h1>Регистрация товара</h1>
     <br>
       <ul class="messages">
     {% for message in messages %}

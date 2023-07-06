@@ -22,6 +22,9 @@
         <th data-label="Цена">Цена</th>
         <th data-label="Себестоимость">Себестоимость</th>
         <th data-label="До/После(черты)">До/После(черты)</th>
+        <th data-label="Скидки">Скидки</th>
+        <th data-label="Разовые">Разовые</th>
+
         <th data-label="Применить">Применить</th>
         <th data-label="Удалить">Удалить</th>
     </tr>
@@ -53,6 +56,16 @@
               </label>
               <label>
                   <input type="radio" name="gender" value="0">
+              </label>
+          </td>
+            <td data-label="Скидки">
+              <label>
+                  <input type="checkbox" name="discount">
+              </label>
+          </td>
+        <td data-label="Разовын">
+              <label>
+                  <input type="checkbox" name="single">
               </label>
           </td>
         <td><input type="submit" value="Добавить"></td>
@@ -97,6 +110,22 @@
                           {% endif %}
                          value="False">
               </label>
+          </td>
+            <td data-label="Скидки">
+              <label>
+                  <input type="checkbox" name="discount"
+                  {% if service.discount %} checked {% endif %}
+                  >
+              </label>
+
+          </td>
+      <td data-label="Разовые">
+              <label>
+                  <input type="checkbox" name="single"
+                  {% if service.single %} checked {% endif %}
+                  >
+              </label>
+
           </td>
 
         <td><input type="submit" value="Изменить"></td>

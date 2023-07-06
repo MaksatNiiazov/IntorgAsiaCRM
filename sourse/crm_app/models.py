@@ -80,8 +80,13 @@ class Service(models.Model):
     type = models.ForeignKey(ServiceType, on_delete=models.DO_NOTHING, blank=True, null=True, related_name='services')
     name = models.CharField(max_length=124)
     before_defective = models.BooleanField(default=False)
+    discount = models.BooleanField(default=True)
     price = models.IntegerField()
     cost_price = models.DecimalField(max_digits=5, decimal_places=2)
+    single = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['type']
 
     def __str__(self):
         return f'{self.name}'
@@ -114,6 +119,14 @@ class ServiceOrder(models.Model):
     amount = models.IntegerField(default=0)
 
 
+class OrderConsumables(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    consumable = models.ForeignKey(Consumables, on_delete=models.PROTECT)
+    count = models.IntegerField(default=0)
+    cost_price = models.IntegerField(default=0)
+    price = models.IntegerField(default=0)
+
+
 class EmployerOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_orders')
     user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='employer_orders')
@@ -141,7 +154,7 @@ class CashboxOperation(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     category = models.ForeignKey(CashboxCategory, on_delete=models.PROTECT)
     money = models.IntegerField()
-    comment = models.CharField(max_length=255)
+    comment = models.CharField(max_length=255, blank=True, null=True)
     cashbox_from = models.ForeignKey(Cashbox, on_delete=models.PROTECT, blank=True, null=True,
                                      related_name='cashbox_from')
     cashbox_to = models.ForeignKey(Cashbox, on_delete=models.PROTECT, blank=True, null=True, related_name='cashbox_to')

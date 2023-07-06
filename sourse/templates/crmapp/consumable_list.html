@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Расходные материалы
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Расходные материалы
+{% endblock %}
+
+{% block content %}
+<table>
+  <thead>
+    <tr>
+        <th data-label="Расходник">Расходник</th>
+        <th data-label="Код">Код</th>
+        <th data-label="Цена">Цена</th>
+        <th data-label="Себестоимость">Себестоимость</th>
+        <th data-label="Кол-во">Кол-во</th>
+        <th data-label="Применить">Применить</th>
+        <th data-label="Удалить">Удалить</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <form method="post" action="{% url 'consumable_create' %}">
+        {% csrf_token %}
+        <td data-label="Расходник"><label>
+            <input type="text" placeholder="Название" name="name" required>
+        </label></td>
+        <td></td>
+        <td data-label="Цена"><label>
+            <input type="number" placeholder="Цена" name="price" required>
+        </label></td>
+        <td data-label="Себестоимость"><label>
+            <input type="number" step="0.01" placeholder="Себестоимость" name="cost_price" required>
+        </label></td>
+        <td data-label="Себестоимость"><label>
+            <input type="number" placeholder="Кол-во" name="count" required>
+        </label></td>
+        <td><input type="submit" value="Добавить"></td>
+      </form>
+    </tr>
+    {% for consumable in consumables_list %}
+    <tr>
+      <form method="post" action="{% url 'consumable_update' consumable.id %}">
+        {% csrf_token %}
+
+        <td data-label="Расходник"><label>
+            <input type="text" value="{{ consumable.name }}" name="name" required>
+        </label></td>
+        <td data-label="Код">{{ consumable.id }}</td>
+        <td data-label="Цена"><label>
+            <input type="number" value="{{ consumable.price }}" name="price" required>
+        </label></td>
+        <td data-label="Себестоимость"><label>
+            <input type="number" value="{{ consumable.cost_price }}" name="cost_price" required>
+        </label></td>
+        <td data-label="Себестоимость"><label>
+            <input type="number" value="{{ consumable.count }}" name="count" required>
+        </label></td>
+        <td><input type="submit" value="Изменить"></td>
+      </form>
+      <form action="{% url 'consumable_delete' consumable.id %}" method="post">
+        {% csrf_token %}
+        <td><input type="submit" value="Удалить"></td>
+      </form>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include 'includes/paginate.html' %}
+{% endblock %}

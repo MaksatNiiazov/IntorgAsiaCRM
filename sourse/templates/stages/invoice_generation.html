@@ -1,8 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block css %}
-    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+<link rel="stylesheet" href="{% static 'css/tables.css' %}">
     <style>
+    .top_block{
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
     .order_info {
         border: 1px solid #ccc;
         padding: 10px;
@@ -31,16 +37,23 @@
 </style>
 
 {% endblock %}
-
+{% block title %}
+Создание счета
+{% endblock %}
+{% block page_title %}
+Создание счета
+{% endblock %}
 {% block content %}
 <form action="{% url 'invoise_create' order.id %}" method="post">
     {% csrf_token %}
         <input type="submit" value="Скачать Счет">
     </form>
     <div class="invoice-container">
-            <h5>Информация о заказе</h5>
+    <div class="top_block">
 
     <div class="order_info">
+                    <h5>Информация о заказе</h5>
+
         <h2>Заказ №{{ order.id }} · {{ order.client }}</h2>
         <p><b>Товар: </b><span>{{ order.name }}</span></p>
         <p><b>Общ. кол-во: </b><span>{{ order.count }}</span></p>
@@ -49,6 +62,38 @@
         <p><b>К оплате: </b><span>{{ order.amount }}</span></p>
 
 
+    </div>
+    <div class="addservice">
+      <h4>Добавить услугу</h4>
+        <form action="{% url 'add_service'  %}" method="post">
+        {% csrf_token %}
+            <input type="hidden" value="{{ order.id }}" name="order">
+            <label for=""></label><select name="service" id="">
+                {% for service in all_services %}
+
+                    <option value="{{ service.id }}">{{ service.name }} {{ service.price }}</option>
+                {% endfor %}
+            </select>
+            <label>
+                <input type="number" name="count" placeholder="кол-во">
+            </label>
+            <input type="submit" value="Добавить">
+        </form>
+        <h4>Добавить расхлдный материал</h4>
+        <form action="{% url 'add_consumables' %}" method="post">
+        {% csrf_token %}
+            <input type="hidden" value="{{ order.id }}" name="order">
+            <label for=""></label><select name="consumable" id="">
+                {% for consumable in consumables %}
+                    <option value="{{ consumable.id }}">{{ consumable.name }} | {{ consumable.count }}</option>
+                {% endfor %}
+            </select>
+            <label>
+                <input type="number" name="count" placeholder="кол-во">
+            </label>
+            <input type="submit" value="Добавить">
+        </form>
+    </div>
     </div>
     <div class="services">
             <h5>Информация об услугах</h5>
@@ -79,6 +124,31 @@
         </tr>
       {% endfor %}
     {% endfor %}
+  </tbody>
+</table>
+    </div>
+    <div class="consumables">
+            <h5>Расходные материалы</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th data-label="Сервис">Сервис</th>
+      <th data-label="Тип">Тип</th>
+      <th data-label="Цена за ед.">Цена за ед.</th>
+      <th data-label="Стоимость">Стоимость</th>
+    </tr>
+  </thead>
+  <tbody>
+
+    {% for consumable in consumables_in_order %}
+        <tr>
+          <td data-label="Сервис">{{ consumable.consumable.name }}</td>
+          <td data-label="Тип">{{ consumable.count }}</td>
+          <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
+          <td data-label="Стоимость">{{ consumable.price }}</td>
+        </tr>
+      {% endfor %}
   </tbody>
 </table>
     </div>

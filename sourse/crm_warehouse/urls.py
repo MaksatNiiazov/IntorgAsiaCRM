@@ -20,6 +20,7 @@ urlpatterns = [
     path('invoice_generation/<int:pk>/', InvoiceGenerationView.as_view(), name='invoice_generation'),
     path('invoise_generation/create/<order_id>/', InvoiceGenerationViewGenerate.as_view(), name='invoise_create'),
     path('set_of_service/create/<int:pk>/', SetOfServiceCreateView.as_view(), name='set_of_service_create'),
+    path('add_consumables/', AddConsumables.as_view(), name='add_consumables'),
 
     path('dispatch/<int:pk>/', DispatchView.as_view(), name='dispatch'),
     path('product/decrease/<int:pk>/', DecreaseProductCountView.as_view(), name='decrease_product_count'),

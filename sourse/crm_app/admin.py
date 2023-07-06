@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Service, OrderService, Cashbox, Order, ModelChangeLog, CashboxCategory, CashboxOperation, \
-    ServiceOrder, ServiceType
+    ServiceOrder, ServiceType, Consumables, OrderConsumables
 # Register your models here.
 
 admin.site.register(ServiceType)
@@ -12,3 +12,5 @@ admin.site.register(ModelChangeLog)
 admin.site.register(CashboxCategory)
 admin.site.register(CashboxOperation)
 admin.site.register(ServiceOrder)
+admin.site.register(Consumables)
+admin.site.register(OrderConsumables)

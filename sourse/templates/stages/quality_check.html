@@ -22,6 +22,12 @@
     }
     </style>
 {% endblock %}
+{% block title %}
+Процессы ОТК
+{% endblock %}
+{% block page_title %}
+Процессы ОТК
+{% endblock %}
 {% block content %}
 
     <ul class="messages">
@@ -59,7 +65,7 @@
                         <td data-label="Цвет">{{ product.color }}</td>
                         <td data-label="Кол-во">{{ product.actual_quantity }}</td>
                         <td data-label="Работник">
-                            <label for="user">Рабочий:</label>
+                            <label for="user"></label>
                             <select name="user" id="user">
                                 {% for worker in workers %}
                                 <option value="{{ worker.id }}">{{ worker }}</option>
