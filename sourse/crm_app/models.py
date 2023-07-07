@@ -29,6 +29,7 @@ class Order(models.Model):
     client = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     defective = models.IntegerField(default=0, blank=True)
     good_quality = models.IntegerField(default=0, blank=True)
+    discount = models.IntegerField(default=0)
 
     def calculate_price(self):
         order_services = OrderService.objects.filter(order=self)
@@ -93,9 +94,9 @@ class Service(models.Model):
 
 
 class OrderService(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    employer = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    service = models.ForeignKey(Service, on_delete=models.DO_NOTHING)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_service')
+    employer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='order_service')
+    service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, related_name='order_service')
     date = models.DateField(default=timezone.now)
     count = models.IntegerField(default=0)
     salary = models.IntegerField(default=0)

@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('employers/', EmployerListView.as_view(), name='employer_list'),
     path('employer/<int:pk>/', EmployerDetailView.as_view(), name='employer_detail'),
-    path('employer/<int:pk>/order/<int:order_id>/', EmployerDetailView.as_view(), name='employer_order_detail'),
+    path('employer/<int:pk>/order/<int:order_id>/', EmployerOrderView.as_view(), name='employer_order_detail'),
     path('employer/pay_a_salary/<int:pk>/', PayASalaryView.as_view(), name='pay_a_salary'),
     path('clients/', ClientListView.as_view(), name='client_list'),
     path('client/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),

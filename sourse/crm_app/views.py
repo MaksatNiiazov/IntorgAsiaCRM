@@ -310,12 +310,27 @@ class PayASalaryView(View):
     def post(self, request, pk):
         emp_order = EmployerOrder.objects.get(id=pk)
         user = CustomUser.objects.get(id=emp_order.user.id)
-        user.money -= emp_order.salary
-        emp_order.salary -= emp_order.salary
+        num = int(self.request.POST.get('num'))
+        user.money -= num
+        emp_order.salary -= num
         user.save()
         emp_order.save()
 
         return redirect('employer_detail', emp_order.user.id)
+
+
+class EmployerOrderView(ListView):
+    model = OrderService
+    template_name = 'crmapp/employer_order.html'
+
+    def get_queryset(self):
+        return OrderService.objects.filter(order_id=self.kwargs['order_id'], employer=self.kwargs['pk'])
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(EmployerOrderView, self).get_context_data()
+        context['order_id'] = self.kwargs['order_id']
+        context['user'] = CustomUser.objects.get(id=self.kwargs['pk'])
+        return context
 
 
 class ClientListView(ListView):

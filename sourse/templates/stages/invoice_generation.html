@@ -50,20 +50,27 @@
     </form>
     <div class="invoice-container">
     <div class="top_block">
-
     <div class="order_info">
-                    <h5>Информация о заказе</h5>
-
+        <h5>Информация о заказе</h5>
         <h2>Заказ №{{ order.id }} · {{ order.client }}</h2>
         <p><b>Товар: </b><span>{{ order.name }}</span></p>
         <p><b>Общ. кол-во: </b><span>{{ order.count }}</span></p>
         <p><b>К отправке: </b><span>{{ order.good_quality }}</span></p>
         <p><b>Брак: </b><span>{{ order.defective }}</span></p>
         <p><b>К оплате: </b><span>{{ order.amount }}</span></p>
-
-
     </div>
+
     <div class="addservice">
+     <form action="{% url 'apply_discount' %}" method="post">
+            <h5>Скидка клиента {{ order.client.discount.percent }} %</h5>
+            <h4>Активная скидка заказа:</h4>
+            {% csrf_token %}
+            <label>
+                <input type="hidden" value="{{ order.id }}" name="order">
+                <input type="text" value="{{ order.discount }}" name="percent">
+            </label>
+            <input type="submit" value="%">
+        </form>
       <h4>Добавить услугу</h4>
         <form action="{% url 'add_service'  %}" method="post">
         {% csrf_token %}

@@ -15,7 +15,6 @@ from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
-
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
 from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder
@@ -66,6 +65,7 @@ class AcceptanceView(View):
             order.month = date.today().month
             order.year = date.today().year
             order.day = date.today().day
+            order.discount = client.discount
             order.save()
             return redirect('dashboard')
 
@@ -282,7 +282,6 @@ class QualityUpdateView(CreateView):
         return context
 
     def form_valid(self, form):
-        print(self.request.POST.getlist('sets'))
         product_id = self.request.POST.get('product')
         product = Product.objects.get(id=product_id)
         product.in_work = True
@@ -374,6 +373,8 @@ class DefectiveCheckUpdateView(UpdateView):
 
             emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
+            # acceptance = Service.objects.get_or_create()
+
             for service_id in services:
                 service = Service.objects.get(id=service_id.service.id)
                 order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
@@ -385,7 +386,13 @@ class DefectiveCheckUpdateView(UpdateView):
                     new_count = product.good_quality + product.defective
                 else:
                     new_count = product.good_quality
-                new_amount = new_count * service.price
+                if service.discount:
+                    discount = client.discount.percent
+                    if not discount:
+                       discount = 0
+                    new_amount = (new_count * service.price / 100) * (100 - client.discount.percent)
+                else:
+                    new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
 
                 emp_order.salary += new_cost
@@ -450,8 +457,26 @@ class InvoiceGenerationView(DetailView):
 
         for product in products:
             total_count += product.actual_quantity
-
         return total_count
+
+
+class ApplyDiscountView(View):
+    def post(self, request):
+        order = Order.objects.get(id=self.request.POST.get('order'))
+        percent = int(self.request.POST.get('percent'))
+        services = ServiceOrder.objects.filter(order=order)
+        new_amount = 0
+        for sirvice in services:
+            if sirvice.service.discount:
+                new_amount += (sirvice.amount / 100) * (100 - percent)
+            else:
+                new_amount += sirvice.amount
+
+            order.amount = round(new_amount)
+            order.discount = percent
+            order.save()
+
+        return redirect('invoice_generation', order.id)
 
 
 class AddConsumables(View):
@@ -518,7 +543,6 @@ class InvoiceGenerationViewGenerate(View):
         thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
                              bottom=Side(style='thin'))
         fill = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
-        fill_bold = PatternFill(start_color='000000', end_color='000000', fill_type="solid")
 
         alignment = Alignment(horizontal='center')
 
@@ -528,7 +552,6 @@ class InvoiceGenerationViewGenerate(View):
 
         font_2 = Font(color="000000")
         font_bold_2 = Font(color="000000", bold=True)
-
 
         for type_name, group in groupby(service_orders, key=lambda x: x.service.type.type):
 
@@ -606,7 +629,7 @@ class InvoiceGenerationViewGenerate(View):
         sheet[f'D{row}'].fill = fill_2
         sheet[f'D{row}'].font = font_bold_2
         sheet[f'A{row}'] = f'Способ оплаты'
-        sheet[f'C{row}'] = '1 ед'
+        sheet[f'C{row}'] = ''
         sheet[f'D{row}'] = 'ИТОГО (руб):'
         row += 1
         sheet[f'A{row}'].font = font_bold_2
@@ -628,7 +651,6 @@ class InvoiceGenerationViewGenerate(View):
         sheet[f'A{row}'].border = thin_border
         sheet[f'A{row}'].fill = fill_2
         sheet[f'A{row}'] = f'Золотая Корона: Камалетдинова Алла Ивановна, КР, г. Бишкек'
-
 
         # Save the workbook
         new_file_path = f'excel/blank{order_id}.xlsx'

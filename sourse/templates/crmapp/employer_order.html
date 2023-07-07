@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+    {{ user }} / Заказ №{{ order_id }}
+{% endblock %}
+
+{% block content %}
+
+    <table>
+        <thead>
+            <tr>
+                <th data-label="Детально">Детально</th>
+                <th data-label="Услуга">Услуга</th>
+                <th data-label="Количество">Количество</th>
+                <th data-label="Дата">Дата</th>
+            </tr>
+        </thead>
+        <tbody>
+             {% for object in object_list %}
+                <tr>
+                    <td data-label="Детально">
+                        <a href="#">
+                            <button>Детали</button>
+                        </a>
+
+                    </td>
+                    <td data-label="Услуга">{{ object.service.name }}</td>
+                    <td data-label="Количество">{{ object.count }}</td>
+                    <td data-label="Дата">{{ object.date }}</td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
+{% endblock %}

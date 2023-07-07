@@ -2,25 +2,30 @@
 {% load static %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <style>
+    .user_info{
+        border: 1px solid black;
+        padding: 10px;
+        display: inline-block;
+        min-width: 300px;
+    }
+    .user_flex{
+        display: flex;
+        justify-content: space-between;
+    }
+    </style>
+{% endblock %}
+{% block page_title %}
+{{ user }}
 {% endblock %}
 
 {% block content %}
- <div class="">
-    <div><p>{{ user.username }}</p></div>
-  </div>
-  <div class="">
-    <div><p>{{ user.first_name }} {{ user.last_name }}</p></div>
-  </div>
-  <div class="">
-    <div><p>{{ user.money }}</p> </div>
-  </div>
-  <div class="">
-    <div><p>{{ user.services_count }}</p> </div>
-  </div>
-  <div class="">
-    <div><p>{{ user.joined_date }}</p> </div>
-  </div>
-
+    <div class="user_info">
+        <div class="user_flex"><b>Номер телефона:</b> <span>{{ user.username }}</span></div>
+        <div class="user_flex"><b>Имя</b> <span>{{ user.first_name }} {{ user.last_name }}</span></div>
+        <div class="user_flex"><b>Зарплата</b> <span>{{ user.money }}</span> </div>
+        <div class="user_flex"><b>Количество услуг</b> <span>{{ user.services_count }}</span> </div>
+    </div>
 
     <table>
       <thead>
@@ -43,7 +48,10 @@
                 {% else %}
                     <form action="{% url 'pay_a_salary' order.id %}" method="post">
                     {% csrf_token %}
-                    <input type="submit" value="Выплатить">
+                        <label>
+                            <input type="number" value="{{ order.salary }}" name="num" max="{{ order.salary }}" min="1">
+                        </label>
+                        <input type="submit" value="Выплатить">
                 </form>
                 {% endif %}
 
