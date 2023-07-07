@@ -10,6 +10,8 @@ from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, Ca
 from datetime import date, timedelta, datetime
 from django.db.models import Sum, Count
 
+from crm_warehouse.models import ProductInEP
+
 
 class StatisticView(ListView):
     model = Order
@@ -320,11 +322,11 @@ class PayASalaryView(View):
 
 
 class EmployerOrderView(ListView):
-    model = OrderService
+    model = ProductInEP
     template_name = 'crmapp/employer_order.html'
 
     def get_queryset(self):
-        return OrderService.objects.filter(order_id=self.kwargs['order_id'], employer=self.kwargs['pk'])
+        return ProductInEP.objects.filter(ep__order_id=self.kwargs['order_id'], user=self.kwargs['pk'])
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(EmployerOrderView, self).get_context_data()

@@ -44,9 +44,9 @@ class ProductInOrder(models.Model):
 
 
 class ProductInEP(models.Model):
-    ep = models.ForeignKey(EmployerProduct, on_delete=models.CASCADE, related_name='products')
+    ep = models.ForeignKey(EmployerProduct, on_delete=models.CASCADE, related_name='employer_products')
     user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, related_name='employer_products')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='emp')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='employer_products')
     count = models.IntegerField(default=0)
     date = models.DateField(default=timezone.now)
 

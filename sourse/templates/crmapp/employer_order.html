@@ -12,7 +12,7 @@
     <table>
         <thead>
             <tr>
-                <th data-label="Детально">Детально</th>
+                <th data-label="ШК">ШК</th>
                 <th data-label="Услуга">Услуга</th>
                 <th data-label="Количество">Количество</th>
                 <th data-label="Дата">Дата</th>
@@ -21,13 +21,21 @@
         <tbody>
              {% for object in object_list %}
                 <tr>
-                    <td data-label="Детально">
-                        <a href="#">
-                            <button>Детали</button>
-                        </a>
-
+                    <td data-label="Услуга">{{ object.product.name }} ({{ object.product.color }}/{{ object.product.size }})</td>
+                    <td>
+{#                        <select>#}
+                        {% for service in object.ep.order.order_service.all %}
+                            <p>{{ service.service }}
+                                {% if service.before_defective %}
+                                 - {{ object.product.count }}
+                                {% else %}
+                                 - {{ object.product.good_quality }}
+                                {% endif %}
+                            </p>
+                        {% endfor %}
+{#                    </select>#}
                     </td>
-                    <td data-label="Услуга">{{ object.service.name }}</td>
+
                     <td data-label="Количество">{{ object.count }}</td>
                     <td data-label="Дата">{{ object.date }}</td>
                 </tr>

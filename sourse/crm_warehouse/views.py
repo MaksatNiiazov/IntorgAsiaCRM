@@ -65,7 +65,9 @@ class AcceptanceView(View):
             order.month = date.today().month
             order.year = date.today().year
             order.day = date.today().day
-            order.discount = client.discount
+            if order.discount:
+                order.discount = client.discount.percent
+            order.discount = 0
             order.save()
             return redirect('dashboard')
 
@@ -349,6 +351,7 @@ class DefectiveCheckUpdateView(UpdateView):
         worker = CustomUser.objects.get(id=employer_id)
         client = CustomUser.objects.get(id=order.client_id)
         product = self.object
+
         if not product.defective_check:
             good_quality = product.actual_quantity - form.cleaned_data['defective']
             product.good_quality = good_quality
@@ -356,7 +359,6 @@ class DefectiveCheckUpdateView(UpdateView):
             product.count = good_quality
             product.defective_check = True
             product.save()
-
             order_items = Product.objects.filter(order=order)
             total_good_quality = sum(item.good_quality for item in order_items)
             total_defective = sum(item.defective for item in order_items)
@@ -364,6 +366,8 @@ class DefectiveCheckUpdateView(UpdateView):
             order.defective = total_defective
             order.count = total_good_quality + total_defective
             order.save()
+            product_in_ep = ProductInEP.objects.get(product=product, user_id=worker.id)
+
             product_in_order = ProductInOrder.objects.create(
                 order=order,
                 product=product,
@@ -387,10 +391,10 @@ class DefectiveCheckUpdateView(UpdateView):
                 else:
                     new_count = product.good_quality
                 if service.discount:
-                    discount = client.discount.percent
-                    if not discount:
-                       discount = 0
-                    new_amount = (new_count * service.price / 100) * (100 - client.discount.percent)
+                    discount = 0
+                    if client.discount:
+                       discount = client.discount.percent
+                    new_amount = (new_count * service.price / 100) * (100 - discount)
                 else:
                     new_amount = new_count * service.price
                 new_cost = new_count * service.cost_price
@@ -414,12 +418,14 @@ class DefectiveCheckUpdateView(UpdateView):
                 client.money += new_amount
                 client.services_count += new_count
 
+                product_in_ep.count = new_count
+
                 update_order.save()
                 emp_order.save()
                 emp_serv.save()
                 worker.save()
                 client.save()
-
+                product_in_ep.save()
             return redirect('quality_check', self.object.order.id)
 
         else:
