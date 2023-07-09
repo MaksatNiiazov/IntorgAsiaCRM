@@ -4,7 +4,6 @@ import time
 from datetime import date
 from itertools import groupby
 from urllib.parse import quote
-
 import pandas as pd
 from django.db.models import Sum
 from django.http import HttpResponse
@@ -241,6 +240,7 @@ class ProductUpdateView(UpdateView):
     def form_valid(self, form):
 
         product = self.object
+        order = self.object.order
         product.actual_quantity = form.cleaned_data['actual_quantity']
         product.good_quality = form.cleaned_data['actual_quantity']
         product.comment = form.cleaned_data['comment']
@@ -296,6 +296,7 @@ class QualityUpdateView(CreateView):
         )[0]
         emp_product.count += product.good_quality
         emp_product.save()
+
         ProductInEP.objects.get_or_create(
             ep=emp_product,
             product=product,
@@ -310,8 +311,9 @@ class QualityUpdateView(CreateView):
 
 class SetOfServiceCreateView(View):
     def get(self, request, pk):
-        services_before = Service.objects.filter(before_defective=True, single=False)
-        services_after = Service.objects.filter(before_defective=False, single=False)
+        services = Service.objects.filter(single=False, acceptance=False)
+        services_before = services.filter(before_defective=True)
+        services_after = services.filter(before_defective=False)
         sets = SetOfServices.objects.filter(order_id=pk)
 
         context = {
@@ -356,7 +358,7 @@ class DefectiveCheckUpdateView(UpdateView):
             good_quality = product.actual_quantity - form.cleaned_data['defective']
             product.good_quality = good_quality
             product.defective = form.cleaned_data['defective']
-            product.count = good_quality
+            product.count = good_quality + product.defective
             product.defective_check = True
             product.save()
             order_items = Product.objects.filter(order=order)
@@ -377,7 +379,6 @@ class DefectiveCheckUpdateView(UpdateView):
 
             emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
-            # acceptance = Service.objects.get_or_create()
 
             for service_id in services:
                 service = Service.objects.get(id=service_id.service.id)
@@ -447,7 +448,7 @@ class InvoiceGenerationView(DetailView):
 
         context['services'] = ServiceOrder.objects.filter(order_id=self.object.id)
         order = self.object
-        service_orders = order.serviceorder_set.order_by('service__type')  # Access related ServiceOrder objects
+        service_orders = order.serviceorder_set.order_by('service__type')
         context['service_orders'] = service_orders
         context['workers'] = CustomUser.objects.filter(user_type='worker')
         total_count = self.total_count()
@@ -488,22 +489,28 @@ class ApplyDiscountView(View):
 class AddConsumables(View):
     def post(self, request):
         order = self.request.POST.get('order')
-        order_obj = Order.objects.get(order=order)
+        order_obj = Order.objects.get(id=order)
         consumable = Consumables.objects.get(id=self.request.POST.get('consumable'))
 
         order_consumable = OrderConsumables.objects.get_or_create(order_id=order, consumable_id=consumable.id)[0]
         count = int(self.request.POST.get('count'))
-        price = consumable.price * count
-        cost_price = consumable.cost_price * count
-        order_consumable.count = count
-        order_consumable.price = price
-        order_consumable.cost_price = cost_price
-        order_consumable.save()
-        order_obj.amount += price
-        order_obj.cost_price += cost_price
-        order_obj.save()
-
-        return redirect('invoice_generation', order)
+        cons_count = consumable.count - count
+        if cons_count < 0:
+            messages.error(self.request, f"{consumable.name} не достаточно на складе")
+            return redirect("invoice_generation", order)
+        else:
+            consumable.count -= count
+            consumable.save()
+            price = consumable.price * count
+            cost_price = consumable.cost_price * count
+            order_consumable.count = count
+            order_consumable.price = price
+            order_consumable.cost_price = cost_price
+            order_consumable.save()
+            order_obj.amount += price
+            order_obj.cost_price += cost_price
+            order_obj.save()
+            return redirect('invoice_generation', order)
 
 
 class InvoiceGenerationViewGenerate(View):
@@ -591,8 +598,9 @@ class InvoiceGenerationViewGenerate(View):
                 sheet[f'D{row}'] = f'{total}'
                 row += 1
 
-        сonsumables = OrderConsumables.objects.filter(order_id=order_id)
-        if сonsumables:
+        consumables = OrderConsumables.objects.filter(order_id=order_id)
+
+        if consumables:
             sheet[f'A{row}'].font = font
             sheet[f'A{row}'].border = thin_border
             sheet[f'A{row}'].alignment = alignment
@@ -604,7 +612,7 @@ class InvoiceGenerationViewGenerate(View):
             sheet[f'A{row}'] = f'Расходные материалы'
             row += 1
 
-            for consumable in сonsumables:
+            for consumable in consumables:
                 sheet[f'A{row}'].font = font_2
                 sheet[f'A{row}'].border = thin_border
                 sheet[f'A{row}'].fill = fill_2
@@ -635,7 +643,7 @@ class InvoiceGenerationViewGenerate(View):
         sheet[f'D{row}'].fill = fill_2
         sheet[f'D{row}'].font = font_bold_2
         sheet[f'A{row}'] = f'Способ оплаты'
-        sheet[f'C{row}'] = ''
+        sheet[f'C{row}'] = f'скидка {order_obj.discount}%'
         sheet[f'D{row}'] = 'ИТОГО (руб):'
         row += 1
         sheet[f'A{row}'].font = font_bold_2
@@ -743,6 +751,20 @@ class UnpackingNextStage(View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         products = order.products.all()
+        order_items = Product.objects.filter(order=order)
+        count = sum(item.actual_quantity for item in order_items)
+        order.count = count
+        order.save()
+        acceptance = Service.objects.get(acceptance=True)
+        salary = acceptance.price * order.count
+        order_service = OrderService(order=order, service=acceptance, employer_id=3, count=order.count, salary=salary)
+        service_order = ServiceOrder(order=order, service=acceptance, count=order.count, amount=salary)
+        order_service.save()
+        service_order.save()
+        if acceptance.discount:
+            order.amount += (salary / 100) * (100 - order.discount)
+        else:
+            order.amount += salary
 
         all_confirmed = all(product.confirmation for product in products)
 

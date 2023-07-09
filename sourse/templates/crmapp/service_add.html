@@ -3,14 +3,17 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/add_service.css' %}">
 {% endblock %}
+{% block page_title %}
+Добавить услугу
+{% endblock %}
 {% block content %}
-<form method="post" class="service-form">
+<form action="{% url 'add_to_order' %}" method="post" class="service-form">
   {% csrf_token %}
   <p>
     <input type="hidden" value="{{ order_id }}" name="order">
   </p>
   <p>
-    <label for="id_service">Service:</label>
+    <label for="id_service">Сервис:</label>
     <select id="id_service" name="service" class="form-control">
       {% for service in services %}
         <option value="{{ service.pk }}">{{ service.name }}</option>
@@ -18,7 +21,7 @@
     </select>
   </p>
   <p>
-    <label for="id_employer">Employer:</label>
+    <label for="id_employer">Работник:</label>
     <select name="employer" required="" id="id_employer" class="form-control">
       {% for employer in employers %}
         <option value="{{ employer.id }}">{{ employer.first_name }} {{ employer.last_name }}</option>
@@ -26,11 +29,11 @@
     </select>
   </p>
   <p>
-    <label for="id_count">Count:</label>
+    <label for="id_count">Кол-во:</label>
     <input type="number" name="count" value="0" required="" id="id_count" class="form-control">
   </p>
 
-  <button type="submit" class="btn btn-primary">Add Service</button>
+  <button type="submit" class="btn btn-primary">Добавить сервис</button>
 </form>
 
 {% endblock %}

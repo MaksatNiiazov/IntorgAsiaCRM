@@ -1,6 +1,7 @@
 import calendar
 
-from django.shortcuts import redirect
+from django.contrib import messages
+from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
@@ -136,9 +137,22 @@ class OrderCreateView(CreateView):
         return redirect('invoice_generation', pk=order.pk)
 
 
+class SertviceToOrderView(View):
+
+    def get(self, request):
+        context = {
+            'services': Service.objects.filter(acceptance=False, single=False),
+            'employers': CustomUser.objects.filter(user_type='worker')
+        }
+        return render(request, 'crmapp/service_add.html', context)
+
+    def post(self, request):
+        pass
+
+
 class AddServiceView(CreateView):
-    template_name = 'crmapp/service_add.html'
     form_class = AddServiceForm
+    template_name = 'crmapp/service_add.html'
 
     def form_valid(self, form):
         order = form.cleaned_data['order']
@@ -155,12 +169,10 @@ class AddServiceView(CreateView):
         new_amount = count * service.price
         new_cost = count * service.cost_price
 
-        # Вычисление изменений
         count_diff = new_count - old_count
         amount_diff = new_amount - old_amount
         cost_diff = new_cost - old_cost
 
-        # Обновление полей
         update_order.count += count_diff
         update_order.amount += amount_diff
         update_order.cost_price += cost_diff
@@ -170,7 +182,6 @@ class AddServiceView(CreateView):
 
         client.money += amount_diff
 
-        # Сохранение изменений
         update_order.save(update_fields=['count', 'amount', 'cost_price'])
         service_order.save(update_fields=['count', 'amount'])
         client.save(update_fields=['money'])
@@ -304,6 +315,7 @@ class EmployerDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['orders'] = EmployerOrder.objects.filter(user_id=self.object.id)
+        context['cashboxes'] = Cashbox.objects.all()
         return context
 
 
@@ -313,8 +325,20 @@ class PayASalaryView(View):
         emp_order = EmployerOrder.objects.get(id=pk)
         user = CustomUser.objects.get(id=emp_order.user.id)
         num = int(self.request.POST.get('num'))
+        cashbox = Cashbox.objects.get(id=int(self.request.POST.get('cashbox')))
+        category = CashboxCategory.objects.get_or_create(category="Зарплата")[0]
+        balance_check =  cashbox.balance - num
+
+        if balance_check < 0:
+            messages.error(self.request, "В кассе недостаточно средств!")
+            return redirect('employer_detail', emp_order.user.id)
+        CashboxOperation.objects.create(user_id=3, category=category, cashbox_from=cashbox, money=num, comment='')
+
+
+        cashbox.balance -= num
         user.money -= num
         emp_order.salary -= num
+        cashbox.save()
         user.save()
         emp_order.save()
 
@@ -326,7 +350,11 @@ class EmployerOrderView(ListView):
     template_name = 'crmapp/employer_order.html'
 
     def get_queryset(self):
-        return ProductInEP.objects.filter(ep__order_id=self.kwargs['order_id'], user=self.kwargs['pk'])
+        query_set = ProductInEP.objects.filter(ep__order_id=self.kwargs['order_id'], user=self.kwargs['pk'])
+
+
+        return query_set
+
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(EmployerOrderView, self).get_context_data()
@@ -367,12 +395,13 @@ class CashboxDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(CashboxDetailView, self).get_context_data()
-        context['operations_from'] = CashboxOperation.objects.filter(cashbox_from=self.object).order_by('date')
-        context['operations_to'] = CashboxOperation.objects.filter(cashbox_to=self.object).order_by('date')
+        operations = CashboxOperation.objects.all()
+        context['operations_from'] = operations.filter(cashbox_from=self.object).order_by('-id')[:10]
+        context['operations_to'] = operations.filter(cashbox_to=self.object).order_by('-id')[:10]
         context['users'] = CustomUser.objects.filter(user_type='worker')
+        cashboxes = Cashbox.objects.all()
+        context['cashboxes'] = cashboxes.exclude(id=self.object.id)
         context['categories'] = CashboxCategory.objects.all()
-        context['cashboxes_from'] = Cashbox.objects.exclude(id=self.object.id)
-        context['cashboxes_to'] = Cashbox.objects.exclude(id=self.object.id)
         return context
 
 
@@ -400,23 +429,77 @@ class CashBoxAddOperationView(CreateView):
     form_class = CashboxOperationForm
     template_name = 'crmapp/cashbox_detail.html'
 
-    # def form_valid(self, form):
-        # cashbox = Cashbox.objects.get()
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        cashbox_to = form.cleaned_data['cashbox_to']
+        if not cashbox_to:
+            cashbox_to = None
+        cashbox_from = form.cleaned_data['cashbox_from']
+        if not cashbox_from:
+            cashbox_from = None
+        category = form.cleaned_data['category']
+        if self.request.POST.get('check') == 'to':
+            money = form.cleaned_data['money']
+            if money <= 0:
+                messages.error(self.request, "Вы пытаетесь сделать приход на 0!")
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            comment = form.cleaned_data['comment']
+            if not comment:
+                comment = ''
+            operation = CashboxOperation.objects.create(
+                user_id=3,
+                category=category,
+                money=form.cleaned_data['money'],
+                comment=comment,
+                cashbox_from=cashbox_from,
+                cashbox_to=cashbox_to,
+            )
+            cashbox = Cashbox.objects.get(id=cashbox_to.id)
+            cashbox.balance += money
+            cashbox.save()
+
+        elif self.request.POST.get('check') == 'from':
+            money = form.cleaned_data['money']
+            if money <= 0:
+                messages.error(self.request, "Вы пытаетесь сделать расход на 0!")
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            comment = form.cleaned_data['comment']
+            if not comment:
+                comment = ''
+            operation = CashboxOperation.objects.create(
+                user_id=3,
+                category=form.cleaned_data['category'],
+                money=money,
+                comment=comment,
+                cashbox_from=cashbox_from,
+                cashbox_to=cashbox_to,
+            )
+            cashbox = Cashbox.objects.get(id=cashbox_from.id)
+            result = cashbox.balance - money
+            if result < 0:
+                messages.error(self.request, "В кассе недостаточно средств!")
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            cashbox.balance = result
+            cashbox.save()
+
+        return redirect(self.request.META.get('HTTP_REFERER'))
 
     def form_invalid(self, form):
         print(form.errors)
+        return redirect(self.request.META.get('HTTP_REFERER'))
 
 
-class CashBoxSubtractOperationView(CreateView):
+class CashboxOperationFromListView(ListView):
     model = CashboxOperation
-    form_class = CashboxOperationForm
-    template_name = 'crmapp/cashbox_detail.html'
+    template_name = 'crmapp/cashbox_operation_list.html'
 
-    # def form_valid(self, form):
-    #     cashbox = Cashbox.objects.get(order=self.object.order)
-
-    def form_invalid(self, form):
-        print(form.errors)
+    def get_queryset(self):
+        return CashboxOperation.objects.filter()
 
 
+class CashboxOperationToListView(ListView):
+    model = CashboxOperation
+    template_name = 'crmapp/cashbox_operation_list.html'
 
+    def get_queryset(self):
+        return CashboxOperation.objects.filter()

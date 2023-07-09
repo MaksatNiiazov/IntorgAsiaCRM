@@ -8,6 +8,7 @@ urlpatterns = [
     path('order/create/', OrderCreateView.as_view(), name='order_create'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),
     path('order/<int:pk>/delete/service/', OrderServiceDeleteView.as_view(), name='delete_service'),
+    path('order/add/to/order/', SertviceToOrderView.as_view(), name='add_to_order'),
 
     path('services/', ServiceListView.as_view(), name='service_list'),
     path('service/create/', ServiceCreateView.as_view(), name='service_create'),
@@ -33,5 +34,8 @@ urlpatterns = [
     path('cashbox/update/<int:pk>/', CashboxUpdateView.as_view(), name='cashbox_update'),
     path('cashbox/delete/<int:pk>/', CashboxDeleteView.as_view(), name='cashbox_delete'),
     path('cashbox/add/operation/', CashBoxAddOperationView.as_view(), name='add_operation'),
+    path('cashbox/<int:pk>/operation/list/to/', CashboxOperationToListView.as_view(), name='cashbox_operation_list_to'),
+    path('cashbox/<int:pk>/operation/list/from/', CashboxOperationFromListView.as_view(),
+         name='cashbox_operation_list_from'),
 
 ]

@@ -13,6 +13,7 @@
 
 {% block content %}
     <a href="{% url 'service_type_create' %}">Создать тип услуг</a>
+    <div class="table-container">
 <table>
   <thead>
     <tr>
@@ -26,6 +27,7 @@
         <th data-label="Разовые">Разовые</th>
 
         <th data-label="Применить">Применить</th>
+        <th data-label="Приёмка">Приёмка</th>
         <th data-label="Удалить">Удалить</th>
     </tr>
   </thead>
@@ -129,15 +131,28 @@
           </td>
 
         <td><input type="submit" value="Изменить"></td>
+       <td data-label="Приемка">
+              <label>
+                  <input type="checkbox" name="acceptance"
+                  {% if service.acceptance %} checked {% endif %}
+                  >
+              </label>
+
+          </td>
       </form>
       <form action="{% url 'service_delete' service.id %}" method="post">
         {% csrf_token %}
         <td><input type="submit" value="Удалить"></td>
+
       </form>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-
+</div>
 {% include 'includes/paginate.html' %}
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
 {% endblock %}

@@ -44,6 +44,12 @@
 Создание счета
 {% endblock %}
 {% block content %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
+
 <form action="{% url 'invoise_create' order.id %}" method="post">
     {% csrf_token %}
         <input type="submit" value="Скачать Счет">
@@ -86,7 +92,7 @@
             </label>
             <input type="submit" value="Добавить">
         </form>
-        <h4>Добавить расхлдный материал</h4>
+        <h4>Добавить расходный материал</h4>
         <form action="{% url 'add_consumables' %}" method="post">
         {% csrf_token %}
             <input type="hidden" value="{{ order.id }}" name="order">
@@ -143,6 +149,7 @@
       <th data-label="Сервис">Сервис</th>
       <th data-label="Тип">Тип</th>
       <th data-label="Цена за ед.">Цена за ед.</th>
+      <th data-label="Кол-во">Кол-во</th>
       <th data-label="Стоимость">Стоимость</th>
     </tr>
   </thead>
@@ -153,6 +160,7 @@
           <td data-label="Сервис">{{ consumable.consumable.name }}</td>
           <td data-label="Тип">{{ consumable.count }}</td>
           <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
+          <td data-label="Кол-во">{{ consumable.count }}</td>
           <td data-label="Стоимость">{{ consumable.price }}</td>
         </tr>
       {% endfor %}

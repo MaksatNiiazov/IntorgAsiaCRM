@@ -12,6 +12,8 @@ class OrderStages(models.TextChoices):
     QUALITY_CHECK = 'quality_check', 'Выдача ОТК'
     INVOICE_GENERATION = 'invoice_generation', 'Выставка счета'
     DISPATCH = 'dispatch', 'Отправка'
+    DISPATCHED = 'dispatched', 'Оправленно'
+
 
 
 class Order(models.Model):
@@ -85,6 +87,7 @@ class Service(models.Model):
     price = models.IntegerField()
     cost_price = models.DecimalField(max_digits=5, decimal_places=2)
     single = models.BooleanField(default=False)
+    acceptance = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['type']
@@ -152,8 +155,8 @@ class CashboxCategory(models.Model):
 
 
 class CashboxOperation(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
-    category = models.ForeignKey(CashboxCategory, on_delete=models.PROTECT)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, blank=True, null=True)
+    category = models.ForeignKey(CashboxCategory, on_delete=models.PROTECT, blank=True, null=True)
     money = models.IntegerField()
     comment = models.CharField(max_length=255, blank=True, null=True)
     cashbox_from = models.ForeignKey(Cashbox, on_delete=models.PROTECT, blank=True, null=True,

@@ -3,51 +3,138 @@
 
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <style>
+    .cashbox{
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .info{
+        margin: 10px;
+        padding: 20px;
+        box-shadow: 0 0 5px black;
+    }
+    .forms{
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .form{
+        margin: 0 10px;
+        padding: 20px;
+        box-shadow: 0 0 5px black;
+        display: flex;
+    }
+
+    </style>
 {% endblock %}
 {% block page_title %}
 Касса
 {% endblock %}
 {% block content %}
     <div class="cashbox">
-    <div class="info">
-    <h3>Касса: {{ object.name }}</h3>
-    <p>Текущий баланс: {{ object.balance }}</p>
+        <div class="info">
+        <h3>Касса: {{ object.name }}</h3>
+        <p>Текущий баланс: {{ object.balance }}</p>
+        </div>
+        <div class="forms">
+            <div class="form">
+                <form action="{% url 'add_operation' %}" method="post">
+                    {% csrf_token %}
+                    <h5>Оформить РАСХОД</h5>
+                    <input type="hidden" value="from" name="check">
+                    <input type="hidden" value="{{ object.id }}" name="cashbox_from">
+                    <label>
+                        <input type="number" name="money" value="0">
+                    </label>
+                        <label for=""></label>
+                          <select name="category" id="">
+                                <option value="">Категория</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.category }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for=""></label>
+                        <select name="cashbox_to" id="">
+                            <option value="">Не в кассу</option>
+                            {% for cashbox in cashboxes %}
+                                <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
+                            {% endfor %}
+                        </select>
+                    <label>
+                        <input name="comment" type="text" placeholder="Комментарий">
+                    </label>
+                    <input type="submit" value="расход">
+                </form>
+            </div>
+            <div class="form">
+                <form action="{% url 'add_operation' %}" method="post">
+                    {% csrf_token %}
+                    <h5>Оформить ПРИХОД</h5>
+                        <input type="hidden" value="to" name="check">
+                        <input type="hidden" value="{{ object.id }}" name="cashbox_to">
+                        <label>
+                            <input type="number" name="money" value="0">
+                        </label>
+                        <label for=""></label>
+                        <select name="category" id="">
+                                <option value="">Категория</option>
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.category }}</option>
+                            {% endfor %}
+                        </select>
+                        <label for=""></label>
+                        <select name="cashbox_from" id="">
+                            <option value="">Не из кассы</option>
+                            {% for cashbox in cashboxes %}
+                                <option value="">Категория</option>
+                                <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                    <label>
+                        <input name="comment" type="text" placeholder="Комментарий">
+                    </label>
+                    <input type="submit" value="приход">
+                </form>
+            </div>
+        </div>
     </div>
     <div class="operations">
     </div>
-    </div>
+      <ul class="messages">
+    {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+  </ul>
     <div class="cashbox-operations">
-
+<div class="table-container">
   <table>
   <h4>Расход</h4>
 
   <thead>
     <tr>
-        <th>Дата</th>
-        <th>Врумя</th>
-      <th>Пользователь</th>
-      <th>Категория</th>
-      <th>Сумма</th>
-      <th>От куда</th>
-      <th>Куда</th>
-      <th>Комментарий</th>
-
-
+        <th data-label="Дата">Дата</th>
+        <th data-label="Время">Время</th>
+        <th data-label="Пользователь">Пользователь</th>
+        <th data-label="Категория">Категория</th>
+        <th data-label="Сумма">Сумма</th>
+        <th data-label="От куда">От куда</th>
+        <th data-label="Куда">Куда</th>
+        <th data-label="Комментарий">Комментарий</th>
     </tr>
   </thead>
   <tbody>
     {% for operation in operations_from %}
     <tr>
-        <td>{{ operation.date }}</td>
-        <td>{{ operation.time }}</td>
-      <td>{{ operation.user }}</td>
-      <td>{{ operation.category }}</td>
-      <td>{{ operation.money }}</td>
-      <td>{{ operation.cashbox_from }}</td>
-      <td>{{ operation.cashbox_to }}</td>
-      <td>{{ operation.comment }}</td>
-
-
+        <td data-label="Дата">{{ operation.date }}</td>
+        <td data-label="Время">{{ operation.time }}</td>
+        <td data-label="Пользователь">{{ operation.user }}</td>
+        <td data-label="Категория">{{ operation.category }}</td>
+        <td data-label="Сумма">{{ operation.money }}</td>
+        <td data-label="От куда">{{ operation.cashbox_from }}</td>
+        <td data-label="Куда">{{ operation.cashbox_to }}</td>
+        <td data-label="Комментарий">{{ operation.comment }}</td>
     </tr>
     {% endfor %}
   </tbody>
@@ -55,31 +142,42 @@
 
   <table>
   <h4>Приход</h4>
-
   <thead>
     <tr>
-      <th>Пользователь</th>
-      <th>Категория</th>
-      <th>Сумма</th>
-      <th>От куда</th>
-      <th>Куда</th>
-      <th>Комментарий</th>
+        <th data-label="Дата">Дата</th>
+        <th data-label="Время">Врумя</th>
+        <th data-label="Пользователь">Пользователь</th>
+        <th data-label="Категория">Категория</th>
+        <th data-label="Сумма">Сумма</th>
+        <th data-label="От куда">От куда</th>
+        <th data-label="Куда">Куда</th>
+        <th data-label="Комментарий">Комментарий</th>
+
 
     </tr>
   </thead>
   <tbody>
-    {% for operation in operations_to %}
+        {% for operation in operations_to %}
     <tr>
-      <td>{{ operation.user }}</td>
-      <td>{{ operation.category }}</td>
-      <td>{{ operation.money }}</td>
-      <td>{{ operation.cashbox_from }}</td>
-      <td>{{ operation.cashbox_to }}</td>
-      <td>{{ operation.comment }}</td>
+        <td data-label="Дата">{{ operation.date }}</td>
+        <td data-label="Время">{{ operation.time }}</td>
+        <td data-label="Пользователь">{{ operation.user }}</td>
+        <td data-label="Категория">{{ operation.category }}</td>
+        <td data-label="Сумма">{{ operation.money }}</td>
+        <td data-label="От куда">{{ operation.cashbox_from }}</td>
+        <td data-label="Куда">{{ operation.cashbox_to }}</td>
+        <td data-label="Комментарий">{{ operation.comment }}</td>
+
 
     </tr>
     {% endfor %}
   </tbody>
 </table>
+</div>
     </div>
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
 {% endblock %}

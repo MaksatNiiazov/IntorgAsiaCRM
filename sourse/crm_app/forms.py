@@ -13,7 +13,7 @@ class ServiceTypeForm(forms.ModelForm):
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['name', 'price', 'type', 'discount', 'single', 'cost_price']
+        fields = ['name', 'price', 'type', 'discount', 'single', 'cost_price', 'acceptance']
 
 
 class ConsumablesForm(forms.ModelForm):

@@ -109,7 +109,7 @@
                     <th data-label="Штрихкод">Штрихкод</th>
                     <th data-label="Цвет">Цвет</th>
                     <th data-label="Размер">Размер</th>
-{#                    <th data-label="Добавить услугу">Добавить услугу</th>#}
+                    <th data-label="Добавить услугу">Добавить услугу</th>
                     <th data-label="Выбрать набор">Выбрать набор</th>
                     <th data-label="Общ кол-во">Общ кол-во</th>
                     <th data-label="Кол-во брака">Кол-во брака</th>
@@ -123,7 +123,7 @@
                     <td data-label="Штрихкод">{{ product.barcode }}</td>
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
                     <td data-label="Размер"><label>{{ product.size }}</label></td>
-{#                    <td data-label="Добавить услугу"><a href="{% url 'add_service' order.id %}">Добавить услугу</a></td>#}
+                    <td data-label="Добавить услугу"><a href="{% url 'add_to_order' %}">Добавить услугу</a></td>
                     <td data-label="Выбрать набор">
                         <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post"
                             action="{% url 'defective_check_update' product.id %}">

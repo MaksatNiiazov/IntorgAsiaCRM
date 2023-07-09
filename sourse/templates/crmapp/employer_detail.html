@@ -26,7 +26,11 @@
         <div class="user_flex"><b>Зарплата</b> <span>{{ user.money }}</span> </div>
         <div class="user_flex"><b>Количество услуг</b> <span>{{ user.services_count }}</span> </div>
     </div>
-
+    <ul class="messages">
+        {% for message in messages %}
+          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+      </ul>
     <table>
       <thead>
         <tr>
@@ -49,7 +53,13 @@
                     <form action="{% url 'pay_a_salary' order.id %}" method="post">
                     {% csrf_token %}
                         <label>
+                              <select name="cashbox" id="">
+                                  {% for cashbox in cashboxes %}
+                                      <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
+                                  {% endfor %}
+                            </select>
                             <input type="number" value="{{ order.salary }}" name="num" max="{{ order.salary }}" min="1">
+
                         </label>
                         <input type="submit" value="Выплатить">
                 </form>
