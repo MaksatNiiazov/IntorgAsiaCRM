@@ -2,26 +2,29 @@ import calendar
 import os
 import time
 from urllib.parse import quote
-
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-
-from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
+from openpyxl.styles import Font, Alignment, Border, Side
+from crm_app.forms import ServiceForm, CashboxForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
     ConsumablesForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
-    ServiceType, ServiceOrder, EmployerOrder, Consumables
-from datetime import date, timedelta, datetime
+    ServiceType, ServiceOrder, EmployerOrder, Consumables, ModelChangeLog
+from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
 from crm_warehouse.models import ProductInEP
 
 
-class StatisticView(ListView):
+class LockedView(LoginRequiredMixin):
+    login_url = "login"
+
+
+class StatisticView(LockedView, ListView):
     model = Order
     template_name = 'crmapp/сhart.html'
 
@@ -95,7 +98,7 @@ class StatisticView(ListView):
         return context
 
 
-class OrderListView(ListView):
+class OrderListView(LockedView, ListView):
     model = Order
     template_name = 'crmapp/order_list.html'
     ordering = ['-date']
@@ -107,44 +110,49 @@ class OrderListView(ListView):
         return queryset
 
 
-class OrderDetailView(DetailView):
+class OrderDetailView(LockedView, DetailView):
     model = Order
     template_name = 'crmapp/order_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['services'] = OrderService.objects.filter(order=self.object.id)
+        context['services'] = ServiceOrder.objects.filter(order=self.object.id)
+        context['products'] = ProductInEP.objects.filter(ep__order=self.object.id)
+        order = self.get_object()
+        revenue = order.amount - order.cost_price
+
+        context['revenue'] = revenue
         return context
 
 
-class OrderCreateView(CreateView):
-    model = Order
-    form_class = OrderForm
-    template_name = 'crmapp/order_create.html'
+# class OrderCreateView(CreateView):
+#     model = Order
+#     form_class = OrderForm
+#     template_name = 'crmapp/order_create.html'
+#
+#     def get_initial(self):
+#         initial = super().get_initial()
+#         initial['date'] = date.today()
+#         initial['day'] = date.today().day
+#         initial['month'] = date.today().month
+#         initial['year'] = date.today().year
+#         initial['time'] = datetime.now().strftime('%H:%M')
+#         return initial
+#
+#     def form_valid(self, form):
+#         order = form.save(commit=False)
+#         total_price, total_cost_price = order.calculate_price()
+#         order.amount = total_price
+#         order.cost_price = total_cost_price
+#         order.month = date.today().month
+#         order.year = date.today().year
+#         order.day = date.today().day
+#         order.save()
+#
+#         return redirect('invoice_generation', pk=order.pk)
 
-    def get_initial(self):
-        initial = super().get_initial()
-        initial['date'] = date.today()
-        initial['day'] = date.today().day
-        initial['month'] = date.today().month
-        initial['year'] = date.today().year
-        initial['time'] = datetime.now().strftime('%H:%M')
-        return initial
 
-    def form_valid(self, form):
-        order = form.save(commit=False)
-        total_price, total_cost_price = order.calculate_price()
-        order.amount = total_price
-        order.cost_price = total_cost_price
-        order.month = date.today().month
-        order.year = date.today().year
-        order.day = date.today().day
-        order.save()
-
-        return redirect('invoice_generation', pk=order.pk)
-
-
-class SertviceToOrderView(View):
+class SertviceToOrderView(LockedView, View):
 
     def get(self, request):
         context = {
@@ -157,7 +165,7 @@ class SertviceToOrderView(View):
         pass
 
 
-class AddServiceView(CreateView):
+class AddServiceView(LockedView, CreateView):
     form_class = AddServiceForm
     template_name = 'crmapp/service_add.html'
 
@@ -193,6 +201,7 @@ class AddServiceView(CreateView):
         update_order.save(update_fields=['count', 'amount', 'cost_price'])
         service_order.save(update_fields=['count', 'amount'])
         client.save(update_fields=['money', 'profit'])
+        # ModelChangeLog.add_log(model_name='сервис', user_id=self.request.user.id, old_value=f'{service.name}/{old_count}', new_value=f'{service.name}/{new_count}')
         return redirect('invoice_generation', pk=order.pk)
 
     def form_invalid(self, form):
@@ -208,7 +217,7 @@ class AddServiceView(CreateView):
         return context
 
 
-class OrderServiceDeleteView(DeleteView):
+class OrderServiceDeleteView(LockedView, DeleteView):
     model = OrderService
 
     def form_valid(self, form):
@@ -229,10 +238,12 @@ class OrderServiceDeleteView(DeleteView):
         cashbox.balance -= self.object.salary
         cashbox.save()
         self.object.delete()
+        # ModelChangeLog.add_log(model_name='сервис', user_id=self.request.user.id, old_value=f'{service.name}/{old_count}', new_value=f'{service.name}/{new_count}')
+
         return redirect('order_detail', pk=self.object.order.pk)
 
 
-class ServiceListView(ListView):
+class ServiceListView(LockedView, ListView):
     model = Service
     template_name = 'crmapp/service_list.html'
     paginate_by = 20
@@ -243,21 +254,20 @@ class ServiceListView(ListView):
         return context
 
 
-class ServiceTypeCreateView(CreateView):
+class ServiceTypeCreateView(LockedView, CreateView):
     model = ServiceType
     form_class = ServiceTypeForm
     template_name = 'crmapp/servise_type_create.html'
     success_url = '/services/'
 
 
-class ServiceCreateView(CreateView):
+class ServiceCreateView(LockedView, CreateView):
     model = Service
     form_class = ServiceForm
     template_name = 'crmapp/service_list.html'
     success_url = '/services/'
 
     def form_valid(self, form):
-
         response = super().form_valid(form)
         object = self.object
         object.before_defective = (self.request.POST.get('gender'))
@@ -265,7 +275,7 @@ class ServiceCreateView(CreateView):
         return response
 
 
-class ServiceUpdateView(UpdateView):
+class ServiceUpdateView(LockedView, UpdateView):
     model = Service
     form_class = ServiceForm
     template_name = 'crmapp/service_list.html'
@@ -279,35 +289,35 @@ class ServiceUpdateView(UpdateView):
         return response
 
 
-class ServiceDeleteView(DeleteView):
+class ServiceDeleteView(LockedView, DeleteView):
     model = Service
     success_url = '/services/'
 
 
-class ConsumablesListView(ListView):
+class ConsumablesListView(LockedView, ListView):
     model = Consumables
     template_name = 'crmapp/consumable_list.html'
 
 
-class ConsumablesCreateView(CreateView):
+class ConsumablesCreateView(LockedView, CreateView):
     model = Consumables
     form_class = ConsumablesForm
     success_url = '/consumables/'
 
 
-class ConsumablesUpdateView(UpdateView):
+class ConsumablesUpdateView(LockedView, UpdateView):
     model = Consumables
     form_class = ConsumablesForm
     template_name = 'crmapp/consumable_list.html'
     success_url = '/consumables/'
 
 
-class ConsumablesDeleteView(DeleteView):
+class ConsumablesDeleteView(LockedView, DeleteView):
     model = Consumables
     success_url = '/consumables/'
 
 
-class EmployerListView(ListView):
+class EmployerListView(LockedView, ListView):
     model = CustomUser
     template_name = 'crmapp/employer_list.html'
     paginate_by = 20
@@ -316,7 +326,7 @@ class EmployerListView(ListView):
         return CustomUser.objects.filter(user_type='worker')
 
 
-class EmployerDetailView(DetailView):
+class EmployerDetailView(LockedView, DetailView):
     model = CustomUser
     template_name = 'crmapp/employer_detail.html'
 
@@ -327,7 +337,7 @@ class EmployerDetailView(DetailView):
         return context
 
 
-class PayASalaryView(View):
+class PayASalaryView(LockedView, View):
 
     def post(self, request, pk):
         emp_order = EmployerOrder.objects.get(id=pk)
@@ -335,13 +345,12 @@ class PayASalaryView(View):
         num = int(self.request.POST.get('num'))
         cashbox = Cashbox.objects.get(id=int(self.request.POST.get('cashbox')))
         category = CashboxCategory.objects.get_or_create(category="Зарплата")[0]
-        balance_check =  cashbox.balance - num
+        balance_check = cashbox.balance - num
 
         if balance_check < 0:
             messages.error(self.request, "В кассе недостаточно средств!")
             return redirect('employer_detail', emp_order.user.id)
         CashboxOperation.objects.create(user_id=3, category=category, cashbox_from=cashbox, money=num, comment='')
-
 
         cashbox.balance -= num
         user.money -= num
@@ -349,20 +358,20 @@ class PayASalaryView(View):
         cashbox.save()
         user.save()
         emp_order.save()
+        ModelChangeLog.add_log(model_name='зарплата', user_id=self.request.user.id, change_type='зарплата',
+                               old_value=f'{user}', new_value=f'{num}')
 
         return redirect('employer_detail', emp_order.user.id)
 
 
-class EmployerOrderView(ListView):
+class EmployerOrderView(LockedView, ListView):
     model = ProductInEP
     template_name = 'crmapp/employer_order.html'
 
     def get_queryset(self):
         query_set = ProductInEP.objects.filter(ep__order_id=self.kwargs['order_id'], user=self.kwargs['pk'])
 
-
         return query_set
-
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(EmployerOrderView, self).get_context_data()
@@ -371,7 +380,7 @@ class EmployerOrderView(ListView):
         return context
 
 
-class ClientListView(ListView):
+class ClientListView(LockedView, ListView):
     model = CustomUser
     template_name = 'crmapp/client_list.html'
     paginate_by = 20
@@ -380,7 +389,7 @@ class ClientListView(ListView):
         return CustomUser.objects.filter(user_type='client')
 
 
-class ClientDetailView(DetailView):
+class ClientDetailView(LockedView, DetailView):
     model = CustomUser
     template_name = 'crmapp/client_detail.html'
     paginate_by = 20
@@ -391,13 +400,13 @@ class ClientDetailView(DetailView):
         return context
 
 
-class CashboxListView(ListView):
+class CashboxListView(LockedView, ListView):
     model = Cashbox
     template_name = 'crmapp/cashbox_list.html'
     paginate_by = 20
 
 
-class CashboxDetailView(DetailView):
+class CashboxDetailView(LockedView, DetailView):
     model = Cashbox
     template_name = 'crmapp/cashbox_detail.html'
 
@@ -413,32 +422,44 @@ class CashboxDetailView(DetailView):
         return context
 
 
-class CashboxCreateView(CreateView):
+class CashboxCreateView(LockedView, CreateView):
+    model = Cashbox
+    form_class = CashboxForm
+    template_name = 'crmapp/cashbox_list.html'
+    success_url = '/cashboxes/'
+
+    def form_valid(self, form):
+        # Save the Cashbox instance
+        response = super().form_valid(form)
+
+        # Create a log entry for the Cashbox creation
+        model_name = 'касса'
+        user = self.request.user.id
+        change_type = 'создание'
+        new_value = form.instance.name
+        ModelChangeLog.add_log(model_name, user, change_type=change_type, new_value=new_value)
+
+        return response
+
+
+class CashboxUpdateView(LockedView, UpdateView):
     model = Cashbox
     form_class = CashboxForm
     template_name = 'crmapp/cashbox_list.html'
     success_url = '/cashboxes/'
 
 
-class CashboxUpdateView(UpdateView):
-    model = Cashbox
-    form_class = CashboxForm
-    template_name = 'crmapp/cashbox_list.html'
-    success_url = '/cashboxes/'
-
-
-class CashboxDeleteView(DeleteView):
+class CashboxDeleteView(LockedView, DeleteView):
     model = Cashbox
     success_url = '/cashboxes/'
 
 
-class CashBoxAddOperationView(CreateView):
+class CashBoxAddOperationView(LockedView, CreateView):
     model = CashboxOperation
     form_class = CashboxOperationForm
     template_name = 'crmapp/cashbox_detail.html'
 
     def form_valid(self, form):
-        print(form.cleaned_data)
         cashbox_to = form.cleaned_data['cashbox_to']
         if not cashbox_to:
             cashbox_to = None
@@ -463,8 +484,11 @@ class CashBoxAddOperationView(CreateView):
                 cashbox_to=cashbox_to,
             )
             cashbox = Cashbox.objects.get(id=cashbox_to.id)
+            old_v = cashbox.balance
             cashbox.balance += money
             cashbox.save()
+            ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
+                                   change_type=f'приход({money})', old_value=f'{old_v}', new_value=f'{cashbox.balance}')
 
         elif self.request.POST.get('check') == 'from':
             money = form.cleaned_data['money']
@@ -487,8 +511,12 @@ class CashBoxAddOperationView(CreateView):
             if result < 0:
                 messages.error(self.request, "В кассе недостаточно средств!")
                 return redirect(self.request.META.get('HTTP_REFERER'))
+            old_v = cashbox.balance
             cashbox.balance = result
+
             cashbox.save()
+            ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
+                                   change_type=f'расход({money})', old_value=f'{old_v}', new_value=f'{result}')
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
@@ -497,7 +525,7 @@ class CashBoxAddOperationView(CreateView):
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 
-class CashboxOperationFromListView(ListView):
+class CashboxOperationFromListView(LockedView, ListView):
     model = CashboxOperation
     template_name = 'crmapp/cashbox_operation_list.html'
     paginate_by = 50
@@ -512,7 +540,7 @@ class CashboxOperationToListView(CashboxOperationFromListView):
         return CashboxOperation.objects.filter(cashbox_to_id=self.kwargs['pk'])
 
 
-class CashboxExport(View):
+class CashboxExport(LockedView, View):
     def post(self, request):
         start_date = self.request.POST['start_date']
         end_date = self.request.POST['end_date']
@@ -575,7 +603,6 @@ class CashboxExport(View):
                 cell.border = thin_border
                 cell.alignment = alignment
 
-
             row += 1
 
         # Save the workbook
@@ -604,5 +631,13 @@ class CashboxExport(View):
             except PermissionError:
                 retry_count += 1
                 time.sleep(retry_delay)
-
+        ModelChangeLog.add_log(model_name=f'касса {cashbox}', user_id=self.request.user.id,
+                               change_type='экспорт')
         return response
+
+
+class ShowLogsView(LockedView, ListView):
+    model = ModelChangeLog
+    template_name = 'crmapp/logs.html'
+    paginate_by = 50
+    ordering = '-id'

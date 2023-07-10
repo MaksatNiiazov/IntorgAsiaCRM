@@ -14,15 +14,18 @@ from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
+
+from crm_app.views import LockedView
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
-from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder
+from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder, \
+    EmployerProductService
 from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder, Consumables, \
     OrderConsumables
 from users.models import User as CustomUser
 
 
-class DashboardView(ListView):
+class DashboardView(LockedView, ListView):
     model = Order
     template_name = 'stages/dashboard.html'
     context_object_name = 'orders'
@@ -41,7 +44,7 @@ class DashboardView(ListView):
         return queryset
 
 
-class AcceptanceView(View):
+class AcceptanceView(LockedView, View):
     template_name = 'stages/acceptance.html'
 
     def get(self, request):
@@ -176,7 +179,7 @@ class ImportExcelView(View):
         return render(request, self.template_name, context)
 
 
-class ProductDeleteView(View):
+class ProductDeleteView(LockedView, View):
 
     def post(self, request, pk):
         product = Product.objects.get(id=pk)
@@ -185,7 +188,7 @@ class ProductDeleteView(View):
         return redirect('import_excel', order)
 
 
-class ProductAddView(CreateView):
+class ProductAddView(LockedView, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'stages/database_loading.html'
@@ -218,7 +221,7 @@ class ProductAddView(CreateView):
         return reverse('product_detail', args=[product_id])
 
 
-class UnpackingView(DetailView):
+class UnpackingView(LockedView, DetailView):
     template_name = 'stages/unpacking.html'
     model = Order
 
@@ -229,7 +232,7 @@ class UnpackingView(DetailView):
         return context
 
 
-class ProductUpdateView(UpdateView):
+class ProductUpdateView(LockedView, UpdateView):
     model = Product
     form_class = ProductUnpackingForm
     template_name = 'stages/unpacking.html'
@@ -254,7 +257,7 @@ class ProductUpdateView(UpdateView):
         return redirect('unpacking', self.object.order.id)
 
 
-class QualityCheckView(DetailView):
+class QualityCheckView(LockedView, DetailView):
     template_name = 'stages/quality_check.html'
     model = Order
 
@@ -270,7 +273,7 @@ class QualityCheckView(DetailView):
         return context
 
 
-class QualityUpdateView(CreateView):
+class QualityUpdateView(LockedView, CreateView):
     model = Order
     form_class = EmployerProductForm
     template_name = 'stages/quality_check.html'
@@ -309,7 +312,7 @@ class QualityUpdateView(CreateView):
         return redirect('quality_check', self.object.id)
 
 
-class SetOfServiceCreateView(View):
+class SetOfServiceCreateView(LockedView, View):
     def get(self, request, pk):
         services = Service.objects.filter(single=False, acceptance=False)
         services_before = services.filter(before_defective=True)
@@ -338,7 +341,7 @@ class SetOfServiceCreateView(View):
         return redirect('quality_check', pk)
 
 
-class DefectiveCheckUpdateView(UpdateView):
+class DefectiveCheckUpdateView(LockedView, UpdateView):
     model = Product
     form_class = DefectiveCheckForm
 
@@ -389,6 +392,8 @@ class DefectiveCheckUpdateView(UpdateView):
                 update_order = Order.objects.get(id=order.pk)
                 emp_serv = order_service
                 emp_serv.confirmed_switch()
+                eps, _ = EmployerProductService.objects.get_or_create(order=update_order, service=service, employer=employer,
+                                                                   product=product)
                 if service.before_defective:
                     new_count = product.good_quality + product.defective
                 else:
@@ -439,7 +444,7 @@ class DefectiveCheckUpdateView(UpdateView):
         return obj
 
 
-class InvoiceGenerationView(DetailView):
+class InvoiceGenerationView(LockedView, DetailView):
     model = Order
     template_name = 'stages/invoice_generation.html'
 
@@ -469,7 +474,7 @@ class InvoiceGenerationView(DetailView):
         return total_count
 
 
-class ApplyDiscountView(View):
+class ApplyDiscountView(LockedView, View):
     def post(self, request):
         order = Order.objects.get(id=self.request.POST.get('order'))
         percent = int(self.request.POST.get('percent'))
@@ -488,7 +493,7 @@ class ApplyDiscountView(View):
         return redirect('invoice_generation', order.id)
 
 
-class AddConsumables(View):
+class AddConsumables(LockedView, View):
     def post(self, request):
         order = self.request.POST.get('order')
         order_obj = Order.objects.get(id=order)
@@ -518,7 +523,7 @@ class AddConsumables(View):
             return redirect('invoice_generation', order)
 
 
-class InvoiceGenerationViewGenerate(View):
+class InvoiceGenerationViewGenerate(LockedView, View):
 
     def post(self, request, order_id):
         # Search for the file 'blank.xlsx' in the 'excel' directory and its subdirectories
@@ -698,18 +703,19 @@ class InvoiceGenerationViewGenerate(View):
         return response
 
 
-class DispatchView(DetailView):
+class DispatchView(LockedView, DetailView):
     model = Order
     template_name = 'stages/dispatch.html'
 
     def get_context_data(self, **kwargs):
         context = super(DispatchView, self).get_context_data()
         context['products'] = Product.objects.filter(order=self.object)
+        context['order_id'] = self.object.id
 
         return context
 
 
-class DecreaseProductCountView(UpdateView):
+class DecreaseProductCountView(LockedView, UpdateView):
     model = Order
     form_class = BarcodeForm
 
@@ -730,7 +736,7 @@ class DecreaseProductCountView(UpdateView):
             return redirect('dispatch', order.id)
 
 
-class AcceptanceNextStage(View):
+class AcceptanceNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         if order.stage == 'acceptance':
@@ -739,7 +745,7 @@ class AcceptanceNextStage(View):
         return redirect(reverse('dashboard'))
 
 
-class DatabaseLoadingNextStage(View):
+class DatabaseLoadingNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         if order.products.count() > 0:
@@ -752,7 +758,7 @@ class DatabaseLoadingNextStage(View):
             return redirect('import_excel', order.id)
 
 
-class UnpackingNextStage(View):
+class UnpackingNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         products = order.products.all()
@@ -784,7 +790,7 @@ class UnpackingNextStage(View):
             return redirect("unpacking", order.id)
 
 
-class QualityCheckNextStage(View):
+class QualityCheckNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         products = order.products.all()
@@ -807,7 +813,7 @@ class QualityCheckNextStage(View):
             return redirect("quality_check", order.id)
 
 
-class InvoiceGenerationNextStage(View):
+class InvoiceGenerationNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         if order.stage == 'invoice_generation':
@@ -815,7 +821,7 @@ class InvoiceGenerationNextStage(View):
         return redirect(reverse('dashboard'))
 
 
-class DispatchNextStage(View):
+class DispatchNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         if order.stage == 'dispatch':

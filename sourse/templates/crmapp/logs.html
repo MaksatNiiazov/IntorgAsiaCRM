@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Логи
+{% endblock %}
+{% block content %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th data-label="Модель">Модель</th>
+                <th data-label="Сотрудник">Сотрудник</th>
+                <th data-label="Тип">Тип</th>
+                <th data-label="Старое значение">Старое значение</th>
+                <th data-label="Новое значение">Новое значение</th>
+                <th data-label="Дата/Время">Дата/Время</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+                <tr>
+                <td data-label="Модель">{{ object.model_name }}</td>
+                <td data-label="Сотрудник">{{ object.user }}</td>
+                <td data-label="Тип">{{ object.change_type }}</td>
+                <td data-label="Старое значение">{{ object.old_value }}</td>
+                <td data-label="Новое значение">{{ object.new_value }}</td>
+                <td data-label="Дата/Время">{{ object.change_timestamp }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+    {% include 'includes/paginate.html' %}
+{% endblock %}
+

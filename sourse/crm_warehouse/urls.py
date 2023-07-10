@@ -26,10 +26,10 @@ urlpatterns = [
     path('dispatch/<int:pk>/', DispatchView.as_view(), name='dispatch'),
     path('product/decrease/<int:pk>/', DecreaseProductCountView.as_view(), name='decrease_product_count'),
 
-    path('nextstage/<int:order_id>', DatabaseLoadingNextStage.as_view(), name='database_loading_next'),
-    path('nextstage/unp/<int:order_id>', UnpackingNextStage.as_view(), name='unpacking_next'),
-    path('nextstage/quality_check/<int:order_id>', QualityCheckNextStage.as_view(), name='quality_check_next'),
-    path('nextstage/invoice_generation/<int:order_id>', InvoiceGenerationNextStage.as_view(), name='invoice_generation_next'),
-    path('nextstage/dispatch/<int:order_id>', DispatchNextStage.as_view(), name='dispatch_next'),
+    path('nextstage/<int:order_id>/', DatabaseLoadingNextStage.as_view(), name='database_loading_next'),
+    path('nextstage/unp/<int:order_id>/', UnpackingNextStage.as_view(), name='unpacking_next'),
+    path('nextstage/quality_check/<int:order_id>/', QualityCheckNextStage.as_view(), name='quality_check_next'),
+    path('nextstage/invoice_generation/<int:order_id>/', InvoiceGenerationNextStage.as_view(), name='invoice_generation_next'),
+    path('nextstage/dispatch/<int:order_id>/', DispatchNextStage.as_view(), name='dispatch_next'),
 
 ]

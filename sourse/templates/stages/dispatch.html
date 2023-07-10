@@ -56,6 +56,13 @@
             </tbody>
         </table>
     </div>
+        <div class="next_stage">
+        <form action="{% url 'dispatch_next' order_id %}" method="post">
+        {% csrf_token %}
+
+        <button type="submit">Зарегистрировать</button>
+    </form>
+    </div>
 
 {% endblock %}
 {% block js %}

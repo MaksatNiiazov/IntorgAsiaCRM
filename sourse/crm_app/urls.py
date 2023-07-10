@@ -5,7 +5,7 @@ urlpatterns = [
     path('statistic/', StatisticView.as_view(), name='statistic_page'),
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('order/detail/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
-    path('order/create/', OrderCreateView.as_view(), name='order_create'),
+    # path('order/create/', OrderCreateView.as_view(), name='order_create'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),
     path('order/<int:pk>/delete/service/', OrderServiceDeleteView.as_view(), name='delete_service'),
     path('order/add/to/order/', SertviceToOrderView.as_view(), name='add_to_order'),
@@ -38,5 +38,7 @@ urlpatterns = [
     path('cashbox/<int:pk>/operation/list/from/', CashboxOperationFromListView.as_view(),
          name='cashbox_operation_list_from'),
     path('cashbox/export/operation/', CashboxExport.as_view(), name='cashbox_export'),
+
+    path('show/logs/', ShowLogsView.as_view(), name='show_logs'),
 
 ]

@@ -61,6 +61,8 @@ class Order(models.Model):
             self.stage = OrderStages.INVOICE_GENERATION
         elif current_stage == OrderStages.INVOICE_GENERATION:
             self.stage = OrderStages.DISPATCH
+        elif current_stage == OrderStages.DISPATCH:
+            self.stage = OrderStages.DISPATCHED
 
         self.save()
 
@@ -167,10 +169,9 @@ class CashboxOperation(models.Model):
 
 
 class ModelChangeLog(models.Model):
-
     model_name = models.CharField(max_length=100)
     user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
-    change_type = models.CharField(max_length=10)
+    change_type = models.CharField(max_length=50)
     old_value = models.CharField(max_length=100, blank=True)
     new_value = models.CharField(max_length=100, blank=True)
     change_timestamp = models.DateTimeField(default=timezone.now)
@@ -179,10 +180,10 @@ class ModelChangeLog(models.Model):
         return f'{self.change_type} {self.model_name} at {self.change_timestamp}'
 
     @classmethod
-    def add_log(cls, model_name, user, change_type='', old_value='', new_value=''):
+    def add_log(cls, model_name, user_id, change_type='', old_value='', new_value=''):
         log_entry = cls(
             model_name=model_name,
-            user=user,
+            user_id=user_id,
             change_type=change_type,
             old_value=old_value,
             new_value=new_value
