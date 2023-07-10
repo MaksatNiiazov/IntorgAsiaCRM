@@ -364,9 +364,10 @@ class DefectiveCheckUpdateView(UpdateView):
             order_items = Product.objects.filter(order=order)
             total_good_quality = sum(item.good_quality for item in order_items)
             total_defective = sum(item.defective for item in order_items)
+            count = total_good_quality + total_defective
             order.good_quality = total_good_quality
             order.defective = total_defective
-            order.count = total_good_quality + total_defective
+            order.count = count
             order.save()
             product_in_ep = ProductInEP.objects.get(product=product, user_id=worker.id)
 
@@ -379,6 +380,7 @@ class DefectiveCheckUpdateView(UpdateView):
 
             emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
 
+            client.product_count = count
 
             for service_id in services:
                 service = Service.objects.get(id=service_id.service.id)
@@ -414,10 +416,10 @@ class DefectiveCheckUpdateView(UpdateView):
                 emp_serv.salary += new_count * service.price
 
                 worker.money += new_cost
-                worker.services_count += new_count
+                worker.product_count += new_count
 
                 client.money += new_amount
-                client.services_count += new_count
+                client.profit += new_amount - new_cost
 
                 product_in_ep.count = new_count
 
@@ -490,8 +492,8 @@ class AddConsumables(View):
     def post(self, request):
         order = self.request.POST.get('order')
         order_obj = Order.objects.get(id=order)
+        client = order_obj.client
         consumable = Consumables.objects.get(id=self.request.POST.get('consumable'))
-
         order_consumable = OrderConsumables.objects.get_or_create(order_id=order, consumable_id=consumable.id)[0]
         count = int(self.request.POST.get('count'))
         cons_count = consumable.count - count
@@ -507,6 +509,9 @@ class AddConsumables(View):
             order_consumable.price = price
             order_consumable.cost_price = cost_price
             order_consumable.save()
+            client.money += price
+            client.profit += price - cost_price
+            client.product_count += count
             order_obj.amount += price
             order_obj.cost_price += cost_price
             order_obj.save()

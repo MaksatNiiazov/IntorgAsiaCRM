@@ -8,6 +8,39 @@
 {% endblock %}
 {% block content %}
 
+    <div class="table-container">
+      <table>
+      <h2>Расходы</h2>
+      <thead>
+        <tr>
+            <th data-label="Дата">Дата</th>
+            <th data-label="Время">Время</th>
+            <th data-label="Пользователь">Пользователь</th>
+            <th data-label="Категория">Категория</th>
+            <th data-label="Сумма">Сумма</th>
+            <th data-label="От куда">От куда</th>
+            <th data-label="Куда">Куда</th>
+            <th data-label="Комментарий">Комментарий</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for operation in object_list %}
+        <tr>
+            <td data-label="Дата">{{ operation.date }}</td>
+            <td data-label="Время">{{ operation.time }}</td>
+            <td data-label="Пользователь">{{ operation.user }}</td>
+            <td data-label="Категория">{{ operation.category }}</td>
+            <td data-label="Сумма">{{ operation.money }}</td>
+            <td data-label="От куда">{{ operation.cashbox_from }}</td>
+            <td data-label="Куда">{{ operation.cashbox_to }}</td>
+            <td data-label="Комментарий">{{ operation.comment }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+{% include 'includes/paginate.html' %}
 {% endblock %}
 {% block js %}
     <script src="{% static 'js/tables.js' %}"></script>

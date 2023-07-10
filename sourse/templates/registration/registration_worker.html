@@ -9,6 +9,9 @@
         }
     </style>
 {% endblock %}
+{% block page_title %}
+Добавить работника
+{% endblock %}
 
 {% block content %}
     {% if errors %}
@@ -46,7 +49,7 @@
                                 <label for="id_password2">Повторите пароль:</label>
                                 <input type="password" name="password2" autocomplete="new-password" required="" id="id_password2">
                             </p>
-                            <input type="submit">
+                            <input type="submit" value="Добавить">
                         </form>
                     </div>
                 </div>

@@ -4,11 +4,10 @@
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
 {% endblock %}
 {% block page_title %}
-Касса
+Заказы
 {% endblock %}
 
 {% block content %}
-        <a href="{% url 'order_create' %}" class="button-link">Создать заказ</a>
 
 <table>
   <thead>
@@ -28,7 +27,7 @@
   <tbody>
     {% for order in order_list %}
       <tr>
-        <td data-label="Счет"><a href="{% url 'order_detail' order.id %}">#{{ order.id }}</a></td>
+        <td data-label="Счет"><a href="{% url 'order_detail' order.id %}"><button>#{{ order.id }}</button></a></td>
         <td data-label="Дата">{{ order.date }}</td>
         <td data-label="Стадия">{{ order.get_stage_display }}</td>
         <td data-label="Касса"><a href="#">{{ order.cashbox }}</a></td>

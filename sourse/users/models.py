@@ -60,7 +60,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     user_type = models.CharField(max_length=20, choices=UserType.choices, default=UserType.CLIENT)
     discount = models.ForeignKey(DiscountType, on_delete=models.PROTECT, blank=True, null=True)
     money = models.IntegerField(default=0)
-    services_count = models.IntegerField(default=0)
+    profit = models.IntegerField(default=0)
+    product_count = models.IntegerField(default=0, blank=True, null=True)
+
     referral = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
 
     class Meta:

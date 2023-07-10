@@ -37,5 +37,6 @@ urlpatterns = [
     path('cashbox/<int:pk>/operation/list/to/', CashboxOperationToListView.as_view(), name='cashbox_operation_list_to'),
     path('cashbox/<int:pk>/operation/list/from/', CashboxOperationFromListView.as_view(),
          name='cashbox_operation_list_from'),
+    path('cashbox/export/operation/', CashboxExport.as_view(), name='cashbox_export'),
 
 ]

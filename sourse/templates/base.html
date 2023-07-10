@@ -88,8 +88,6 @@
 {#        </ul>#}
         <ul class="menu_items">
           <div class="menu_title menu_editor"></div>
-          <!-- duplicate these li tag if you want to add or remove navlink only -->
-          <!-- Start -->
           <li class="item">
             <a href="{% url 'dashboard' %}" class="nav_link">
               <span class="navlink_icon">
@@ -98,37 +96,12 @@
               <span class="navlink">Стадии заказов</span>
             </a>
           </li>
-          <!-- End -->
-          <li class="item">
-            <a href="{% url 'employer_list' %}" class="nav_link">
-              <span class="navlink_icon">
-                <i class="bx bx-loader-circle"></i>
-              </span>
-              <span class="navlink">Зарплаты</span>
-            </a>
-          </li>
-          <li class="item">
-            <a href="{% url 'service_list' %}" class="nav_link">
-              <span class="navlink_icon">
-                <i class="bx bx-filter"></i>
-              </span>
-              <span class="navlink">Редактор услуг</span>
-            </a>
-          </li>
-          <li class="item">
+            <li class="item">
             <a href="{% url 'order_list' %}" class="nav_link">
               <span class="navlink_icon">
                 <i class="bx bx-cloud-upload"></i>
               </span>
               <span class="navlink">Все заказы</span>
-            </a>
-          </li>
-            <li class="item">
-            <a href="{% url 'statistic_page' %}" class="nav_link">
-              <span class="navlink_icon">
-                <i class="bx bx-cloud-upload"></i>
-              </span>
-              <span class="navlink">Отчеты</span>
             </a>
           </li>
             <li class="item">
@@ -139,6 +112,25 @@
               <span class="navlink">Кассы</span>
             </a>
           </li>
+          <li class="item">
+            <a href="{% url 'employer_list' %}" class="nav_link">
+              <span class="navlink_icon">
+                <i class="bx bx-loader-circle"></i>
+              </span>
+              <span class="navlink">Зарплаты</span>
+            </a>
+          </li>
+
+
+            <li class="item">
+            <a href="{% url 'statistic_page' %}" class="nav_link">
+              <span class="navlink_icon">
+                <i class="bx bx-cloud-upload"></i>
+              </span>
+              <span class="navlink">Отчеты</span>
+            </a>
+          </li>
+
             <li class="item">
             <a href="{% url 'client_list' %}" class="nav_link">
               <span class="navlink_icon">
@@ -150,12 +142,20 @@
         </ul>
         <ul class="menu_items">
           <div class="menu_title menu_setting"></div>
-          <li class="item">
-            <a href="{% url 'register_worker' %}" class="nav_link">
+{#          <li class="item">#}
+{#            <a href="{% url 'register_worker' %}" class="nav_link">#}
+{#              <span class="navlink_icon">#}
+{#                <i class="bx bx-flag"></i>#}
+{#              </span>#}
+{#              <span class="navlink">Добавить Работника</span>#}
+{#            </a>#}
+{#          </li>#}
+              <li class="item">
+            <a href="{% url 'service_list' %}" class="nav_link">
               <span class="navlink_icon">
-                <i class="bx bx-flag"></i>
+                <i class="bx bx-filter"></i>
               </span>
-              <span class="navlink">Добавить Работника</span>
+              <span class="navlink">Редактор услуг</span>
             </a>
           </li>
             <li class="item">

@@ -7,10 +7,14 @@
     .cashbox{
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between;
         margin-bottom: 20px;
     }
     .info{
+        margin: 10px;
+        padding: 20px;
+        box-shadow: 0 0 5px black;
+    }
+    .export{
         margin: 10px;
         padding: 20px;
         box-shadow: 0 0 5px black;
@@ -26,6 +30,7 @@
         display: flex;
     }
 
+
     </style>
 {% endblock %}
 {% block page_title %}
@@ -36,7 +41,22 @@
         <div class="info">
         <h3>Касса: {{ object.name }}</h3>
         <p>Текущий баланс: {{ object.balance }}</p>
+
         </div>
+    <div class="export">
+        <h5>Выгрузить кассу</h5>
+        <form action="{% url 'cashbox_export' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="cashcox" value="{{ object.id }}">
+            <label>
+                <input type="date" name="start_date" required>
+            </label>
+            <label>
+                <input type="date" name="end_date" required>
+            </label>
+            <input type="submit">
+        </form>
+    </div>
         <div class="forms">
             <div class="form">
                 <form action="{% url 'add_operation' %}" method="post">
@@ -110,8 +130,7 @@
     <div class="cashbox-operations">
 <div class="table-container">
   <table>
-  <h4>Расход</h4>
-
+      <a href="{% url 'cashbox_operation_list_from' cashbox.id %}"><button>Расходы</button></a>
   <thead>
     <tr>
         <th data-label="Дата">Дата</th>
@@ -141,7 +160,8 @@
 </table>
 
   <table>
-  <h4>Приход</h4>
+        <a href="{% url 'cashbox_operation_list_to' cashbox.id %}"><button>Приходы</button></a>
+
   <thead>
     <tr>
         <th data-label="Дата">Дата</th>

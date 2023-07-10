@@ -11,6 +11,7 @@
 
 {% block content %}
 
+    <a href="{% url 'register_worker' %}" class="nav_link"><button>Добавить Работника</button></a>
 
 <table>
   <thead>
@@ -27,7 +28,7 @@
       <tr>
         <td data-label="Имя"><a href="{% url 'employer_detail' employer.id %}">{{ employer.first_name }} {{ employer.last_name }}</a></td>
         <td data-label="Номер телефона">{{ employer.username }}</td>
-        <td data-label="Кол-во выполненных услуг">{{ employer.services_count }}</td>
+        <td data-label="Кол-во выполненных услуг">{{ employer.product_count }}</td>
         <td data-label="Зарплата">{{ employer.money }}</td>
       </tr>
     {% endfor %}

@@ -1,15 +1,22 @@
 import calendar
+import os
+import time
+from urllib.parse import quote
 
 from django.contrib import messages
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
+
 from crm_app.forms import ServiceForm, CashboxForm, OrderForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
     ConsumablesForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
     ServiceType, ServiceOrder, EmployerOrder, Consumables
 from datetime import date, timedelta, datetime
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 
 from crm_warehouse.models import ProductInEP
 
@@ -181,10 +188,11 @@ class AddServiceView(CreateView):
         service_order.amount += amount_diff
 
         client.money += amount_diff
+        client.profit += amount_diff - cost_diff
 
         update_order.save(update_fields=['count', 'amount', 'cost_price'])
         service_order.save(update_fields=['count', 'amount'])
-        client.save(update_fields=['money'])
+        client.save(update_fields=['money', 'profit'])
         return redirect('invoice_generation', pk=order.pk)
 
     def form_invalid(self, form):
@@ -211,11 +219,11 @@ class OrderServiceDeleteView(DeleteView):
         order.save()
         client = CustomUser.objects.get(id=order.client_id)
         client.money -= self.object.salary
-        client.services_count -= self.object.count
+        client.product_count -= self.object.count
         client.save()
         worker = CustomUser.objects.get(id=self.object.employer_id)
         worker.money -= self.object.salary
-        worker.services_count -= self.object.count
+        worker.product_count -= self.object.count
         worker.save()
         cashbox = Cashbox.objects.get(id=order.cashbox_id)
         cashbox.balance -= self.object.salary
@@ -492,14 +500,109 @@ class CashBoxAddOperationView(CreateView):
 class CashboxOperationFromListView(ListView):
     model = CashboxOperation
     template_name = 'crmapp/cashbox_operation_list.html'
+    paginate_by = 50
 
     def get_queryset(self):
-        return CashboxOperation.objects.filter()
+        return CashboxOperation.objects.filter(cashbox_from_id=self.kwargs['pk'])
 
 
-class CashboxOperationToListView(ListView):
-    model = CashboxOperation
-    template_name = 'crmapp/cashbox_operation_list.html'
+class CashboxOperationToListView(CashboxOperationFromListView):
 
     def get_queryset(self):
-        return CashboxOperation.objects.filter()
+        return CashboxOperation.objects.filter(cashbox_to_id=self.kwargs['pk'])
+
+
+class CashboxExport(View):
+    def post(self, request):
+        start_date = self.request.POST['start_date']
+        end_date = self.request.POST['end_date']
+        cashbox = self.request.POST['cashcox']
+        cashbox_operations = CashboxOperation.objects.filter(
+            Q(cashbox_from=cashbox) | Q(cashbox_to=cashbox),
+            date__range=(start_date, end_date)
+        )
+        file_name = 'cashbox_operations_template.xlsx'  # Excel template file name
+        root_directory = 'excel'  # Root directory to search for the template file
+        file_path = None
+
+        for root, dirs, files in os.walk(root_directory):
+            if file_name in files:
+                file_path = os.path.join(root, file_name)
+                break
+
+        if not file_path:
+            return HttpResponse('File not found')
+
+        wb = load_workbook(file_path)
+        sheet = wb.active
+
+        # Set column headers
+        sheet['A1'] = 'Дата'
+        sheet['B1'] = 'Время'
+        sheet['C1'] = 'От'
+        sheet['D1'] = 'Сумма'
+        sheet['E1'] = 'Куда'
+        sheet['F1'] = 'Категория'
+        sheet['G1'] = 'Сотрудник'
+        sheet['H1'] = 'Комментарий'
+
+        # Set column widths and formatting
+        column_widths = [20, 20, 10, 30, 20, 20, 15, 15]
+        for col_num, width in enumerate(column_widths, start=1):
+            col_letter = chr(ord('A') + col_num - 1)
+            sheet.column_dimensions[col_letter].width = width
+
+        thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'),
+                             bottom=Side(style='thin'))
+        alignment = Alignment(horizontal='center')
+        font = Font(color="000000")
+
+        row = 2
+        for operation in cashbox_operations:
+            # Set cell values
+            sheet[f'A{row}'] = operation.date.strftime('%Y-%m-%d')
+            sheet[f'B{row}'] = operation.time.strftime('%H:%M')
+            sheet[f'C{row}'] = operation.cashbox_from.name if operation.cashbox_from else ''
+            sheet[f'D{row}'] = operation.money
+            sheet[f'E{row}'] = operation.cashbox_to.name if operation.cashbox_to else ''
+            sheet[f'F{row}'] = operation.category.category if operation.category else ''
+            sheet[f'G{row}'] = operation.user.username if operation.user else ''
+            sheet[f'H{row}'] = operation.comment if operation.comment else ''
+
+            # Apply formatting to cells
+            for col_num in range(1, 9):
+                cell = sheet.cell(row=row, column=col_num)
+                cell.border = thin_border
+                cell.alignment = alignment
+
+
+            row += 1
+
+        # Save the workbook
+        timestamp = int(time.time())  # Add a timestamp to the file name to make it unique
+        new_file_path = f'excel/cashbox_operations_{timestamp}.xlsx'
+        wb.save(new_file_path)
+        wb.close()
+
+        # Prepare the response for file download
+        with open(new_file_path, 'rb') as f:
+            response = HttpResponse(f.read(),
+                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            filename = f'CashboxOperations_{date.today()}.xlsx'
+            quoted_filename = quote(filename, encoding='utf-8')
+            response['Content-Disposition'] = f'attachment; filename="{quoted_filename}"'
+
+        # Delete the newly generated file
+        max_retries = 3
+        retry_delay = 1  # Delay in seconds
+        retry_count = 0
+
+        while retry_count < max_retries:
+            try:
+                os.remove(new_file_path)
+                break
+            except PermissionError:
+                retry_count += 1
+                time.sleep(retry_delay)
+
+        return response

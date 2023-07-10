@@ -16,8 +16,17 @@ body {
   background-color: #ffffff;
   transition: all 0.5s ease;
 }
+body a{
+  color: #333333;
+}
 body.dark {
   background-color: #333;
+  color: white;
+}
+body.dark a:checked{
+  color: #b6b6b6;
+}
+body.dark a{
   color: white;
 }
 body.dark {
