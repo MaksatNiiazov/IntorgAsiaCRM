@@ -15,7 +15,6 @@ class OrderStages(models.TextChoices):
     DISPATCHED = 'dispatched', 'Оправленно'
 
 
-
 class Order(models.Model):
     stage = models.CharField(max_length=20, choices=OrderStages.choices, default=OrderStages.DATABASE_LOADING)
     name = models.CharField(max_length=50, blank=True)

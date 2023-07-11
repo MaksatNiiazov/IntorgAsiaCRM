@@ -39,6 +39,7 @@ class EmployerProduct(models.Model):
 
 class EmployerProductService(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_product_service')
+    client = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='user_service_product')
     employer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='employer_product_service')
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='employer_product_service')
     service_count = models.IntegerField(default=0)

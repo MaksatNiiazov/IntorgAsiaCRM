@@ -54,7 +54,7 @@
             <label>
                 <input type="date" name="end_date" required>
             </label>
-            <input type="submit">
+            <input type="submit" value="выгрузить">
         </form>
     </div>
         <div class="forms">
@@ -65,7 +65,7 @@
                     <input type="hidden" value="from" name="check">
                     <input type="hidden" value="{{ object.id }}" name="cashbox_from">
                     <label>
-                        <input type="number" name="money" value="0">
+                        <input type="number" name="money" value="0" min="1">
                     </label>
                         <label for=""></label>
                           <select name="category" id="">
@@ -94,7 +94,7 @@
                         <input type="hidden" value="to" name="check">
                         <input type="hidden" value="{{ object.id }}" name="cashbox_to">
                         <label>
-                            <input type="number" name="money" value="0">
+                            <input type="number" name="money" value="0" min="1">
                         </label>
                         <label for=""></label>
                         <select name="category" id="">
@@ -158,7 +158,7 @@
     {% endfor %}
   </tbody>
 </table>
-
+    <br>
   <table>
         <a href="{% url 'cashbox_operation_list_to' cashbox.id %}"><button>Приходы</button></a>
 

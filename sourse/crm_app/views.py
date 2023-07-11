@@ -350,7 +350,7 @@ class PayASalaryView(LockedView, View):
         if balance_check < 0:
             messages.error(self.request, "В кассе недостаточно средств!")
             return redirect('employer_detail', emp_order.user.id)
-        CashboxOperation.objects.create(user_id=3, category=category, cashbox_from=cashbox, money=num, comment='')
+        CashboxOperation.objects.create(user_id=self.request.user.id, category=category, cashbox_from=cashbox, money=num, comment='')
 
         cashbox.balance -= num
         user.money -= num
@@ -476,7 +476,7 @@ class CashBoxAddOperationView(LockedView, CreateView):
             if not comment:
                 comment = ''
             operation = CashboxOperation.objects.create(
-                user_id=3,
+                user_id=self.request.user.id,
                 category=category,
                 money=form.cleaned_data['money'],
                 comment=comment,
@@ -499,7 +499,7 @@ class CashBoxAddOperationView(LockedView, CreateView):
             if not comment:
                 comment = ''
             operation = CashboxOperation.objects.create(
-                user_id=3,
+                user_id=self.request.user.id,
                 category=form.cleaned_data['category'],
                 money=money,
                 comment=comment,

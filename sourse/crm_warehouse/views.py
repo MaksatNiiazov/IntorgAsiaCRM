@@ -392,8 +392,8 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 update_order = Order.objects.get(id=order.pk)
                 emp_serv = order_service
                 emp_serv.confirmed_switch()
-                eps, _ = EmployerProductService.objects.get_or_create(order=update_order, service=service, employer=employer,
-                                                                   product=product)
+                eps, _ = EmployerProductService.objects.get_or_create(order=update_order, service=service,
+                                                                      employer=employer, product=product)
                 if service.before_defective:
                     new_count = product.good_quality + product.defective
                 else:
@@ -768,7 +768,7 @@ class UnpackingNextStage(LockedView, View):
         order.save()
         acceptance = Service.objects.get(acceptance=True)
         salary = acceptance.price * order.count
-        order_service = OrderService(order=order, service=acceptance, employer_id=3, count=order.count, salary=salary)
+        order_service = OrderService(order=order, service=acceptance, employer_id=self.request.user.id, count=order.count, salary=salary)
         service_order = ServiceOrder(order=order, service=acceptance, count=order.count, amount=salary)
         order_service.save()
         service_order.save()

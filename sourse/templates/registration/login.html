@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
-
+{% block page_title %}
+Вход
+{% endblock %}
 {% block content %}
     <div class="container">
 <div class="page">
@@ -10,15 +12,15 @@
              <form action="{% url 'login' %}" method="POST" class="modal-login">
                             {% csrf_token %}
                             <div class="content-modal-form">
-                                <div class="title-modal-form">Sign In</div>
+                                <div class="title-modal-form">Вход</div>
                             </div>
 
                             <div class="mb-3">
-                                <input type="text", name ="username" class="form-control form-control-form" placeholder="">
+                                <input type="text", name ="username" class="form-control form-control-form" placeholder="Логин">
                             </div>
 
                             <div class="mb-3">
-                                <input type="password" name="password" class="form-control form-control-form" placeholder="Password">
+                                <input type="password" name="password" class="form-control form-control-form" placeholder="Пароль">
                             </div>
 
 
