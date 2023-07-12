@@ -18,7 +18,7 @@
     <tr>
       <th data-label="Имя">Имя</th>
       <th data-label="Номер телефона">Номер телефона</th>
-      <th data-label="Кол-во выполненных услуг">Кол-во выполненных услуг</th>
+      <th data-label="Кол-во">Кол-во</th>
       <th data-label="Зарплата">Зарплата</th>
 
     </tr>
@@ -28,7 +28,7 @@
       <tr>
         <td data-label="Имя"><a href="{% url 'employer_detail' employer.id %}">{{ employer.first_name }} {{ employer.last_name }}</a></td>
         <td data-label="Номер телефона">{{ employer.username }}</td>
-        <td data-label="Кол-во выполненных услуг">{{ employer.product_count }}</td>
+        <td data-label="Кол-во">{{ employer.employer_orders.first.product_count }}</td>
         <td data-label="Зарплата">{{ employer.money }}</td>
       </tr>
     {% endfor %}

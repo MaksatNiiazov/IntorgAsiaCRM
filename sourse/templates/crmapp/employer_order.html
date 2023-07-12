@@ -16,7 +16,6 @@
                 <th data-label="Услуга">Услуга</th>
                 <th data-label="Общее Кол-во">Общее Кол-во</th>
                 <th data-label="Кол-во Брака">Кол-во Брака</th>
-                <th data-label="Дата">Дата</th>
             </tr>
         </thead>
         <tbody>
@@ -24,22 +23,13 @@
                 <tr>
                     <td data-label="Услуга">{{ object.product.name }} ({{ object.product.color }}/{{ object.product.size }})</td>
                     <td>
-{#                        <select>#}
-                        {% for service in object.ep.order.order_service.filter.user %}
-                            <p>{{ service.service }}
-                                {% if service.before_defective %}
-                                 - {{ object.product.count }}
-                                {% else %}
-                                 - {{ object.product.good_quality }}
-                                {% endif %}
-                            </p>
+                        {% for service in object.product_service.all %}
+                            <p>{{ service.service }} - {{ service.count }}</p>
                         {% endfor %}
-{#                    </select>#}
                     </td>
 
-                    <td data-label="Общее Кол-во">{{ object.count }}</td>
+                    <td data-label="Общее Кол-во">{{ object.product.count }}</td>
                     <td data-label="Кол-во Брака">{{ object.product.defective }}</td>
-                    <td data-label="Дата">{{ object.date }}</td>
                 </tr>
             {% endfor %}
 

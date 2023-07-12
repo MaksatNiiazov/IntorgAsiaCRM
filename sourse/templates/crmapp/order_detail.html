@@ -87,7 +87,35 @@
                         <td data-label="Услуга">{{ order_service.service }}</td>
                         <td data-label="Код">{{ order_service.service.id }}</td>
                         <td data-label="Цена за ед">{{ order_service.service.price }}</td>
-                        <td data-label="Общая цена">{{ order_service.amount }}</td>
+                        <td data-label="Общая цена">{{ order_service.price }}</td>
+                        <td data-label="Количество">{{ order_service.count }}</td>
+                {% empty %}
+                        <td>No order services found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="table-container">
+        <h4>Расходные материалы</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th data-label="Услуга">Услуга</th>
+                    <th data-label="Код">Код</th>
+                    <th data-label="Цена за ед">Цена за ед</th>
+                    <th data-label="Общая цена">Общая цена</th>
+                    <th data-label="Количество">Количество</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order_service in services %}
+                    <tr>
+                        <td data-label="Услуга">{{ order_service.service }}</td>
+                        <td data-label="Код">{{ order_service.service.id }}</td>
+                        <td data-label="Цена за ед">{{ order_service.service.price }}</td>
+                        <td data-label="Общая цена">{{ order_service.price }}</td>
                         <td data-label="Количество">{{ order_service.count }}</td>
                 {% empty %}
                         <td>No order services found.</td>

@@ -18,8 +18,7 @@ from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
 from crm_app.views import LockedView
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
-from crm_warehouse.models import Product, EmployerProduct, ProductInEP, SetOfServices, ServiceInSet, ProductInOrder, \
-    EmployerProductService
+from crm_warehouse.models import Product, EmployerProduct, SetOfServices, ServiceInSet, ProductService
 from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrder, EmployerOrder, Consumables, \
     OrderConsumables
 from users.models import User as CustomUser
@@ -265,7 +264,7 @@ class QualityCheckView(LockedView, DetailView):
         context = super().get_context_data()
         context['products_in_work'] = Product.objects.filter(order=self.object, in_work=True)
         context['products'] = Product.objects.filter(order=self.object, in_work=False)
-        context['workers'] = CustomUser.objects.filter(user_type='worker')
+        context['employers'] = CustomUser.objects.filter(user_type='worker')
         context['services'] = Service.objects.all()
         context['order_id'] = self.object.id
         context['sets_of_services'] = SetOfServices.objects.filter(order_id=self.object.id)
@@ -291,24 +290,19 @@ class QualityUpdateView(LockedView, CreateView):
         product = Product.objects.get(id=product_id)
         product.in_work = True
         product.save()
-        order = form.cleaned_data['order']
-        user = form.cleaned_data['user']
-        emp_product = EmployerProduct.objects.get_or_create(
-            order=order,
-            user=user,
-        )[0]
-        emp_product.count += product.good_quality
-        emp_product.save()
-
-        ProductInEP.objects.get_or_create(
-            ep=emp_product,
+        order = product.order
+        employer = form.cleaned_data['employer']
+        employer_product = EmployerProduct.objects.get_or_create(
             product=product,
-            user=user,
-            count=product.good_quality
-        )
+            employer=employer,
+        )[0]
+        employer_product.product_count += product.good_quality
+        employer_product.save()
+
         return redirect('quality_check', order.id)
 
     def form_invalid(self, form):
+        print(form.errors)
         return redirect('quality_check', self.object.id)
 
 
@@ -349,13 +343,10 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
         set_id = self.request.POST.get('set')
         set = SetOfServices.objects.get(id=set_id)
         services = set.services.all()
-        order_id = self.request.POST['order']
-        order = Order.objects.get(id=order_id)
-        employer_id = self.request.POST['employer']
-        employer = CustomUser.objects.get(id=employer_id)
-        worker = CustomUser.objects.get(id=employer_id)
-        client = CustomUser.objects.get(id=order.client_id)
         product = self.object
+        employer = CustomUser.objects.get(id=form.cleaned_data['employer_id'])
+        order = product.order
+        client = order.client
 
         if not product.defective_check:
             good_quality = product.actual_quantity - form.cleaned_data['defective']
@@ -372,32 +363,23 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
             order.defective = total_defective
             order.count = count
             order.save()
-            product_in_ep = ProductInEP.objects.get(product=product, user_id=worker.id)
-
-            product_in_order = ProductInOrder.objects.create(
-                order=order,
-                product=product,
-                count=total_good_quality
-            )
             product.save()
-
-            emp_order = EmployerOrder.objects.get_or_create(order=order, user=worker)[0]
+            employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
+            employer_product = EmployerProduct.objects.get(product=product, employer=employer)
 
             client.product_count = count
 
-            for service_id in services:
-                service = Service.objects.get(id=service_id.service.id)
-                order_service, _ = OrderService.objects.get_or_create(order=order, service=service, employer=employer)
+            for service in services:
+                service = Service.objects.get(id=service.service.id)
+                order_service, _ = OrderService.objects.get_or_create(order=order, service=service)
                 service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
-                update_order = Order.objects.get(id=order.pk)
-                emp_serv = order_service
-                emp_serv.confirmed_switch()
-                eps, _ = EmployerProductService.objects.get_or_create(order=update_order, service=service,
-                                                                      employer=employer, product=product)
+                order_service.confirmed_switch()
+                product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product, service=service)
                 if service.before_defective:
                     new_count = product.good_quality + product.defective
                 else:
                     new_count = product.good_quality
+
                 if service.discount:
                     discount = 0
                     if client.discount:
@@ -405,39 +387,50 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                     new_amount = (new_count * service.price / 100) * (100 - discount)
                 else:
                     new_amount = new_count * service.price
+
                 new_cost = new_count * service.cost_price
 
-                emp_order.salary += new_cost
-                emp_order.count += new_count
-
-                update_order.amount += new_amount
-                update_order.cost_price += new_cost
+                order.amount += new_amount
+                order.cost_price += new_cost
 
                 service_order.count += new_count
-                service_order.amount += new_amount
+                service_order.price += new_amount
                 service_order.save()
 
-                emp_serv.count += new_count
-                emp_serv.salary += new_count * service.price
+                order_service.count += new_count
+                order_service.salary += new_count * service.price
 
-                worker.money += new_cost
-                worker.product_count += new_count
+                employer.money += new_cost
+                employer.product_count += new_count
 
                 client.money += new_amount
-                client.profit += new_amount - new_cost
+                client.profit += float(new_amount) - float(new_cost)
 
-                product_in_ep.count = new_count
+                employer_product.service_count += new_count
+                product_service.count = new_count
 
-                update_order.save()
-                emp_order.save()
-                emp_serv.save()
-                worker.save()
+                employer_order.service_count += new_count
+                employer_order.product_count = new_count
+                employer_order.salary += new_amount
+
+                order.save()
+                order_service.save()
+                employer.save()
                 client.save()
-                product_in_ep.save()
+                product_service.save()
+                employer_product.save()
+                employer_order.save()
             return redirect('quality_check', self.object.order.id)
 
         else:
-            return super().form_valid(form)
+            self.object.defective_check = False
+            self.object.save()
+            return redirect('quality_check', self.object.order.id)
+
+
+    def form_invalid(self, form):
+        print(form.errors)
+        return redirect('quality_check', self.object.order.id)
 
     def get_object(self, queryset=None):
         obj = get_object_or_404(Product, pk=self.kwargs['pk'])
@@ -482,9 +475,9 @@ class ApplyDiscountView(LockedView, View):
         new_amount = 0
         for sirvice in services:
             if sirvice.service.discount:
-                new_amount += (sirvice.amount / 100) * (100 - percent)
+                new_amount += (sirvice.price / 100) * (100 - percent)
             else:
-                new_amount += sirvice.amount
+                new_amount += sirvice.price
 
             order.amount = round(new_amount)
             order.discount = percent
@@ -722,18 +715,22 @@ class DecreaseProductCountView(LockedView, UpdateView):
     def form_valid(self, form):
         order = self.object
         barcode = form.cleaned_data['barcode']
-        product = Product.objects.get(barcode=barcode, order=order)
-        product_in_order = ProductInOrder.objects.get(order=order, product=product)
+        try:
+            product = Product.objects.get(barcode=barcode, order=order)
+            if product.count > 0:
+                product.count -= 1
+                product.save()
+                return redirect('dispatch', order.id)
+            else:
+                messages.error(self.request, 'Данного продукта уже нет складе!')
+                return redirect('dispatch', order.id)
+        except:
+            messages.error(self.request, 'Данного продукта нет складе!')
+            return redirect('dispatch', order.id)
 
-        if product.count > 0:
-            product_in_order.count -= 1
-            product.count -= 1
-            product.save()
-            product_in_order.save()
-            return redirect('dispatch', order.id)
-        else:
-            messages.error(self.request, 'Product count is already 0.')
-            return redirect('dispatch', order.id)
+    def form_invalid(self, form):
+        print(form.errors)
+        messages.error(self.request, 'Неверный баркод!')
 
 
 class AcceptanceNextStage(LockedView, View):
@@ -767,15 +764,13 @@ class UnpackingNextStage(LockedView, View):
         order.count = count
         order.save()
         acceptance = Service.objects.get(acceptance=True)
-        salary = acceptance.price * order.count
-        order_service = OrderService(order=order, service=acceptance, employer_id=self.request.user.id, count=order.count, salary=salary)
-        service_order = ServiceOrder(order=order, service=acceptance, count=order.count, amount=salary)
-        order_service.save()
+        price = acceptance.price * order.count
+        service_order = ServiceOrder(order=order, service=acceptance, count=order.count, price=price)
         service_order.save()
         if acceptance.discount:
-            order.amount += (salary / 100) * (100 - order.discount)
+            order.amount += (price / 100) * (100 - order.discount)
         else:
-            order.amount += salary
+            order.amount += price
 
         all_confirmed = all(product.confirmation for product in products)
 

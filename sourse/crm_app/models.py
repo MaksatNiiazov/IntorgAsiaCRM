@@ -99,7 +99,6 @@ class Service(models.Model):
 
 class OrderService(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='order_service')
-    employer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='order_service')
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, related_name='order_service')
     date = models.DateField(default=timezone.now)
     count = models.IntegerField(default=0)
@@ -121,7 +120,8 @@ class ServiceOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.DO_NOTHING, related_name='services_in_order')
     count = models.IntegerField(default=0)
-    amount = models.IntegerField(default=0)
+    cost_price = models.IntegerField(default=0)
+    price = models.IntegerField(default=0)
 
 
 class OrderConsumables(models.Model):
@@ -136,7 +136,8 @@ class EmployerOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_orders')
     user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='employer_orders')
     date = models.DateField(blank=True, null=True)
-    count = models.IntegerField(default=0)
+    service_count = models.IntegerField(default=0)
+    product_count = models.IntegerField(default=0)
     salary = models.IntegerField(default=0)
 
 

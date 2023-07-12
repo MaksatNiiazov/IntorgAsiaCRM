@@ -17,7 +17,7 @@ from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, Ca
 from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
-from crm_warehouse.models import ProductInEP
+from crm_warehouse.models import ProductService, EmployerProduct
 
 
 class LockedView(LoginRequiredMixin):
@@ -117,7 +117,9 @@ class OrderDetailView(LockedView, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['services'] = ServiceOrder.objects.filter(order=self.object.id)
-        context['products'] = ProductInEP.objects.filter(ep__order=self.object.id)
+        context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
+        context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
+
         order = self.get_object()
         revenue = order.amount - order.cost_price
 
@@ -193,13 +195,13 @@ class AddServiceView(LockedView, CreateView):
         update_order.cost_price += cost_diff
 
         service_order.count += count_diff
-        service_order.amount += amount_diff
+        service_order.price += amount_diff
 
         client.money += amount_diff
         client.profit += amount_diff - cost_diff
 
         update_order.save(update_fields=['count', 'amount', 'cost_price'])
-        service_order.save(update_fields=['count', 'amount'])
+        service_order.save(update_fields=['count', 'price'])
         client.save(update_fields=['money', 'profit'])
         # ModelChangeLog.add_log(model_name='сервис', user_id=self.request.user.id, old_value=f'{service.name}/{old_count}', new_value=f'{service.name}/{new_count}')
         return redirect('invoice_generation', pk=order.pk)
@@ -365,11 +367,12 @@ class PayASalaryView(LockedView, View):
 
 
 class EmployerOrderView(LockedView, ListView):
-    model = ProductInEP
+    model = EmployerProduct
     template_name = 'crmapp/employer_order.html'
 
     def get_queryset(self):
-        query_set = ProductInEP.objects.filter(ep__order_id=self.kwargs['order_id'], user=self.kwargs['pk'])
+        order = Order.objects.get(id=self.kwargs['order_id'])
+        query_set = EmployerProduct.objects.filter(product__order=order, employer_id=self.kwargs['pk'])
 
         return query_set
 

@@ -66,9 +66,9 @@
                         <td data-label="Кол-во">{{ product.actual_quantity }}</td>
                         <td data-label="Работник">
                             <label for="user"></label>
-                            <select name="user" id="user" required>
-                                {% for worker in workers %}
-                                <option value="{{ worker.id }}">{{ worker }}</option>
+                            <select name="employer" id="user" required>
+                                {% for employer in employers %}
+                                <option value="{{ employer.id }}">{{ employer }}</option>
                                 {% endfor %}
                             </select>
                         </td>
@@ -82,7 +82,9 @@
         </table>
     </div>
     <div class="next_stage">
-    <a href="{% url 'set_of_service_create' order_id %}"><button>Создать набор услуг</button></a>
+        <form action="{% url 'set_of_service_create' order_id %}">
+            <button type="submit">Создать набор услуг</button>
+        </form>
     </div>
     <div class="card_container">
         {% for set in sets_of_services %}
@@ -118,7 +120,7 @@
             <tbody>
                 {% for product in products_in_work %}
                 <tr>
-                    <td data-label="Сотрудник">{{ product.employer_products.first.user }}</td>
+                    <td data-label="Сотрудник">{{ product.employer_product.first.employer }}</td>
                     <td data-label="Продукт">{{ product.name }}</td>
                     <td data-label="Штрихкод">{{ product.barcode }}</td>
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
@@ -138,8 +140,7 @@
                     <td data-label="Общ кол-во">{{ product.actual_quantity }}</td>
                     <td data-label="Кол-во брака">
                         <label>
-                            <input type="hidden" value="{{ order_id }}" name="order">
-                            <input type="hidden" value="{{ product.employer_products.first.user.id }}" name="employer">
+                            <input type="hidden" value="{{ product.employer_product.first.employer.id }}" name="employer_id">
                             <input type="number" max="{{ product.actual_quantity }}" name="defective"
                                 value="{{ product.defective }}" onchange="updateDefectiveQuantity({{ product.id }})">
                             <input type="checkbox" class="submit-checkbox" {% if product.defective_check %}checked{% endif %}
