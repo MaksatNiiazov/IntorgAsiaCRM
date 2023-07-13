@@ -14,7 +14,6 @@ from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
-
 from crm_app.views import LockedView
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
@@ -265,7 +264,7 @@ class QualityCheckView(LockedView, DetailView):
         context['products_in_work'] = Product.objects.filter(order=self.object, in_work=True)
         context['products'] = Product.objects.filter(order=self.object, in_work=False)
         context['employers'] = CustomUser.objects.filter(user_type='worker')
-        context['services'] = Service.objects.all()
+        context['services'] = Service.objects.filter(acceptance=False, single=False)
         context['order_id'] = self.object.id
         context['sets_of_services'] = SetOfServices.objects.filter(order_id=self.object.id)
 
@@ -762,15 +761,23 @@ class UnpackingNextStage(LockedView, View):
         order_items = Product.objects.filter(order=order)
         count = sum(item.actual_quantity for item in order_items)
         order.count = count
-        order.save()
         acceptance = Service.objects.get(acceptance=True)
-        price = acceptance.price * order.count
-        service_order = ServiceOrder(order=order, service=acceptance, count=order.count, price=price)
+        price = acceptance.price * count
+        cost_price = acceptance.cost_price + count
+        service_order = ServiceOrder(order=order, service=acceptance, count=count, price=price)
         service_order.save()
+        amount = 0
         if acceptance.discount:
-            order.amount += (price / 100) * (100 - order.discount)
+            amount += (price / 100) * (100 - order.discount)
         else:
-            order.amount += price
+            amount += price
+        order.amount += amount
+        order.cost_price += cost_price
+        order.save()
+        client = order.client
+        client.money += amount
+        client.profit += float(amount) - float(cost_price)
+        client.save()
 
         all_confirmed = all(product.confirmation for product in products)
 

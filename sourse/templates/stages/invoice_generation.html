@@ -146,7 +146,7 @@
 <table>
   <thead>
     <tr>
-      <th data-label="Сервис">Сервис</th>
+      <th data-label="Расходник">Расходник</th>
       <th data-label="Тип">Тип</th>
       <th data-label="Цена за ед.">Цена за ед.</th>
       <th data-label="Кол-во">Кол-во</th>
@@ -157,7 +157,7 @@
 
     {% for consumable in consumables_in_order %}
         <tr>
-          <td data-label="Сервис">{{ consumable.consumable.name }}</td>
+          <td data-label="Расходник">{{ consumable.consumable.name }}</td>
           <td data-label="Тип">{{ consumable.count }}</td>
           <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
           <td data-label="Кол-во">{{ consumable.count }}</td>

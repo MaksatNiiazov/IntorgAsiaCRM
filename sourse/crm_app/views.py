@@ -11,9 +11,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 from crm_app.forms import ServiceForm, CashboxForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
-    ConsumablesForm
+    ConsumablesForm, AddServiceEmployerForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
-    ServiceType, ServiceOrder, EmployerOrder, Consumables, ModelChangeLog
+    ServiceType, ServiceOrder, EmployerOrder, Consumables, ModelChangeLog, OrderConsumables
 from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
@@ -118,7 +118,7 @@ class OrderDetailView(LockedView, DetailView):
         context = super().get_context_data(**kwargs)
         context['services'] = ServiceOrder.objects.filter(order=self.object.id)
         context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
-        context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
+        context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object)
 
         order = self.get_object()
         revenue = order.amount - order.cost_price
@@ -203,13 +203,67 @@ class AddServiceView(LockedView, CreateView):
         update_order.save(update_fields=['count', 'amount', 'cost_price'])
         service_order.save(update_fields=['count', 'price'])
         client.save(update_fields=['money', 'profit'])
-        # ModelChangeLog.add_log(model_name='сервис', user_id=self.request.user.id, old_value=f'{service.name}/{old_count}', new_value=f'{service.name}/{new_count}')
         return redirect('invoice_generation', pk=order.pk)
 
     def form_invalid(self, form):
         order = form.cleaned_data['order']
         print(form.errors)
         return redirect('invoice_generation', pk=order.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['order_id'] = self.kwargs['order_id']
+        context['services'] = Service.objects.all()
+        context['employers'] = CustomUser.objects.filter(user_type='worker')
+        return context
+
+
+class AddServiceEmployerView(LockedView, CreateView):
+
+    form_class = AddServiceEmployerForm
+    template_name = 'crmapp/service_add.html'
+
+    def form_valid(self, form):
+        product = form.cleaned_data['product']
+        order = product.order
+        client = order.client
+        count = form.cleaned_data['service_count']
+        service = Service.objects.get(id=int(self.request.POST.get('service')))
+        employer =form.cleaned_data['employer']
+        price = service.price * count
+        cost_price = service.cost_price * count
+
+        employer_product = EmployerProduct.objects.create(employer=employer, product=product, service_count=count)
+        product_service = ProductService.objects.create(service=service, employer_product=employer_product,
+                                                        count=count,)
+        employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
+        service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
+        service_order.count += count
+        service_order.price += price
+        service_order.cost_price += cost_price
+        service_order.save()
+
+        order.amount += price
+        order.cost_price += cost_price
+        order.count += count
+        order.save()
+
+        client.money += price
+        client.profit += price - cost_price
+        client.save()
+
+        employer.money += cost_price
+        employer.save()
+
+        employer_order.service_count += count
+        employer_order.save()
+
+        return redirect('quality_check', pk=order.pk)
+
+    def form_invalid(self, form):
+
+        print(form.errors)
+        return redirect('invoice_generation', pk=form.product.order.pk)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

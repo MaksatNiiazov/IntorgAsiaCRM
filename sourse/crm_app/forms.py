@@ -1,5 +1,6 @@
 from django import forms
 
+from crm_warehouse.models import EmployerProduct
 from .models import Service, Cashbox, Order, CustomUser, CashboxOperation, ServiceType, EmployerOrder, \
     Consumables, ServiceOrder
 
@@ -53,3 +54,8 @@ class AddServiceForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['service'].queryset = Service.objects.all()
 
+
+class AddServiceEmployerForm(forms.ModelForm):
+    class Meta:
+        model = EmployerProduct
+        fields = ('product', 'employer', 'service_count')

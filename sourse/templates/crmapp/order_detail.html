@@ -18,6 +18,9 @@
     }
     </style>
 {% endblock %}
+{% block page_title %}
+Заказ №{{ order.id }}
+{% endblock %}
 {% block content %}
     <div class="container">
         <div class="order-detail">
@@ -100,29 +103,28 @@
     <div class="table-container">
         <h4>Расходные материалы</h4>
         <table>
-            <thead>
-                <tr>
-                    <th data-label="Услуга">Услуга</th>
-                    <th data-label="Код">Код</th>
-                    <th data-label="Цена за ед">Цена за ед</th>
-                    <th data-label="Общая цена">Общая цена</th>
-                    <th data-label="Количество">Количество</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order_service in services %}
-                    <tr>
-                        <td data-label="Услуга">{{ order_service.service }}</td>
-                        <td data-label="Код">{{ order_service.service.id }}</td>
-                        <td data-label="Цена за ед">{{ order_service.service.price }}</td>
-                        <td data-label="Общая цена">{{ order_service.price }}</td>
-                        <td data-label="Количество">{{ order_service.count }}</td>
-                {% empty %}
-                        <td>No order services found.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <thead>
+        <tr>
+          <th data-label="Расходник">Расходник</th>
+          <th data-label="Тип">Тип</th>
+          <th data-label="Цена за ед.">Цена за ед.</th>
+          <th data-label="Кол-во">Кол-во</th>
+          <th data-label="Стоимость">Стоимость</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% for consumable in consumables_in_order %}
+            <tr>
+              <td data-label="Расходник">{{ consumable.consumable.name }}</td>
+              <td data-label="Тип">{{ consumable.count }}</td>
+              <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
+              <td data-label="Кол-во">{{ consumable.count }}</td>
+              <td data-label="Стоимость">{{ consumable.price }}</td>
+            </tr>
+          {% endfor %}
+      </tbody>
+    </table>
 
     </div>
     </div>

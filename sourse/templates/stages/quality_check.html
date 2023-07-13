@@ -3,23 +3,49 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
     <style>
-    h2{
-        text-align: center;
-    }
-    .card_container{
-        display: flex;
-    }
-    .card{
-        border: #af4c4c 1px solid;
-        margin: 0 10px 0 0 ;
-        padding: 10px;
-    }
-    .card_title{
-        font-size: 20px;
-    }
-    .card_body{
-        font-size: 15px;
-    }
+        h2 {
+            text-align: center;
+        }
+        .card_container {
+            display: flex;
+        }
+        .card {
+            border: #af4c4c 1px solid;
+            margin: 0 10px 0 0 ;
+            padding: 10px;
+        }
+        .card_title {
+            font-size: 20px;
+        }
+        .card_body {
+            font-size: 15px;
+        }
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .popup-content {
+            margin: 20% auto;
+            width: 500px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .close{
+            margin-left: 95%;
+            font-size: 20px;
+            line-height: 0;
+            width: 10px;
+            height: 10px;
+        }
     </style>
 {% endblock %}
 {% block title %}
@@ -37,7 +63,7 @@
     </ul>
 
     <div class="table-container">
-    <h2>Выдача</h2>
+        <h2>Выдача</h2>
         <table>
             <thead>
                 <tr>
@@ -102,7 +128,7 @@
     </div>
 
     <div class="table-container">
-    <h2>В работе</h2>
+        <h2>В работе</h2>
         <table>
             <thead>
                 <tr>
@@ -125,7 +151,9 @@
                     <td data-label="Штрихкод">{{ product.barcode }}</td>
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
                     <td data-label="Размер"><label>{{ product.size }}</label></td>
-                    <td data-label="Добавить услугу"><a href="{% url 'add_to_order' %}">Добавить услугу</a></td>
+                    <td data-label="Добавить услугу">
+                        <button onclick="openPopup('{{ product.id }}')">Добавить услугу</button>
+                    </td>
                     <td data-label="Выбрать набор">
                         <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post"
                             action="{% url 'defective_check_update' product.id %}">
@@ -147,7 +175,7 @@
                                 data-form-id="update-form-{{ product.id }}">
                         </label>
                     </td>
-                        </form>
+                    </form>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -156,12 +184,38 @@
 
     <br>
     <div class="next_stage">
-    <form action="{% url 'quality_check_next' order_id %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Завершить работы</button>
-    </form>
+        <form action="{% url 'quality_check_next' order_id %}" method="post">
+            {% csrf_token %}
+            <button type="submit">Завершить работы</button>
+        </form>
     </div>
     <br>
+
+    <!-- Popup -->
+    <div id="popup" class="popup" style="display: none">
+        <div class="popup-content">
+            <span class="close" onclick="closePopup()">&times;</span>
+            <h3>Добавить услугу</h3>
+            <form id="add-service-form" method="post" action="{% url 'add_service_employer' %}">
+                {% csrf_token %}
+                <input type="hidden" id="product-id-input" name="product" value="">
+                <label for="service"></label><select name="service" id="service" required>
+                    {% for service in services %}
+                    <option value="{{ service.id }}">{{ service.name }}</option>
+                    {% endfor %}
+                </select>
+                 <select name="employer" id="user" required>
+                    {% for employer in employers %}
+                    <option value="{{ employer.id }}">{{ employer }}</option>
+                    {% endfor %}
+                </select>
+                <label value="Кол-во">
+                    <input type="number" name="service_count" placeholder="Кол-во">
+                </label>
+                <input type="submit" value="Добавить">
+            </form>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -204,6 +258,22 @@
         const formId = `update-form-${productId}`;
         const form = document.getElementById(formId);
         submitFormViaAjax(form);
+    }
+
+    // Function to open the popup and set the product ID
+    function openPopup(productId) {
+        const popup = document.getElementById('popup');
+        const productIdInput = document.getElementById('product-id-input');
+        productIdInput.value = productId;
+        popup.style.display = 'block';
+    }
+
+    // Function to close the popup and clear the product ID
+    function closePopup() {
+        const popup = document.getElementById('popup');
+        const productIdInput = document.getElementById('product-id-input');
+        productIdInput.value = '';
+        popup.style.display = 'none';
     }
 </script>
 {% endblock %}

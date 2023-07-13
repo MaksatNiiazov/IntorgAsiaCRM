@@ -7,6 +7,8 @@ urlpatterns = [
     path('order/detail/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     # path('order/create/', OrderCreateView.as_view(), name='order_create'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),
+    path('order/add/service/employer/', AddServiceEmployerView.as_view(), name='add_service_employer'),
+
     path('order/<int:pk>/delete/service/', OrderServiceDeleteView.as_view(), name='delete_service'),
     path('order/add/to/order/', SertviceToOrderView.as_view(), name='add_to_order'),
 
