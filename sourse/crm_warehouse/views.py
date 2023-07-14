@@ -829,3 +829,11 @@ class DispatchNextStage(LockedView, View):
         if order.stage == 'dispatch':
             order.transition_to_next_stage()
         return redirect(reverse('dashboard'))
+
+
+class DispatchedNextStage(LockedView, View):
+    def post(self, request, order_id):
+        order = Order.objects.get(id=order_id)
+        if order.stage == 'dispatched':
+            order.transition_to_next_stage()
+        return redirect(reverse('dashboard'))

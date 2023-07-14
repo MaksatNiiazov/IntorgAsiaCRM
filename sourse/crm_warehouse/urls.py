@@ -31,5 +31,5 @@ urlpatterns = [
     path('nextstage/quality_check/<int:order_id>/', QualityCheckNextStage.as_view(), name='quality_check_next'),
     path('nextstage/invoice_generation/<int:order_id>/', InvoiceGenerationNextStage.as_view(), name='invoice_generation_next'),
     path('nextstage/dispatch/<int:order_id>/', DispatchNextStage.as_view(), name='dispatch_next'),
-
+    path('nextstage/dispatched/<int:order_id>/', DispatchedNextStage.as_view(), name='dispatched_next'),
 ]

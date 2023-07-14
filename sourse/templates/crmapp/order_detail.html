@@ -3,19 +3,30 @@
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
     <style>
-    .order-detail{
-        max-width: 300px;
-        padding: 20px;
-        box-shadow: 0 0 5px black;
-        margin-bottom: 10px;
-    }
-    .order-detail p{
-        display: flex;
-        justify-content: space-between;
-    }
-    .order-detail span{
-        font-weight: bolder;
-    }
+        .order-detail{
+            max-width: 320px;
+            padding: 20px;
+            box-shadow: 0 0 5px black;
+            margin-bottom: 10px;
+        }
+        .order-detail p{
+            display: flex;
+            justify-content: space-between;
+            margin: 3px;
+        }
+        .order-detail span{
+            font-weight: bolder;
+        }
+        .top_block{
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .make_a_payment{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
     </style>
 {% endblock %}
 {% block page_title %}
@@ -23,18 +34,53 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-        <div class="order-detail">
-            <h1>Заказ №{{ order.id }}</h1>
-            <p><span>Стадия:</span> {{ order.get_stage_display }}</p>
-            <p><span>Касса:</span> {{ order.cashbox }}</p>
-            <p><span>Дата:</span> {{ order.date }}</p>
-            <p><span>Время:</span> {{ order.time }}</p>
-            <p><span>Клиент:</span> {{ order.client }}</p>
-            <p><span>Стоимость:</span> {{ order.amount }}</p>
-            <p><span>Себестоимость:</span> {{ order.cost_price }}</p>
-            <p><span>Выручка:</span> {{ revenue }}</p>
-            <p><span>Количество услуг:</span> {{ order.count }}</p>
+        <div class="top_block">
+            <div class="order_info">
+                <div class="order-detail">
+                    <h1>Заказ №{{ order.id }}</h1>
+                    <p><span>Клиент:</span> {{ order.client }}</p>
+                    <p><span>Стадия:</span> {{ order.get_stage_display }}</p>
+                    <p><span>Дата:</span> {{ order.date }}</p>
+                    <p><span>Время:</span> {{ order.time }}</p>
+                    <p><span>Количество услуг:</span> {{ order.count }}</p>
+                    <p><span>Себестоимость:</span> {{ order.cost_price }}</p>
+                    <p><span>Выручка:</span> {{ revenue }}</p>
+                    <p><span>Сумма заказа:</span> {{ order.amount }}</p>
+
+                </div>
+                {% if next_stage %}
+                    <form action="{% url 'dispatched_next' order.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="submit" value="Закрыть заказ">
+                    </form>
+                {% endif %}
+            </div>
+            <div class="make_a_payment">
+                <div class="pay">
+                    <h5>Провести оплату</h5>
+                    {% if order.amount != 0 %}
+                        <form action="{% url 'make_a_payment' %}" method="post">
+                            {% csrf_token %}
+                            <label for=""></label>
+                            <select name="cashbox" id="">
+                                {% for cashbox in cashboxes %}
+                                    <option value="{{ cashbox.id }}">{{ cashbox }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+                            <label>
+                                <input name="money" type="number" placeholder="Сумма" value="{{ order.amount }}" min="1" max="{{ order.amount }}">
+                            </label>
+                            <input type="hidden" value="{{ order.id }}" name="order">
+                            <input type="submit" value="оплата">
+                        </form>
+                    {% else %}
+                        <button>Оплаченно</button>
+                    {% endif %}
+                </div>
+            </div>
         </div>
+        <br>
      <div class="table-container">
      <h4>
          Продукты в заказе
@@ -45,8 +91,8 @@
                     <th data-label="Баркод">Баркод</th>
                     <th data-label="Артикул">Артикул</th>
                     <th data-label="Продукт">Продукт</th>
-                    <th data-label="Размер">Размер</th>
                     <th data-label="Цвет">Цвет</th>
+                    <th data-label="Размер">Размер</th>
                     <th data-label="Состав">Состав</th>
                     <th data-label="Страна пр-ва">Страна пр-ва</th>
                     <th data-label="К отправке">К отправке</th>
@@ -103,29 +149,31 @@
     <div class="table-container">
         <h4>Расходные материалы</h4>
         <table>
-  <thead>
-        <tr>
-          <th data-label="Расходник">Расходник</th>
-          <th data-label="Тип">Тип</th>
-          <th data-label="Цена за ед.">Цена за ед.</th>
-          <th data-label="Кол-во">Кол-во</th>
-          <th data-label="Стоимость">Стоимость</th>
-        </tr>
-      </thead>
-      <tbody>
-
-        {% for consumable in consumables_in_order %}
-            <tr>
-              <td data-label="Расходник">{{ consumable.consumable.name }}</td>
-              <td data-label="Тип">{{ consumable.count }}</td>
-              <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
-              <td data-label="Кол-во">{{ consumable.count }}</td>
-              <td data-label="Стоимость">{{ consumable.price }}</td>
-            </tr>
-          {% endfor %}
-      </tbody>
-    </table>
-
+            <thead>
+                <tr>
+                    <th data-label="Расходник">Расходник</th>
+                    <th data-label="Тип">Тип</th>
+                    <th data-label="Цена за ед.">Цена за ед.</th>
+                    <th data-label="Кол-во">Кол-во</th>
+                    <th data-label="Стоимость">Стоимость</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consumable in consumables_in_order %}
+                    <tr>
+                        <td data-label="Расходник">{{ consumable.consumable.name }}</td>
+                        <td data-label="Тип">{{ consumable.count }}</td>
+                        <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
+                        <td data-label="Кол-во">{{ consumable.count }}</td>
+                        <td data-label="Стоимость">{{ consumable.price }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
 {% endblock %}

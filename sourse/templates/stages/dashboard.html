@@ -119,7 +119,7 @@
   {% if order.stage == 'dispatched' %}
   <div class="order" id="{{ order.id }}" draggable="true">
   <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                  <a href="{% url 'dispatch' order.id %}"><button>Проверка</button></a>
+                  <a href="{% url 'order_detail' order.id %}"><button>Проверка</button></a>
     </div>
   {% endif %}
   {% endfor %}

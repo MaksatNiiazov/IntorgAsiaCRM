@@ -119,7 +119,9 @@ class OrderDetailView(LockedView, DetailView):
         context['services'] = ServiceOrder.objects.filter(order=self.object.id)
         context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
         context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object)
-
+        context['cashboxes'] = Cashbox.objects.all()
+        if self.object.amount == 0 and self.object.stage == 'dispatched':
+            context['next_stage'] = True
         order = self.get_object()
         revenue = order.amount - order.cost_price
 
@@ -406,8 +408,8 @@ class PayASalaryView(LockedView, View):
         if balance_check < 0:
             messages.error(self.request, "В кассе недостаточно средств!")
             return redirect('employer_detail', emp_order.user.id)
-        CashboxOperation.objects.create(user_id=self.request.user.id, category=category, cashbox_from=cashbox, money=num, comment='')
-
+        CashboxOperation.objects.create(user_id=self.request.user.id, category=category, cashbox_from=cashbox,
+                                        money=num, comment=f'зарплата {user}')
         cashbox.balance -= num
         user.money -= num
         emp_order.salary -= num
@@ -691,6 +693,41 @@ class CashboxExport(LockedView, View):
         ModelChangeLog.add_log(model_name=f'касса {cashbox}', user_id=self.request.user.id,
                                change_type='экспорт')
         return response
+
+
+class MakeAPaymentView(View):
+    def post(self, request):
+        order = Order.objects.get(id=self.request.POST.get('order'))
+        cashbox = Cashbox.objects.get(id=self.request.POST.get('cashbox'))
+        money = int(self.request.POST.get('money'))
+
+        check = order.amount - money
+        if check < 0:
+            messages.error(self.request, "Вы пытаетесь провести оплату на сумму бользую стоимости заказа!")
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        if money <= 0:
+            messages.error(self.request, "Вы пытаетесь провести оплату на 0!")
+            return redirect(self.request.META.get('HTTP_REFERER'))
+        operation_category, _ = CashboxCategory.objects.get_or_create(category='оплата заказа')
+        operation = CashboxOperation.objects.create(
+            user_id=self.request.user.id,
+            category=operation_category,
+            money=money,
+            comment=f'оплата заказа №{order.id}',
+            cashbox_to=cashbox,
+        )
+        old_v = cashbox.balance
+        cashbox.balance += money
+        cashbox.save()
+
+        order.amount -= money
+        order.amount_paid += money
+        order.save()
+        ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
+                               change_type=f'оплата заказа №{order.id} ({money})', old_value=f'{old_v}',
+                               new_value=f'{cashbox.balance}')
+
+        return redirect('order_detail', order.id)
 
 
 class ShowLogsView(LockedView, ListView):

@@ -13,6 +13,7 @@ class OrderStages(models.TextChoices):
     INVOICE_GENERATION = 'invoice_generation', 'Выставка счета'
     DISPATCH = 'dispatch', 'Отправка'
     DISPATCHED = 'dispatched', 'Оправленно'
+    CLOSED = 'closed', 'Закрыт'
 
 
 class Order(models.Model):
@@ -20,6 +21,7 @@ class Order(models.Model):
     name = models.CharField(max_length=50, blank=True)
     cashbox = models.ForeignKey("Cashbox", on_delete=models.PROTECT, blank=True, null=True)
     amount = models.IntegerField(default=0)
+    amount_paid = models.IntegerField(default=0)
     cost_price = models.IntegerField(default=0)
     count = models.IntegerField(default=0)
     date = models.DateField(default=timezone.now)
@@ -49,7 +51,6 @@ class Order(models.Model):
 
     def transition_to_next_stage(self):
         current_stage = self.stage
-
         if current_stage == OrderStages.ACCEPTANCE:
             self.stage = OrderStages.DATABASE_LOADING
         elif current_stage == OrderStages.DATABASE_LOADING:
@@ -62,7 +63,8 @@ class Order(models.Model):
             self.stage = OrderStages.DISPATCH
         elif current_stage == OrderStages.DISPATCH:
             self.stage = OrderStages.DISPATCHED
-
+        elif current_stage == OrderStages.DISPATCHED:
+            self.stage = OrderStages.CLOSED
         self.save()
 
 
