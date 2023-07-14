@@ -4,6 +4,7 @@ from crm_app.views import *
 urlpatterns = [
     path('statistic/', StatisticView.as_view(), name='statistic_page'),
     path('orders/', OrderListView.as_view(), name='order_list'),
+    path('closed/orders/', ClosedOrderListView.as_view(), name='closed_order_list'),
     path('order/detail/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
     # path('order/create/', OrderCreateView.as_view(), name='order_create'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),

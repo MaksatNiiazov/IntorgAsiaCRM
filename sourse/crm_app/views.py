@@ -105,9 +105,21 @@ class OrderListView(LockedView, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        return Order.objects.exclude(stage='closed')
 
-        return queryset
+
+class ClosedOrderListView(LockedView, ListView):
+    model = Order
+    template_name = 'crmapp/order_list.html'
+    ordering = ['-date']
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Order.objects.filter(stage='closed')
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super(ClosedOrderListView, self).get_context_data()
+        context['closed'] = True
+        return context
 
 
 class OrderDetailView(LockedView, DetailView):

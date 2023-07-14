@@ -2,13 +2,29 @@
 {% load static %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <style>
+    .order_stages{
+        display: flex;
+        justify-content: flex-end;
+    }
+    </style>
 {% endblock %}
 {% block page_title %}
-Заказы
+    {% if closed %}
+        Закрытые заказы
+    {% else %}
+        Активные заказы
+    {% endif %}
 {% endblock %}
-
 {% block content %}
-
+    <div class="order_stages">
+        {% if closed %}
+            <a href="{% url 'order_list' %}"><button>Активные заказы</button></a>
+        {% else %}
+            <a href="{% url 'closed_order_list' %}"><button>Закрытые заказы</button></a>
+        {% endif %}
+    </div>
+    <div class="table-container">
 <table>
   <thead>
     <tr>
@@ -17,7 +33,7 @@
         <th data-label="Стадия">Стадия</th>
         <th data-label="Касса">Касса</th>
         <th data-label="Сумма">Сумма</th>
-        <th data-label="Себестоимость">Себестоимость</th>
+        <th data-label="Себес">Себес</th>
         <th data-label="Количество">Количество</th>
         <th data-label="Время">Время</th>
         <th data-label="Реферал">Реферал</th>
@@ -32,7 +48,7 @@
         <td data-label="Стадия">{{ order.get_stage_display }}</td>
         <td data-label="Касса"><a href="#">{{ order.cashbox }}</a></td>
         <td data-label="Сумма">{{ order.amount }}</td>
-        <td data-label="Себестоимость">{{ order.cost_price }}</td>
+        <td data-label="Себес">{{ order.cost_price }}</td>
         <td data-label="Количество">{{ order.count }}</td>
         <td data-label="Время">{{ order.time }}</td>
         <td data-label="Реферал">{{ order.client.referral }}</td>
@@ -41,6 +57,7 @@
     {% endfor %}
   </tbody>
 </table>
+    </div>
 {% include 'includes/paginate.html' %}
 
 {% endblock %}
