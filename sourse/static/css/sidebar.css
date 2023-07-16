@@ -134,7 +134,7 @@ body.dark {
   content: "Навигация";
 }
 .menu_setting::before {
-  content: "Служебные";
+  content: "Справочник";
 }
 .sidebar.close .menu_title::before {
   content: "";

@@ -7,7 +7,7 @@ display: inline-block;
 .info-item{
   padding: 5px;
   box-shadow: 0 0 5px black;
-  border-radius: 5px;
+  border-radius: 2px;
   margin: 10px 5px;
   text-align: center;
   min-width: 150px;
@@ -18,8 +18,9 @@ display: inline-block;
 }
 .graph-wrapper{
     display: inline-block;
-    max-height: 800px;
-    width: 100%;
+      max-height: 400px;
+      min-height: 200px;
+      width: 100%;
 }
 
 #chartContainer {
@@ -51,7 +52,7 @@ form input[type="date"] {
 }
 
 form button[type="submit"] {
-  margin-top: 30px;
+  margin-top: 20px;
   padding: 10px 20px;
   background-color: #4CAF50;
   color: white;
