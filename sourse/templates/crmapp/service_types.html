@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Типы Услуг
+{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <style>
+    input[type="text"]{
+        width: 100%;
+    }
+    </style>
+{% endblock %}
+{% block page_title %}
+Типы Услуг
+{% endblock %}
+{% block content %}
+<div class="table-container">
+<table>
+    <thead>
+        <tr>
+            <th data-label="Тип услуг">Тип услуг</th>
+            <th data-label="Применить">Применить</th>
+            <th data-label="Удалить">Удалить</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <form action="{% url 'service_type_create' %}" method="post">
+                {% csrf_token %}
+            <td data-label="Тип услуг"><label>
+                <input type="text" name="type" placeholder="Тип услуг">
+            </label></td>
+            <td data-label="Применить"><input type="submit" value="Добавить"></td>
+            </form>
+        </tr>
+        {% for object in object_list %}
+                    <tr>
+            <form action="{% url 'service_type_update' object.id %}" method="post">
+                {% csrf_token %}
+            <td data-label="Тип услуг"><label>
+                <input type="text" name="type" value="{{ object.type }}" placeholder="Тип услуг">
+            </label></td>
+            <td data-label="Применить"><input type="submit" value="Изменить"></td>
+            </form>
+            <td>
+            <form action="{% url 'service_type_delete' object.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" value="Удалить">
+            </form>
+            </td>
+        </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+</div>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
+{% endblock %}
+

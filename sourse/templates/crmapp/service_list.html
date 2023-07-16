@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <a href="{% url 'service_type_create' %}">Создать тип услуг</a>
+    <a href="{% url 'service_type_list' %}">Создать тип услуг</a>
     <div class="table-container">
 <table>
   <thead>
@@ -80,10 +80,12 @@
       <td data-label="Тип услуги">
            <label for=""></label><select name="type" id="">
                   {% for type in types %}
-                      {% if service.type == type %}
-                       selected
-                      {% endif %}
-                      <option value="{{ type.id }}">{{ type.type }}</option>
+
+                      <option value="{{ type.id }}"
+                        {% if service.type.id == type.id %}
+                            selected
+                        {% endif %}>
+                          {{ type.type }}</option>
                   {% endfor %}
               </select>
       </td>
@@ -95,7 +97,7 @@
             <input type="number" value="{{ service.price }}" name="price" required>
         </label></td>
         <td data-label="Себестоимость"><label>
-            <input type="number" value="{{ service.cost_price }}" name="cost_price" required>
+            <input type="number" value="{{ service.cost_price }}" step="any" name="cost_price" required>
         </label></td>
           <td data-label="До/После(черты)">
               <label>
@@ -116,8 +118,7 @@
             <td data-label="Скидки">
               <label>
                   <input type="checkbox" name="discount"
-                  {% if service.discount %} checked {% endif %}
-                  >
+                  {% if service.discount %} checked {% endif %}>
               </label>
 
           </td>

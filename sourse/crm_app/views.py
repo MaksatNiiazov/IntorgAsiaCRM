@@ -11,7 +11,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 from crm_app.forms import ServiceForm, CashboxForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
-    ConsumablesForm, AddServiceEmployerForm
+    ConsumablesForm, AddServiceEmployerForm, CashboxOperationCategoryForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
     ServiceType, ServiceOrder, EmployerOrder, Consumables, ModelChangeLog, OrderConsumables
 from datetime import date, timedelta
@@ -139,33 +139,6 @@ class OrderDetailView(LockedView, DetailView):
 
         context['revenue'] = revenue
         return context
-
-
-# class OrderCreateView(CreateView):
-#     model = Order
-#     form_class = OrderForm
-#     template_name = 'crmapp/order_create.html'
-#
-#     def get_initial(self):
-#         initial = super().get_initial()
-#         initial['date'] = date.today()
-#         initial['day'] = date.today().day
-#         initial['month'] = date.today().month
-#         initial['year'] = date.today().year
-#         initial['time'] = datetime.now().strftime('%H:%M')
-#         return initial
-#
-#     def form_valid(self, form):
-#         order = form.save(commit=False)
-#         total_price, total_cost_price = order.calculate_price()
-#         order.amount = total_price
-#         order.cost_price = total_cost_price
-#         order.month = date.today().month
-#         order.year = date.today().year
-#         order.day = date.today().day
-#         order.save()
-#
-#         return redirect('invoice_generation', pk=order.pk)
 
 
 class SertviceToOrderView(LockedView, View):
@@ -316,7 +289,7 @@ class OrderServiceDeleteView(LockedView, DeleteView):
 class ServiceListView(LockedView, ListView):
     model = Service
     template_name = 'crmapp/service_list.html'
-    paginate_by = 20
+    paginate_by = 25
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(ServiceListView, self).get_context_data()
@@ -324,11 +297,30 @@ class ServiceListView(LockedView, ListView):
         return context
 
 
+class ServiceTypeListView(LockedView, ListView):
+    model = ServiceType
+    template_name = 'crmapp/service_types.html'
+    success_url = '/service/type/list/'
+
+
 class ServiceTypeCreateView(LockedView, CreateView):
     model = ServiceType
     form_class = ServiceTypeForm
-    template_name = 'crmapp/servise_type_create.html'
-    success_url = '/services/'
+    template_name = 'crmapp/service_types.html'
+    success_url = '/service/type/list/'
+
+
+class ServiceTypeUpdateView(LockedView, UpdateView):
+    model = ServiceType
+    form_class = ServiceTypeForm
+    template_name = 'crmapp/service_types.html'
+    success_url = '/service/type/list/'
+
+
+class ServiceTypeDeleteView(LockedView, DeleteView):
+    model = ServiceType
+    template_name = 'crmapp/service_types.html'
+    success_url = '/service/type/list/'
 
 
 class ServiceCreateView(LockedView, CreateView):
@@ -500,10 +492,7 @@ class CashboxCreateView(LockedView, CreateView):
     success_url = '/cashboxes/'
 
     def form_valid(self, form):
-        # Save the Cashbox instance
         response = super().form_valid(form)
-
-        # Create a log entry for the Cashbox creation
         model_name = 'касса'
         user = self.request.user.id
         change_type = 'создание'
@@ -523,6 +512,41 @@ class CashboxUpdateView(LockedView, UpdateView):
 class CashboxDeleteView(LockedView, DeleteView):
     model = Cashbox
     success_url = '/cashboxes/'
+
+
+class OperationCategoryListView(LockedView, ListView):
+    model = CashboxCategory
+    template_name = 'crmapp/cashbox_operation_types.html'
+    paginate_by = 20
+
+
+class OperationCategoryCreateView(LockedView, CreateView):
+    model = CashboxCategory
+    form_class = CashboxOperationCategoryForm
+    template_name = 'crmapp/cashbox_operation_types.html'
+    success_url = '/operation/categories/'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        model_name = 'кстегории операций+'
+        user = self.request.user.id
+        change_type = 'создание'
+        new_value = form.instance.category
+        ModelChangeLog.add_log(model_name, user, change_type=change_type, new_value=new_value)
+
+        return response
+
+
+class OperationCategoryViewUpdateView(LockedView, UpdateView):
+    model = CashboxCategory
+    form_class = CashboxOperationCategoryForm
+    success_url = '/operation/categories/'
+
+
+class OperationCategoryDeleteView(LockedView, DeleteView):
+    model = CashboxCategory
+    success_url = '/operation/categories/'
+    template_name = 'crmapp/cashbox_operation_types.html'
 
 
 class CashBoxAddOperationView(LockedView, CreateView):
@@ -707,7 +731,7 @@ class CashboxExport(LockedView, View):
         return response
 
 
-class MakeAPaymentView(View):
+class MakeAPaymentView(LockedView, View):
     def post(self, request):
         order = Order.objects.get(id=self.request.POST.get('order'))
         cashbox = Cashbox.objects.get(id=self.request.POST.get('cashbox'))

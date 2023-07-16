@@ -2,7 +2,7 @@ from django import forms
 
 from crm_warehouse.models import EmployerProduct
 from .models import Service, Cashbox, Order, CustomUser, CashboxOperation, ServiceType, EmployerOrder, \
-    Consumables, ServiceOrder
+    Consumables, ServiceOrder, CashboxCategory
 
 
 class ServiceTypeForm(forms.ModelForm):
@@ -27,6 +27,12 @@ class CashboxForm(forms.ModelForm):
     class Meta:
         model = Cashbox
         fields = ['name', 'balance']
+
+
+class CashboxOperationCategoryForm(forms.ModelForm):
+    class Meta:
+        model = CashboxCategory
+        fields = ('category',)
 
 
 class CashboxOperationForm(forms.ModelForm):

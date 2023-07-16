@@ -1,53 +1,12 @@
-/* Стилизация текстового поля (input type="text") */
-input[type="text"] {
+input[type="text"], input[type="password"], select, input[type="email"] {
   margin-bottom: 4px;
-  width: 200px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
   color: #111;
-    box-shadow:0 0 2px black;
-
+  box-shadow: 0 0 2px black;
 }
-/* Стилизация текстового поля (input type="text") */
-input[type="password"] {
-  margin-bottom: 4px;
-  width: 200px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  color: #111;
-    box-shadow:0 0 2px black;
-
-}
-select{
-  margin-bottom: 4px;
-  width: 200px;
-  padding: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  color: #111;
-    box-shadow:0 0 2px black;
-
-}
-
-/* Стилизация поля ввода для email (input type="email") */
-input[type="email"] {
-  margin-bottom: 4px;
-  width: 200px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  color: #111;
-    box-shadow:0 0 2px black;
-
-}
-
-/* Стилизация поля ввода для чисел (input type="number") */
 input[type="number"] {
   margin-bottom: 4px;
   width: 100px;
@@ -60,7 +19,6 @@ input[type="number"] {
 
 }
 
-/* Стилизация флажка (input type="checkbox") */
 input[type="checkbox"] {
   margin-bottom: 4px;
   -webkit-appearance: none;
@@ -84,8 +42,6 @@ input[type="checkbox"]:checked {
     box-shadow:0 0 2px black;
 
 }
-
-/* Стилизация кнопки (input type="submit") */
 input[type="submit"] {
   margin-bottom: 4px;
   padding: 4px 20px;
@@ -122,8 +78,6 @@ button{
   transition: background-color 0.3s ease;
   cursor: pointer;
 }
-/* Стилизация текстового поля (input type="text") */
-
 
 .messages li{
   color: red;

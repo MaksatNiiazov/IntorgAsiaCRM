@@ -758,30 +758,32 @@ class UnpackingNextStage(LockedView, View):
     def post(self, request, order_id):
         order = Order.objects.get(id=order_id)
         products = order.products.all()
-        order_items = Product.objects.filter(order=order)
-        count = sum(item.actual_quantity for item in order_items)
-        order.count = count
-        acceptance = Service.objects.get(acceptance=True)
-        price = acceptance.price * count
-        cost_price = acceptance.cost_price + count
-        service_order = ServiceOrder(order=order, service=acceptance, count=count, price=price)
-        service_order.save()
-        amount = 0
-        if acceptance.discount:
-            amount += (price / 100) * (100 - order.discount)
-        else:
-            amount += price
-        order.amount += amount
-        order.cost_price += cost_price
-        order.save()
-        client = order.client
-        client.money += amount
-        client.profit += float(amount) - float(cost_price)
-        client.save()
-
         all_confirmed = all(product.confirmation for product in products)
 
         if all_confirmed:
+            order_items = Product.objects.filter(order=order)
+            count = sum(item.actual_quantity for item in order_items)
+            order.count = count
+            acceptance = Service.objects.get(acceptance=True)
+            price = acceptance.price * count
+            cost_price = acceptance.cost_price + count
+            service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=acceptance)
+            service_order.count = count
+            service_order.price = price
+            service_order.save()
+            amount = 0
+            if acceptance.discount:
+                amount += (price / 100) * (100 - order.discount)
+            else:
+                amount += price
+            order.amount += amount
+            order.cost_price += cost_price
+            order.save()
+            client = order.client
+            client.money += amount
+            client.product_count += count
+            client.profit += float(amount) - float(cost_price)
+            client.save()
             if order.stage == 'unpacking':
                 order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))

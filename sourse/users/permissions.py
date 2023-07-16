@@ -11,7 +11,7 @@ class WorkerRequiredMixin(UserPassesTestMixin):
 class ClientRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.user_type == UserType.CLIENT
-    
+
 
 class ManagerRequiredMixin(UserPassesTestMixin):
     def test_func(self):

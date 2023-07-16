@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}
+Кассы
+{% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/tables.css' %}">
 {% endblock %}
@@ -8,6 +11,12 @@
 {% endblock %}
 
 {% block content %}
+    <div class="table-container">
+        <a href="{% url 'operation_list' %}">
+            <button>
+                Категории кассовых операций
+            </button>
+        </a>
 <table>
   <thead>
     <tr>
@@ -38,5 +47,9 @@
     {% endfor %}
   </tbody>
 </table>
+    </div>
 {% include 'includes/paginate.html' %}
+{% endblock %}
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
 {% endblock %}

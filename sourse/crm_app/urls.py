@@ -6,7 +6,6 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('closed/orders/', ClosedOrderListView.as_view(), name='closed_order_list'),
     path('order/detail/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
-    # path('order/create/', OrderCreateView.as_view(), name='order_create'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),
     path('order/add/service/employer/', AddServiceEmployerView.as_view(), name='add_service_employer'),
 
@@ -14,9 +13,13 @@ urlpatterns = [
     path('order/add/to/order/', SertviceToOrderView.as_view(), name='add_to_order'),
     path('order/make/a/payment/', MakeAPaymentView.as_view(), name='make_a_payment'),
 
+    path('service/type/list/', ServiceTypeListView.as_view(), name='service_type_list'),
+    path('service/type/create/', ServiceTypeCreateView.as_view(), name='service_type_create'),
+    path('service/type/update/<int:pk>/', ServiceTypeUpdateView.as_view(), name='service_type_update'),
+    path('service/type/delete/<int:pk>/', ServiceTypeDeleteView.as_view(), name='service_type_delete'),
+
     path('services/', ServiceListView.as_view(), name='service_list'),
     path('service/create/', ServiceCreateView.as_view(), name='service_create'),
-    path('service/type/create/', ServiceTypeCreateView.as_view(), name='service_type_create'),
     path('service/update/<int:pk>/', ServiceUpdateView.as_view(), name='service_update'),
     path('service/delete/<int:pk>/', ServiceDeleteView.as_view(), name='service_delete'),
 
@@ -31,6 +34,11 @@ urlpatterns = [
     path('employer/pay/a/salary/<int:pk>/', PayASalaryView.as_view(), name='pay_a_salary'),
     path('clients/', ClientListView.as_view(), name='client_list'),
     path('client/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
+
+    path('operation/categories/', OperationCategoryListView.as_view(), name='operation_list'),
+    path('operation/create/', OperationCategoryCreateView.as_view(), name='operation_create'),
+    path('operation/update/<int:pk>/', OperationCategoryViewUpdateView.as_view(), name='operation_update'),
+    path('operation/delete/<int:pk>/', OperationCategoryDeleteView.as_view(), name='operation_delete'),
 
     path('cashboxes/', CashboxListView.as_view(), name='cashbox_list'),
     path('cashbox/<int:pk>/', CashboxDetailView.as_view(), name='cashbox_detail'),

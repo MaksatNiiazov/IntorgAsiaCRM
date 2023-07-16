@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}
-Orders
+Заказы
 {% endblock %}
 {% block css %}
     <link rel="stylesheet" href="{% static 'css/main_page.css' %}">
@@ -36,7 +36,7 @@ Orders
     <div class="main-content">
     <div class="total-info">
         <div class="info-item"><p>Выручка</p><span> {{ total_amount }}</span></div>
-        <div class="info-item"><p>Себистоимость</p><span>{{ total_cost_price }}</span></div>
+        <div class="info-item"><p>Себестоимость</p><span>{{ total_cost_price }}</span></div>
         <div class="info-item"><p>Прибыль</p><span> {{ profit }}</span></div>
         <div class="info-item"><p>Сделок</p><span> {{ total_count }}</span></div>
 
@@ -74,7 +74,7 @@ Orders
         borderWidth: 1 // толщина линии графика
       },
       {
-        label: 'Себистоимость', // название набора данных
+        label: 'Себестоимость', // название набора данных
         data: [
           {% for result in object_list %}
                 {{ result.total_cost_price }},

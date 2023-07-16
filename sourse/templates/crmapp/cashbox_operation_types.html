@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+Категории кассовых операций
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Категории кассовых операций
+{% endblock %}
+{% block content %}
+
+    <div class="table-container">
+        <a href="{% url 'cashbox_list' %}"><button>Кассы</button></a>
+    <table>
+        <thead>
+            <tr>
+                <th>Категории</th>
+                <th>Применить</th>
+                <th>Удалить</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <form action="{% url 'operation_create' %}" method="post">
+                {% csrf_token %}
+                    <td>
+                        <label>
+                            <input type="text" placeholder="Категория" name="category">
+                        </label>
+                    </td>
+                    <td>
+                        <label>
+                            <input type="submit" value="Добавить">
+                        </label>
+                    </td>
+                </form>
+            </tr>
+            {% for object in object_list %}
+                <tr>
+                    <form action="{% url 'operation_update' object.id %}" method="post">
+                    {% csrf_token %}
+                        <td>
+                            <label>
+                                <input type="text" placeholder="Категория" name="category" value="{{ object.category }}">
+                            </label>
+                        </td>
+                        <td>
+                                <input type="submit" value="Изменить">
+                        </td>
+                    </form>
+                    <td>
+                        <form action="{% url 'operation_delete' object.id %}">
+                            <input type="submit" value="Удалить">
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+    </div>
+{% endblock %}
+{% block js %}
+    <link rel="stylesheet" href="{% static 'js/tables.js' %}">
+{% endblock %}

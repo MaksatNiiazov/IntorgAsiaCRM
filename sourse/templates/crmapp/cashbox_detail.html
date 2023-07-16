@@ -57,6 +57,7 @@
             <input type="submit" value="выгрузить">
         </form>
     </div>
+
         <div class="forms">
             <div class="form">
                 <form action="{% url 'add_operation' %}" method="post">
@@ -69,14 +70,14 @@
                     </label>
                         <label for=""></label>
                           <select name="category" id="">
-                                <option value="">Категория</option>
+                                <option value="">нет категории</option>
                             {% for category in categories %}
                                 <option value="{{ category.id }}">{{ category.category }}</option>
                             {% endfor %}
                         </select>
                         <label for=""></label>
                         <select name="cashbox_to" id="">
-                            <option value="">Не в кассу</option>
+                            <option value="">не в кассу</option>
                             {% for cashbox in cashboxes %}
                                 <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
                             {% endfor %}
@@ -98,16 +99,15 @@
                         </label>
                         <label for=""></label>
                         <select name="category" id="">
-                                <option value="">Категория</option>
+                                <option value="">нет категории</option>
                             {% for category in categories %}
                                 <option value="{{ category.id }}">{{ category.category }}</option>
                             {% endfor %}
                         </select>
                         <label for=""></label>
                         <select name="cashbox_from" id="">
-                            <option value="">Не из кассы</option>
+                            <option value="">не из кассы</option>
                             {% for cashbox in cashboxes %}
-                                <option value="">Категория</option>
                                 <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
                             {% endfor %}
                         </select>
