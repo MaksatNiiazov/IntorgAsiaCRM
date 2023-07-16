@@ -10,7 +10,7 @@ class OrderStages(models.TextChoices):
     DATABASE_LOADING = 'database_loading', 'Загрузка в базу'
     UNPACKING = 'unpacking', 'Распаковка'
     QUALITY_CHECK = 'quality_check', 'Выдача ОТК'
-    INVOICE_GENERATION = 'invoice_generation', 'Выставка счета'
+    INVOICE_GENERATION = 'invoice_generation', 'Выставление счета'
     DISPATCH = 'dispatch', 'Отправка'
     DISPATCHED = 'dispatched', 'Оправленно'
     CLOSED = 'closed', 'Закрыт'
@@ -72,7 +72,7 @@ class Consumables(models.Model):
     name = models.CharField(max_length=50)
     count = models.IntegerField(default=0)
     price = models.IntegerField(default=0)
-    cost_price = models.IntegerField(default=0)
+    cost_price = models.DecimalField(max_digits=5, decimal_places=2)
 
 
 class ServiceType(models.Model):

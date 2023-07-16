@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{% static 'css/select_search.css' %}">
 
     <style>
+    .message li{
+        color: #4CAF50;!important;
+    }
     .acceptance{
         display: flex;
         flex-wrap: wrap;
@@ -27,21 +30,28 @@
 Создание приемки
 {% endblock %}
 {% block content %}
+    <div class="message">
+         <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    </div>
 <div class="acceptance">
-    <div class="acceptance_create">
 
+    <div class="acceptance_create">
         <form action="{% url 'acceptance' %}" method="post">
         {% csrf_token %}
-
-
             <div class="input">
                   <label for="search-input"></label>
+                <label>
                     <select required name="client" class="search-input">
                         <option value=""></option>
                         {% for user in users %}
                             <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }}</option>
                         {% endfor %}
                     </select>
+                </label>
                 <label for="132132"></label>
                 <input required name="name" type="text" id="132132" placeholder="Товар"><br>
                 <input required name="count" type="number" id="132132" placeholder="Кол-во">

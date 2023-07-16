@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
@@ -23,6 +24,7 @@ class RegisterView(View):
             user = form.save(commit=False)
             user.is_active = True
             user.save()
+            messages.success(request, 'Клиент создан')
             return redirect('acceptance')
         else:
             print(form.errors)
@@ -32,7 +34,6 @@ class RegisterView(View):
                 'errors': form.errors,
             }
         return render(request, 'registration/registration.html', context)
-
 
 class RegisterWorkerView(View):
 

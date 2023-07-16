@@ -28,7 +28,7 @@ class Product(models.Model):
     in_work = models.BooleanField(default=False)
 
     def __str__(self):
-        return f'{self.name}'
+        return f'{self.name} ({self.size} - {self.color})'
 
 
 class SetOfServices(models.Model):

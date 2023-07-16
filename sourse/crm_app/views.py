@@ -177,7 +177,6 @@ class AddServiceView(LockedView, CreateView):
         amount_diff = new_amount - old_amount
         cost_diff = new_cost - old_cost
 
-        update_order.count += count_diff
         update_order.amount += amount_diff
         update_order.cost_price += cost_diff
 
@@ -216,11 +215,14 @@ class AddServiceEmployerView(LockedView, CreateView):
         client = order.client
         count = form.cleaned_data['service_count']
         service = Service.objects.get(id=int(self.request.POST.get('service')))
-        employer =form.cleaned_data['employer']
+        employer = form.cleaned_data['employer']
         price = service.price * count
         cost_price = service.cost_price * count
 
-        employer_product = EmployerProduct.objects.create(employer=employer, product=product, service_count=count)
+        employer_product, _ = EmployerProduct.objects.get_or_create(employer=employer, product=product,)
+        employer_product.service_count = count
+        employer_product.save()
+
         product_service = ProductService.objects.create(service=service, employer_product=employer_product,
                                                         count=count,)
         employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
@@ -243,6 +245,8 @@ class AddServiceEmployerView(LockedView, CreateView):
         employer.save()
 
         employer_order.service_count += count
+        employer_order.salary += price
+
         employer_order.save()
 
         return redirect('quality_check', pk=order.pk)

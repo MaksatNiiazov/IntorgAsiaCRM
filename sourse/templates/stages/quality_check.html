@@ -154,20 +154,19 @@
                     <td data-label="Добавить услугу">
                         <button onclick="openPopup('{{ product.id }}')">Добавить услугу</button>
                     </td>
-                    <td data-label="Выбрать набор">
-                        <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post"
-                            action="{% url 'defective_check_update' product.id %}">
+                    <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post" action="{% url 'defective_check_update' product.id %}">
                             {% csrf_token %}
+                    <td data-label="Выбрать набор">
                             <label for="set-{{ product.id }}"></label>
                             <select name="set" id="set-{{ product.id }}" required>
                                 {% for service in sets_of_services %}
                                 <option value="{{ service.id }}">{{ service.name }}</option>
                                 {% endfor %}
                             </select>
-                    </td>
-                    <td data-label="Общ кол-во">{{ product.actual_quantity }}</td>
-                    <td data-label="Кол-во брака">
-                        <label>
+                        </td>
+                        <td data-label="Общ кол-во">{{ product.actual_quantity }}</td>
+                        <td data-label="Кол-во брака">
+                            <label>
                             <input type="hidden" value="{{ product.employer_product.first.employer.id }}" name="employer_id">
                             <input type="number" max="{{ product.actual_quantity }}" name="defective"
                                 value="{{ product.defective }}" onchange="updateDefectiveQuantity({{ product.id }})">
@@ -210,7 +209,7 @@
                     {% endfor %}
                 </select>
                 <label value="Кол-во">
-                    <input type="number" name="service_count" placeholder="Кол-во">
+                    <input type="number" name="service_count" placeholder="Кол-во" required>
                 </label>
                 <input type="submit" value="Добавить">
             </form>

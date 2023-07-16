@@ -471,13 +471,15 @@ class ApplyDiscountView(LockedView, View):
         order = Order.objects.get(id=self.request.POST.get('order'))
         percent = int(self.request.POST.get('percent'))
         services = ServiceOrder.objects.filter(order=order)
+        consumables = OrderConsumables.objects.filter(order=order)
         new_amount = 0
         for sirvice in services:
             if sirvice.service.discount:
                 new_amount += (sirvice.price / 100) * (100 - percent)
             else:
                 new_amount += sirvice.price
-
+        for consumable in consumables:
+            new_amount += consumable.price
             order.amount = round(new_amount)
             order.discount = percent
             order.save()
@@ -492,12 +494,15 @@ class AddConsumables(LockedView, View):
         client = order_obj.client
         consumable = Consumables.objects.get(id=self.request.POST.get('consumable'))
         order_consumable = OrderConsumables.objects.get_or_create(order_id=order, consumable_id=consumable.id)[0]
+        old_count = order_consumable.count
+
         count = int(self.request.POST.get('count'))
         cons_count = consumable.count - count
         if cons_count < 0:
             messages.error(self.request, f"{consumable.name} не достаточно на складе")
             return redirect("invoice_generation", order)
         else:
+            consumable.count += old_count
             consumable.count -= count
             consumable.save()
             price = consumable.price * count
