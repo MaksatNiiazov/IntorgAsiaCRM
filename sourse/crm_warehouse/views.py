@@ -352,7 +352,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
             product.good_quality = good_quality
             product.defective = form.cleaned_data['defective']
             product.count = good_quality + product.defective
-            product.defective_check = True
             product.save()
             order_items = Product.objects.filter(order=order)
             total_good_quality = sum(item.good_quality for item in order_items)
@@ -362,7 +361,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
             order.defective = total_defective
             order.count = count
             order.save()
-            product.save()
             employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
             employer_product = EmployerProduct.objects.get(product=product, employer=employer)
 
@@ -420,13 +418,10 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 product_service.save()
                 employer_product.save()
                 employer_order.save()
-            return redirect('quality_check', self.object.order.id)
-
         else:
             product.good_quality += form.cleaned_data['defective']
             product.defective = 0
             product.count = product.good_quality + product.defective
-            product.defective_check = False
             order_items = Product.objects.filter(order=order)
             total_good_quality = sum(item.good_quality for item in order_items)
             total_defective = sum(item.defective for item in order_items)
@@ -483,8 +478,13 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 product_service.save()
                 employer_product.save()
                 employer_order.save()
-            return redirect('quality_check', self.object.order.id)
 
+        if product.defective_check:
+            product.defective_check = False
+        else:
+            product.defective_check = True
+        product.save()
+        return redirect('quality_check', self.object.order.id)
 
     def form_invalid(self, form):
         print(form.errors)
