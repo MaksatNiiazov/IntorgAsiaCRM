@@ -1,0 +1,56 @@
+{% extends 'templates/base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+Пересчёт и сортировка
+{% endblock %}
+{% block content %}
+    <h2>{{ order.client }} #{{ order.id }}</h2>
+    <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-label="Наименование">Наименование</th>
+              <th data-label="Цвет">Цвет</th>
+              <th data-label="Размер">Размер</th>
+              <th data-label="Декларированное количество">Декларированное количество</th>
+              <th data-label="Фактическое количество">Фактическое количество</th>
+              <th data-label="Комментарий">Комментарий</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+            <tr>
+              <td data-label="Наименование">
+                <label>{{ product.name }}</label>
+              </td>
+              <td data-label="Цвет">
+                <label>{{ product.color }}</label>
+              </td>
+              <td data-label="Размер">
+                <label>{{ product.size }}</label>
+              </td>
+              <td data-label="Декларированное количество">
+                <label>{{ product.declared_quantity }}</label>
+              </td>
+              <td data-label="Фактическое количество">
+                  <label>
+                      {{ product.actual_quantity }}
+                  </label>
+              </td>
+              <td data-label="Комментарий">
+                  <label>
+                      {{ product.comment }}
+                  </label>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+        <script src="{% static 'js/tables.js' %}"></script>
+
+
+{% endblock %}

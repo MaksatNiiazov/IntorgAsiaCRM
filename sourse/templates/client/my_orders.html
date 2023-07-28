@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block page_title %}
+    {% if closed %}
+        Закрытые заказы
+    {% else %}
+        Активные заказы
+    {% endif %}
+{% endblock %}
+{% block content %}
+
+    <div class="table-container">
+<table>
+  <thead>
+    <tr>
+        <th data-label="Счет">Счет</th>
+        <th data-label="Дата">Дата</th>
+        <th data-label="Стадия">Стадия</th>
+        <th data-label="Сумма">Сумма</th>
+        <th data-label="Количество">Количество</th>
+        <th data-label="Время">Время</th>
+
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in order_list %}
+      <tr>
+        <td data-label="Счет"><a href="{% url 'my_order' order.id %}"><button>#{{ order.id }}</button></a></td>
+        <td data-label="Дата">{{ order.date }}</td>
+        <td data-label="Стадия">{{ order.get_stage_display }}</td>
+        <td data-label="Сумма">{{ order.amount }}</td>
+        <td data-label="Количество">{{ order.count }}</td>
+        <td data-label="Время">{{ order.time }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+    </div>
+{% include 'includes/paginate.html' %}
+
+{% endblock %}

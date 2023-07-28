@@ -46,82 +46,137 @@
 {% block page_title %}
     Стадии заказов
 {% endblock %}
+
 {% block content %}
+
+{% if user.user_type == 'client' %}
+
+    <div class="stage" id="unpacking" data-url="/unpacking/">
+      <h3>Пересчёт и сортировка</h3>
+      {% for order in orders %}
+      {% if order.stage == 'quality_check' %}
+      <div class="order" id="{{ order.id }}" draggable="true">
+      <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Заявленное количество - {{ order.total_declared_quantity }}ед • Фактическое количество - {{ order.total_actual_quantity }}ед </span>
+          <a href="{% url 'unpacking_client' order.id %}"><button>Завершено</button></a>
+      </div>
+      {% endif %}
+
+      {% endfor %}
+    </div>
+
+    <div class="stage" id="quality_check" data-url="/quality_check/">
+      <h3>Процессы ОТК</h3>
+      {% for order in orders %}
+      {% if order.stage == 'dispatch' %}
+      <div class="order" id="{{ order.id }}" draggable="true">
+      <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Фактическое количество - {{ order.total_actual_quantity }}ед </span>
+          <a href="#"><button>Проверка</button></a>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="stage" id="dispatch" data-url="/dispatch/">
+      <h3>Финальный пересчёт</h3>
+      {% for order in orders %}
+      {% if order.stage == 'dispatched' %}
+      <div class="order" id="{{ order.id }}" draggable="true">
+      <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
+                    <a href="{% url 'dispatch' order.id %}"><button>Считать</button></a>
+    </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="stage" id="clossed" data-url="/dispatched/">
+      <h3>Отправка</h3>
+      {% for order in orders %}
+      {% if order.stage == 'closed' %}
+      <div class="order" id="{{ order.id }}" draggable="true">
+      <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
+                      <a href="{% url 'order_detail' order.id %}"><button>Завершить заказ</button></a>
+        </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+
+{% else %}
     <div class="stage dark-light"  data-url="/acceptance/">
-  <h3>Приемка товара</h3>
+          <h3>Приемка товара</h3>
 
-      <div class="order">
-          <a href="{% url 'acceptance' %}"><button>Создать приемку</button></a></div>
-   </div>
-<div class="stage" id="database_loading" data-url="/database_loading/">
-  <h3>Регистрация товара</h3>
+              <div class="order">
+                  <a href="{% url 'acceptance' %}"><button>Создать приемку</button></a></div>
+           </div>
+        <div class="stage" id="database_loading" data-url="/database_loading/">
+          <h3>Регистрация товара</h3>
 
-  {% for order in orders %}
-  {% if order.stage == 'database_loading' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-      <a href="{% url 'import_excel' order.id %}"><button>Внести товар</button></a></div>
-  {% endif %}
-  {% endfor %}
-</div>
+          {% for order in orders %}
+          {% if order.stage == 'database_loading' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
+              <a href="{% url 'import_excel' order.id %}"><button>Внести товар</button></a></div>
+          {% endif %}
+          {% endfor %}
+        </div>
 
-<div class="stage" id="unpacking" data-url="/unpacking/">
-  <h3>Пересчёт и сортировка</h3>
-  {% for order in orders %}
-  {% if order.stage == 'unpacking' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Заявленное количество - {{ order.total_declared_quantity }}ед </span>
-      <a href="{% url 'unpacking' order.id %}"><button>Указать количество</button></a>
-  </div>
-  {% endif %}
-  {% endfor %}
-</div>
+        <div class="stage" id="unpacking" data-url="/unpacking/">
+          <h3>Пересчёт и сортировка</h3>
+          {% for order in orders %}
+          {% if order.stage == 'unpacking' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Заявленное количество - {{ order.total_declared_quantity }}ед </span>
+              <a href="{% url 'unpacking' order.id %}"><button>Указать количество</button></a>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
 
-<div class="stage" id="quality_check" data-url="/quality_check/">
-  <h3>Процессы ОТК</h3>
-  {% for order in orders %}
-  {% if order.stage == 'quality_check' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Фактическое количество - {{ order.total_actual_quantity }}ед </span>
-      <a href="{% url 'quality_check' order.id %}"><button>Проверка</button></a>
-  </div>
-  {% endif %}
-  {% endfor %}
-</div>
+        <div class="stage" id="quality_check" data-url="/quality_check/">
+          <h3>Процессы ОТК</h3>
+          {% for order in orders %}
+          {% if order.stage == 'quality_check' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • Фактическое количество - {{ order.total_actual_quantity }}ед </span>
+              <a href="{% url 'quality_check' order.id %}"><button>Проверка</button></a>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
 
-<div class="stage" id="invoice_generation" data-url="/invoice_generation/">
-  <h3>Генерация счета</h3>
-  {% for order in orders %}
-  {% if order.stage == 'invoice_generation' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • к отправке - {{ order.good_quality }}ед, брак - {{ order.defective }}ед</span>
-              <a href="{% url 'invoice_generation' order.id %}"><button>Cоздать счёт</button></a>
+        <div class="stage" id="invoice_generation" data-url="/invoice_generation/">
+          <h3>Генерация счета</h3>
+          {% for order in orders %}
+          {% if order.stage == 'invoice_generation' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • к отправке - {{ order.good_quality }}ед, брак - {{ order.defective }}ед</span>
+                      <a href="{% url 'invoice_generation' order.id %}"><button>Cоздать счёт</button></a>
+            </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="stage" id="dispatch" data-url="/dispatch/">
+          <h3>Финальный пересчёт</h3>
+          {% for order in orders %}
+          {% if order.stage == 'dispatch' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
+                        <a href="{% url 'dispatch' order.id %}"><button>Считать</button></a>
+        </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="stage" id="dispatched" data-url="/dispatched/">
+          <h3>Отправка</h3>
+          {% for order in orders %}
+          {% if order.stage == 'dispatched' %}
+          <div class="order" id="{{ order.id }}" draggable="true">
+          <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
+                          <a href="{% url 'order_detail' order.id %}"><button>Завершить заказ</button></a>
+            </div>
+        {% endif %}
+        {% endfor %}
     </div>
-  {% endif %}
-  {% endfor %}
-</div>
-
-<div class="stage" id="dispatch" data-url="/dispatch/">
-  <h3>Финальный пересчёт</h3>
-  {% for order in orders %}
-  {% if order.stage == 'dispatch' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                <a href="{% url 'dispatch' order.id %}"><button>Считать</button></a>
-</div>
-  {% endif %}
-  {% endfor %}
-</div>
-
-<div class="stage" id="dispatched" data-url="/dispatched/">
-  <h3>Отправка</h3>
-  {% for order in orders %}
-  {% if order.stage == 'dispatched' %}
-  <div class="order" id="{{ order.id }}" draggable="true">
-  <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                  <a href="{% url 'order_detail' order.id %}"><button>Завершить заказ</button></a>
-    </div>
-  {% endif %}
-  {% endfor %}
-</div>
+{% endif %}
 {% endblock %}

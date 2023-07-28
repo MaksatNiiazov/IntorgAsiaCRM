@@ -46,6 +46,9 @@
             width: 10px;
             height: 10px;
         }
+        .service-added {
+            background-color: #ff0; /* Or any other highlight color */
+        }
     </style>
 {% endblock %}
 {% block title %}
@@ -152,7 +155,7 @@
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
                     <td data-label="Размер"><label>{{ product.size }}</label></td>
                     <td data-label="Добавить услугу">
-                        <button onclick="openPopup('{{ product.id }}')">Добавить услугу</button>
+                        <button onclick="openPopup('{{ product.id }}')" >Добавить услугу ({{ product.service_count }})</button>
                     </td>
                     <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post" action="{% url 'defective_check_update' product.id %}">
                             {% csrf_token %}

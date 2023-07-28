@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+    <style>
+        .order-detail{
+            max-width: 320px;
+            padding: 20px;
+            box-shadow: 0 0 5px black;
+            margin-bottom: 10px;
+        }
+        .order-detail p{
+            display: flex;
+            justify-content: space-between;
+            margin: 3px;
+        }
+        .order-detail span{
+            font-weight: bolder;
+        }
+        .top_block{
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .make_a_payment{
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+            input[type="submit"] {
+        background-color: #4CAF50;
+    }
+    </style>
+{% endblock %}
+{% block page_title %}
+Заказ №{{ order.id }}
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <div class="top_block">
+            <div class="order_info">
+
+                <div class="order-detail">
+                    <h1>Заказ №{{ order.id }}</h1>
+                    <p><span>Клиент:</span> {{ order.client }}</p>
+                    <p><span>Стадия:</span> {{ order.get_stage_display }}</p>
+                    <p><span>Дата:</span> {{ order.date }}</p>
+                    <p><span>Время:</span> {{ order.time }}</p>
+                    <p><span>Количество:</span> {{ order.count }}</p>
+                    <p><span>Сумма заказа:</span> {{ order.amount }}</p>
+
+                </div>
+            </div>
+            <div class="make_a_payment">
+{#                        <form action="{% url 'invoise_create' order.id %}" method="post">#}
+{#                        {% csrf_token %}#}
+{#                            <input type="submit" value="Скачать Счет">#}
+{#                        </form>#}
+                <div class="pay">
+                    {% if order.amount != 0 %}
+                    <h5>Требуется провести оплату</h5>
+
+                    <button>{{ order.amount }}</button>
+                    {% else %}
+                        <button>Оплаченно</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <br>
+     <div class="table-container">
+     <h4>
+         Продукты в заказе
+     </h4>
+        <table>
+            <thead>
+                <tr>
+                    <th data-label="Баркод">Баркод</th>
+                    <th data-label="Артикул">Артикул</th>
+                    <th data-label="Продукт">Продукт</th>
+                    <th data-label="Цвет">Цвет</th>
+                    <th data-label="Размер">Размер</th>
+                    <th data-label="Состав">Состав</th>
+                    <th data-label="Страна пр-ва">Страна пр-ва</th>
+                    <th data-label="К отправке">К отправке</th>
+                    <th data-label="Брак">Брак</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td data-label="Баркод>">{{ product.product.barcode }}</td>
+                        <td data-label="Артикул">{{ product.product.article }}</td>
+                        <td data-label="Продукт">{{ product.product.name }}</td>
+                        <td data-label="Размер">{{ product.product.color }}</td>
+                        <td data-label="Цвет">{{ product.product.size }}</td>
+                        <td data-label="Состав">{{ product.product.composition }}</td>
+                        <td data-label="Страна пр-ва">{{ product.product.country }}</td>
+                        <td data-label="К отправке">{{ product.product.good_quality }}</td>
+                        <td data-label="Брак">{{ product.product.defective }}</td>
+                {% empty %}
+                        <td>No order services found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="table-container">
+        <h4>Услуги в заказе</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th data-label="Услуга">Услуга</th>
+                    <th data-label="Код">Код</th>
+                    <th data-label="Количество">Количество</th>
+
+                    <th data-label="Цена за ед">Цена за ед</th>
+                    <th data-label="Общая цена">Общая цена</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order_service in services %}
+                    <tr>
+                        <td data-label="Услуга">{{ order_service.service }}</td>
+                        <td data-label="Код">{{ order_service.service.id }}</td>
+                        <td data-label="Количество">{{ order_service.count }}</td>
+                        <td data-label="Цена за ед">{{ order_service.service.price }}</td>
+                        <td data-label="Общая цена">{{ order_service.price }}</td>
+                {% empty %}
+                        <td>No order services found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="table-container">
+        <h4>Расходные материалы</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th data-label="Расходник">Расходник</th>
+                    <th data-label="Кол-во">Кол-во</th>
+                    <th data-label="Цена за ед.">Цена за ед.</th>
+                    <th data-label="Стоимость">Стоимость</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consumable in consumables_in_order %}
+                    <tr>
+                        <td data-label="Расходник">{{ consumable.consumable.name }}</td>
+                        <td data-label="Кол-во">{{ consumable.count }}</td>
+                        <td data-label="Цена за ед.">{{ consumable.consumable.price }}</td>
+                        <td data-label="Стоимость">{{ consumable.price }}</td>
+                    {% empty %}
+                        <td>No order services found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
+{% endblock %}

@@ -1,12 +1,13 @@
 from django.contrib import messages
+from django.contrib.auth.views import LoginView
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, resolve_url
 from django.contrib.auth import get_user_model
 from django.views import View
 from users.forms import SignupForm
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from users.models import User
+from users.models import User, UserType
 from users.token import account_activation_token
 
 
@@ -78,4 +79,11 @@ def activate(request, uidb64, token):
         return HttpResponse('Activation link is invalid!')
 
 
+class CustomLoginView(LoginView):
 
+    def get_default_redirect_url(self):
+
+        if self.next_page:
+            return resolve_url('my/orders/')
+        else:
+            return resolve_url('my/orders/')

@@ -30,6 +30,8 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.name} ({self.size} - {self.color})'
 
+    def service_count(self):
+        return ProductService.objects.filter(employer_product__product=self).count()
 
 class SetOfServices(models.Model):
     name = models.CharField(max_length=50)

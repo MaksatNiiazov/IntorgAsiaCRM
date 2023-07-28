@@ -14,7 +14,7 @@ from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill, Border, Side, Font, Alignment
-from crm_app.views import LockedView
+from crm_app.views import LockedView, Locked
 from crm_warehouse.forms import UploadForm, AcceptanceForm, ProductForm, ProductUnpackingForm, EmployerProductForm, \
     DefectiveCheckForm, BarcodeForm
 from crm_warehouse.models import Product, EmployerProduct, SetOfServices, ServiceInSet, ProductService
@@ -23,7 +23,7 @@ from crm_app.models import Order, OrderStages, Service, OrderService, ServiceOrd
 from users.models import User as CustomUser
 
 
-class DashboardView(LockedView, ListView):
+class DashboardView(Locked, ListView):
     model = Order
     template_name = 'stages/dashboard.html'
     context_object_name = 'orders'
@@ -373,7 +373,8 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 order_service, _ = OrderService.objects.get_or_create(order=order, service=service)
                 service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
                 order_service.confirmed_switch()
-                product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product, service=service)
+                product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product,
+                                                                          service=service)
                 if service.before_defective:
                     new_count = product.good_quality + product.defective
                 else:
@@ -422,8 +423,66 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
             return redirect('quality_check', self.object.order.id)
 
         else:
-            self.object.defective_check = False
-            self.object.save()
+            product.good_quality += form.cleaned_data['defective']
+            product.defective = 0
+            product.count = product.good_quality + product.defective
+            product.defective_check = False
+            order_items = Product.objects.filter(order=order)
+            total_good_quality = sum(item.good_quality for item in order_items)
+            total_defective = sum(item.defective for item in order_items)
+            count = total_good_quality + total_defective
+            order.good_quality = total_good_quality
+            order.defective = total_defective
+            order.count = count
+            product.save()
+            order.save()
+            employer_order = EmployerOrder.objects.get(order=order, user=employer)
+            employer_product = EmployerProduct.objects.get(product=product, employer=employer)
+            client.product_count = count
+
+            for service in services:
+                service = Service.objects.get(id=service.service.id)
+                order_service = OrderService.objects.get(order=order, service=service)
+                service_order = ServiceOrder.objects.get(order=order, service=service)
+                product_service = ProductService.objects.get(employer_product=employer_product, service=service)
+
+                if service.before_defective:
+                    new_count = product.good_quality + product.defective
+                else:
+                    new_count = product.good_quality
+
+                new_amount = new_count * service.price
+                new_cost = new_count * service.cost_price
+
+                order.amount -= new_amount
+                order.cost_price -= new_cost
+
+                service_order.count -= new_count
+                service_order.price -= new_amount
+
+                order_service.count -= new_count
+                order_service.salary -= new_count * service.price
+
+                employer.money -= new_cost
+                employer.product_count -= new_count
+
+                client.money -= new_amount
+                client.profit -= float(new_amount) - float(new_cost)
+
+                employer_product.service_count -= new_count
+                product_service.count = new_count
+                employer_order.service_count -= new_count
+                employer_order.product_count = new_count
+                employer_order.salary -= new_amount
+
+                order.save()
+                order_service.save()
+                service_order.save()
+                employer.save()
+                client.save()
+                product_service.save()
+                employer_product.save()
+                employer_order.save()
             return redirect('quality_check', self.object.order.id)
 
 
@@ -523,7 +582,6 @@ class AddConsumables(LockedView, View):
 class InvoiceGenerationViewGenerate(LockedView, View):
 
     def post(self, request, order_id):
-        # Search for the file 'blank.xlsx' in the 'excel' directory and its subdirectories
         file_name = 'blank.xlsx'
         root_directory = 'excel'
         file_path = None

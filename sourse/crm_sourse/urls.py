@@ -6,4 +6,6 @@ urlpatterns = [
     path("", include('crm_app.urls')),
     path("", include('users.urls')),
     path("", include('crm_warehouse.urls')),
+    path("", include('client_app.urls')),
+
 ]

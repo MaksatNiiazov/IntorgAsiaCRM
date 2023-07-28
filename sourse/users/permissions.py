@@ -18,6 +18,6 @@ class ManagerRequiredMixin(UserPassesTestMixin):
         return self.request.user.user_type == UserType.MANAGER
 
 
-class AdminRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.user_type == UserType.ADMIN
+# class AdminRequiredMixin(UserPassesTestMixin):
+#     def test_func(self):
+#         return self.request.user.user_type == UserType.ADMIN

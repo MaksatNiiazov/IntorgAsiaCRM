@@ -18,10 +18,16 @@ from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
 from crm_warehouse.models import ProductService, EmployerProduct
+from users.permissions import WorkerRequiredMixin
 
-
-class LockedView(LoginRequiredMixin):
+class Locked(LoginRequiredMixin):
     login_url = "login"
+
+
+class LockedView(LoginRequiredMixin, WorkerRequiredMixin):
+    login_url = "login"
+
+
 
 
 class StatisticView(LockedView, ListView):
@@ -116,6 +122,7 @@ class ClosedOrderListView(LockedView, ListView):
 
     def get_queryset(self):
         return Order.objects.filter(stage='closed')
+
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super(ClosedOrderListView, self).get_context_data()
         context['closed'] = True
@@ -597,6 +604,14 @@ class CashBoxAddOperationView(LockedView, CreateView):
             comment = form.cleaned_data['comment']
             if not comment:
                 comment = ''
+
+            cashbox = Cashbox.objects.get(id=cashbox_from.id)
+            result = cashbox.balance - money
+            if result < 0:
+                messages.error(self.request, "В кассе недостаточно средств!")
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            old_v = cashbox.balance
+            cashbox.balance = result
             operation = CashboxOperation.objects.create(
                 user_id=self.request.user.id,
                 category=form.cleaned_data['category'],
@@ -605,14 +620,6 @@ class CashBoxAddOperationView(LockedView, CreateView):
                 cashbox_from=cashbox_from,
                 cashbox_to=cashbox_to,
             )
-            cashbox = Cashbox.objects.get(id=cashbox_from.id)
-            result = cashbox.balance - money
-            if result < 0:
-                messages.error(self.request, "В кассе недостаточно средств!")
-                return redirect(self.request.META.get('HTTP_REFERER'))
-            old_v = cashbox.balance
-            cashbox.balance = result
-
             cashbox.save()
             ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
                                    change_type=f'расход({money})', old_value=f'{old_v}', new_value=f'{result}')

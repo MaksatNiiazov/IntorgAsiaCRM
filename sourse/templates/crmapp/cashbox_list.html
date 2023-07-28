@@ -20,7 +20,7 @@
 <table>
   <thead>
     <tr>
-      <th data-label="Имя услуги">Имя услуги</th>
+      <th data-label="Название кассы">Название кассы</th>
       <th data-label="№">№</th>
       <th data-label="Цена">Цена</th>
       <th data-label="Применить">Применить</th>
@@ -30,7 +30,7 @@
     <form method="post" action="{% url 'cashbox_create' %}">
     {% csrf_token %}
       <tr>
-        <td data-label="Имя услуги"><input type="text" placeholder="Название" name="name"></td>
+        <td data-label="Название кассы"><input type="text" placeholder="Название" name="name"></td>
         <td data-label="№"></td>
         <td data-label="Цена"><input type="number" placeholder="Баланс" name="balance"></td>
         <td data-label="Применить"><input type="submit" value="Добавить"></td>
@@ -39,7 +39,7 @@
 
     {% for cashbox in object_list %}
       <tr>
-          <td data-label="Имя услуги">{{ cashbox.name }}</td>
+          <td data-label="Название кассы">{{ cashbox.name }}</td>
           <td data-label="№">{{ cashbox.id }}</td>
           <td data-label="Цена">{{cashbox.balance }}</td>
           <td data-label="Применить"><a href="{% url 'cashbox_detail' cashbox.id %}"><input type="submit" value="{{ cashbox.name }}"></a></td>
