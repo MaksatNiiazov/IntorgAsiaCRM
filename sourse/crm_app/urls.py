@@ -32,8 +32,15 @@ urlpatterns = [
     path('employer/<int:pk>/', EmployerDetailView.as_view(), name='employer_detail'),
     path('employer/<int:pk>/order/<int:order_id>/', EmployerOrderView.as_view(), name='employer_order_detail'),
     path('employer/pay/a/salary/<int:pk>/', PayASalaryView.as_view(), name='pay_a_salary'),
+
     path('clients/', ClientListView.as_view(), name='client_list'),
     path('client/<int:pk>/', ClientDetailView.as_view(), name='client_detail'),
+    path('user/change/<int:pk>/', UserChangeView.as_view(), name='user_change'),
+
+    path('discounts/', DiscountListView.as_view(), name='discounts'),
+    path('discount/create/', DiscountCreateView.as_view(), name='discount_create'),
+    path('discount/update/<int:pk>/', DiscountUpdateView.as_view(), name='discount_update'),
+    path('discount/delete/<int:pk>/', DiscountDeleteView.as_view(), name='discount_delete'),
 
     path('operation/categories/', OperationCategoryListView.as_view(), name='operation_list'),
     path('operation/create/', OperationCategoryCreateView.as_view(), name='operation_create'),
@@ -52,5 +59,4 @@ urlpatterns = [
     path('cashbox/export/operation/', CashboxExport.as_view(), name='cashbox_export'),
 
     path('show/logs/', ShowLogsView.as_view(), name='show_logs'),
-
 ]

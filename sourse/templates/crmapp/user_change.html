@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block page_title %}
+    Редактировать
+{% endblock %}
+{% block css %}
+    <style>
+    p{
+        display: flex;
+        justify-content: space-between;
+        max-width: 300px;
+        flex-wrap: wrap;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<form action="/user/change/2/" method="post">
+    {% csrf_token %}
+    <p>
+    <label for="id_username">Логин:</label>
+    <input type="text" name="username" value="{{ user.username }}" maxlength="100" id="id_username">
+    </p>
+  <p>
+    <label for="id_first_name">Имя:</label>
+    <input type="text" name="first_name" value="{{ user.first_name }}" maxlength="254" required="" id="id_first_name">
+  </p>
+  <p>
+    <label for="id_last_name">Фамилия:</label>
+    <input type="text" name="last_name" value="{{ user.last_name }}" maxlength="254" required="" id="id_last_name">
+  </p>
+  <p>
+    <label for="id_referral">Реферал:</label>
+ {{ form.referral }}
+  </p>
+        <a href="{% url 'discounts' %}"><button type="button">Скидки</button></a>
+<p>
+  <label for="id_discount">Скидка:</label>
+   {{ form.discount }}
+  </p>
+<button type="submit">Редактировать</button>
+    </form>
+{% endblock %}

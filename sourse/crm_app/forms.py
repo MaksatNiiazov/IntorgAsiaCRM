@@ -1,6 +1,7 @@
 from django import forms
 
 from crm_warehouse.models import EmployerProduct
+from users.models import DiscountType
 from .models import Service, Cashbox, Order, CustomUser, CashboxOperation, ServiceType, EmployerOrder, \
     Consumables, ServiceOrder, CashboxCategory
 
@@ -21,6 +22,18 @@ class ConsumablesForm(forms.ModelForm):
     class Meta:
         model = Consumables
         fields = ['name', 'count', 'price', 'cost_price']
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = ['username', 'first_name', 'last_name', 'discount', 'referral']
+
+
+class DiscountForm(forms.ModelForm):
+    class Meta:
+        model = DiscountType
+        fields = ['name', 'percent']
 
 
 class CashboxForm(forms.ModelForm):

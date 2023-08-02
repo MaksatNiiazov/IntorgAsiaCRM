@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block page_title %}
+Скидки
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/tables.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-label="Название">Название</th>
+              <th data-label="№">№</th>
+              <th data-label="Процент">Процент</th>
+              <th data-label="Применить">Применить</th>
+            </tr>
+          </thead>
+          <tbody>
+            <form method="post" action="{% url 'discount_create' %}">
+            {% csrf_token %}
+              <tr>
+                <td data-label="Название"><input type="text" placeholder="Название" name="name"></td>
+                <td data-label="№"></td>
+                <td data-label="Процент"><input type="number" placeholder="Процент" name="percent"></td>
+                <td data-label="Применить"><input type="submit" value="Добавить"></td>
+              </tr>
+            </form>
+
+            {% for discount in object_list %}
+              <form action="{% url 'discount_update' discount.id %}" method="post">
+              {% csrf_token %}
+                  <tr>
+                          <td data-label="Название кассы"><label>
+                              <input type="text" name="name" value="{{ discount.name }}">
+                          </label></td>
+                          <td data-label="№">{{ discount.id }}</td>
+                          <td data-label="Цена"><label>
+                              <input type="text" name="percent" value="{{discount.percent }}">
+                          </label></td>
+                          <td data-label="Применить"><input type="submit" value="Применить"></td>
+                  </tr>
+              </form>
+
+            {% endfor %}
+          </tbody>
+        </table>
+    </div>
+{% include 'includes/paginate.html' %}
+{% endblock %}
+{% block js %}
+    <script src="{% static 'js/tables.js' %}"></script>
+{% endblock %}

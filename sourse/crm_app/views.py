@@ -6,18 +6,20 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 from crm_app.forms import ServiceForm, CashboxForm, AddServiceForm, CashboxOperationForm, ServiceTypeForm, \
-    ConsumablesForm, AddServiceEmployerForm, CashboxOperationCategoryForm
+    ConsumablesForm, AddServiceEmployerForm, CashboxOperationCategoryForm, UserForm, DiscountForm
 from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, CashboxOperation, CashboxCategory, \
     ServiceType, ServiceOrder, EmployerOrder, Consumables, ModelChangeLog, OrderConsumables
 from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
 from crm_warehouse.models import ProductService, EmployerProduct
+from users.models import DiscountType
 from users.permissions import WorkerRequiredMixin
 
 class Locked(LoginRequiredMixin):
@@ -472,6 +474,49 @@ class ClientDetailView(LockedView, DetailView):
         context = super(ClientDetailView, self).get_context_data()
         context['orders'] = Order.objects.filter(client_id=self.object.id)
         return context
+
+
+class UserChangeView(LockedView, UpdateView):
+    template_name = 'crmapp/user_change.html'
+    model = CustomUser
+    form_class = UserForm
+
+    def get_success_url(self):
+        referer = self.request.META.get('HTTP_REFERER')
+        if referer:
+            return referer
+        else:
+            return reverse('/')
+
+
+class DiscountListView(LockedView, ListView):
+    model = DiscountType
+    template_name = 'crmapp/discount.html'
+
+
+class DiscountCreateView(LockedView, CreateView):
+    model = DiscountType
+    form_class = DiscountForm
+    template_name = 'crmapp/discount.html'
+    success_url = '/discounts/'
+
+
+class DiscountUpdateView(LockedView, UpdateView):
+    model = DiscountType
+    form_class = DiscountForm
+    template_name = 'crmapp/discount.html'
+
+    def get_success_url(self):
+        referer = self.request.META.get('HTTP_REFERER')
+        if referer:
+            return referer
+        else:
+            return reverse('/')
+
+class DiscountDeleteView(LockedView, DeleteView):
+    model = DiscountType
+    template_name = 'crmapp/discount.html'
+    success_url = '/discounts/'
 
 
 class CashboxListView(LockedView, ListView):

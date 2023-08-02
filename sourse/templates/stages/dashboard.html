@@ -82,7 +82,7 @@
       {% if order.stage == 'dispatched' %}
       <div class="order" id="{{ order.id }}" draggable="true">
       <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                    <a href="{% url 'dispatch' order.id %}"><button>Считать</button></a>
+                    <a href="#"><button>Считать</button></a>
     </div>
       {% endif %}
       {% endfor %}
@@ -94,7 +94,7 @@
       {% if order.stage == 'closed' %}
       <div class="order" id="{{ order.id }}" draggable="true">
       <span><b>№{{ order.id }}</b> • {{ order.client }} • {{ order.name }} • {{ order.count }}ед</span>
-                      <a href="{% url 'order_detail' order.id %}"><button>Завершить заказ</button></a>
+                      <a href="#"><button>Завершить заказ</button></a>
         </div>
       {% endif %}
       {% endfor %}
