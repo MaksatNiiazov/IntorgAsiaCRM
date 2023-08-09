@@ -25,6 +25,8 @@
         <div class="user_flex"><b>Имя</b> <span>{{ user.first_name }} {{ user.last_name }}</span></div>
         <div class="user_flex"><b>Зарплата</b> <span>{{ user.money }}</span> </div>
         <div class="user_flex"><b>Количество услуг</b> <span>{{ user.product_count }}</span> </div>
+{#        <a href="{% url 'user_change' user.id %}"><button>Редактировать</button></a>#}
+
     </div>
     <ul class="messages">
         {% for message in messages %}
@@ -45,7 +47,7 @@
           <tr>
             <td data-label="Номер заказа"><a href="{% url  'employer_order_detail' user.id order.order.id %}">№{{ order.order.id }}</a></td>
             <td data-label="Дата">{{ order.order.date }}</td>
-            <td data-label="Зарплата">{{ order.salary }}</td>
+            <td data-label="Зарплата">{{ user.money }}</td>
             <td data-label="Выплатить">
                 {% if order.salary == 0 %}
                     <input type="submit" disabled value="Выплаченно">
@@ -53,12 +55,12 @@
                     <form action="{% url 'pay_a_salary' order.id %}" method="post">
                     {% csrf_token %}
                         <label>
-                              <select name="cashbox" id="">
+                              <select name="cashbox" id="" required>
                                   {% for cashbox in cashboxes %}
                                       <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
                                   {% endfor %}
                             </select>
-                            <input type="number" value="{{ order.salary }}" name="num" max="{{ order.salary }}" min="1">
+                            <input type="number" value="{{ user.money }}" name="num" max="{{ user.money }}" min="1">
 
                         </label>
                         <input type="submit" value="Выплатить">

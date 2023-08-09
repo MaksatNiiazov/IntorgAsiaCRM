@@ -21,7 +21,7 @@ class AcceptanceForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['order', 'name', 'count', 'declared_quantity', 'size', 'color', 'composition',
+        fields = ['barcode','article','order', 'name', 'count', 'declared_quantity', 'size', 'color', 'composition',
                   'brand', 'country', 'comment']
 
 

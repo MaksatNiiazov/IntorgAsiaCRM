@@ -145,7 +145,7 @@ class EmployerOrder(models.Model):
 
 class Cashbox(models.Model):
     name = models.CharField(max_length=54)
-    balance = models.IntegerField()
+    balance = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.name}'

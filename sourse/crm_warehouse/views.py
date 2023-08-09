@@ -194,6 +194,8 @@ class ProductAddView(LockedView, CreateView):
     def form_valid(self, form):
         print(form.cleaned_data)
         product = Product(
+            barcode=form.cleaned_data['barcode'],
+            article=form.cleaned_data['article'],
             order=form.cleaned_data['order'] or 1,
             name=form.cleaned_data['name'],
             count=form.cleaned_data['count'] or 0,
