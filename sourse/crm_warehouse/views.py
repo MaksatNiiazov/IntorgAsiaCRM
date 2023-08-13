@@ -243,7 +243,6 @@ class ProductUpdateView(LockedView, UpdateView):
     def form_valid(self, form):
 
         product = self.object
-        order = self.object.order
         product.actual_quantity = form.cleaned_data['actual_quantity']
         product.good_quality = form.cleaned_data['actual_quantity']
         product.comment = form.cleaned_data['comment']
@@ -575,6 +574,7 @@ class AddConsumables(LockedView, View):
             client.money += price
             client.profit += price - cost_price
             client.product_count += count
+            client.save()
             order_obj.amount += price
             order_obj.cost_price += cost_price
             order_obj.save()
@@ -746,7 +746,72 @@ class InvoiceGenerationViewGenerate(LockedView, View):
         with open(new_file_path, 'rb') as f:
             response = HttpResponse(f.read(),
                                     content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            filename = f'Счет№{order_id}_{order_obj.day}/{order_obj.month}/{order_obj.year}_{order_obj.client}_{order_obj.amount}.xlsx'
+            filename = f'Счет№{order_id} {order_obj.day}/{order_obj.month}/{order_obj.year} {order_obj.client} {order_obj.amount}.xlsx'
+            quoted_filename = quote(filename, encoding='utf-8')
+
+            response['Content-Disposition'] = f'attachment; filename="{quoted_filename}"'
+        while retry_count < max_retries:
+            try:
+                os.remove(new_file_path)
+                break
+            except PermissionError:
+                retry_count += 1
+                time.sleep(retry_delay)
+        return response
+
+
+class DownloadCargoDetail(View):
+    def post(self, request, order_id):
+        file_name = 'download_cargo_detail.xlsx'
+        root_directory = 'excel'
+        file_path = None
+
+        for root, dirs, files in os.walk(root_directory):
+            if file_name in files:
+                file_path = os.path.join(root, file_name)
+                break
+
+        if not file_path:
+            return HttpResponse('File not found')
+
+        wb = load_workbook(file_path)
+
+        sheet = wb.active
+        order_obj = Order.objects.get(id=order_id)
+
+        row = 3
+
+        products = Product.objects.filter(order_id=order_id)
+
+        total_count = 0
+        for product in products:
+            sheet[f'A{row}'] = f'{product.name}'
+            sheet[f'B{row}'] = f'{product.barcode}'
+            sheet[f'C{row}'] = f'{product.article}'
+            sheet[f'D{row}'] = f'{product.color}'
+            sheet[f'E{row}'] = f'{product.size}'
+            sheet[f'F{row}'] = f'{product.good_quality}'
+            total_count += product.good_quality
+            row += 1
+        sheet[f'E{row}'] = 'Итого:'
+        sheet[f'F{row}'] = f'{total_count}шт'
+
+
+
+        # Save the workbook
+        new_file_path = f'excel/blank{order_id}.xlsx'
+        wb.save(new_file_path)
+        wb.close()
+
+        # Delete the newly generated file
+        max_retries = 3
+        retry_delay = 1  # Delay in seconds
+        retry_count = 0
+
+        with open(new_file_path, 'rb') as f:
+            response = HttpResponse(f.read(),
+                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            filename = f'Детализация Заказа№{order_obj.id} {order_obj.client}.xlsx'
             quoted_filename = quote(filename, encoding='utf-8')
 
             response['Content-Disposition'] = f'attachment; filename="{quoted_filename}"'
@@ -845,10 +910,23 @@ class UnpackingNextStage(LockedView, View):
             order.cost_price += cost_price
             order.save()
             client = order.client
-            client.money += amount
-            client.product_count += count
+            client.money = amount
+            client.product_count = count
             client.profit += float(amount) - float(cost_price)
             client.save()
+            employer = CustomUser.objects.get(id=self.request.user.id)
+            employer.money += cost_price
+            employer.product_count += count
+            employer.save()
+            order_servise, _ = OrderService.objects.get_or_create(order=order, service=acceptance)
+            order_servise.count += count
+            order_servise.salary += amount
+            order_servise.save()
+            employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user_id=self.request.user.id)
+            employer_order.service_count += count
+            employer_order.product_count += count
+            employer_order.salary += amount
+            employer_order.save()
             if order.stage == 'unpacking':
                 order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))

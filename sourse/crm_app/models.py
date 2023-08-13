@@ -33,6 +33,8 @@ class Order(models.Model):
     defective = models.IntegerField(default=0, blank=True)
     good_quality = models.IntegerField(default=0, blank=True)
     discount = models.IntegerField(default=0)
+    date_of_actual_arrival = models.DateField(null=True, blank=True)
+    actual_shipment_date = models.DateField(null=True, blank=True)
 
     def calculate_price(self):
         order_services = OrderService.objects.filter(order=self)

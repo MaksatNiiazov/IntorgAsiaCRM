@@ -33,21 +33,22 @@
   <tbody>
     {% for product in products %}
     <tr>
-      <td data-label="Наименование">
-        <label>{{ product.name }}</label>
-      </td>
+        <td data-label="Наименование" data-name="{{ product.name }}">
+            <label>{{ product.name }}</label>
+        </td>
       <td data-label="Цвет">
         <label>{{ product.color }}</label>
       </td>
       <td data-label="Размер">
         <label>{{ product.size }}</label>
       </td>
-      <td data-label="Декларированное количество">
+
+    <td data-label="Декларированное количество" data-declared="{{ product.declared_quantity }}">
         <label>{{ product.declared_quantity }}</label>
-      </td>
+    </td>
       <td data-label="Фактическое количество">
           <label>
-              <input type="number" required name="actual_quantity" value="{{ product.actual_quantity }}" placeholder="Фактическое количество">
+              <input type="number" required name="actual_quantity" value="{{ product.declared_quantity }}" placeholder="Фактическое количество">
           </label>
       </td>
       <td data-label="Комментарий">
@@ -72,41 +73,45 @@
         </form>
     </div>
     </div>
+
+{% endblock %}
+
+{% block js %}
     <script src="{% static 'js/packets/jquery.min.js' %}"></script>
     <script>
         function updateProduct(productId, checkbox) {
-            var actualQuantity = $(checkbox).closest('tr').find('input[name="actual_quantity"]').val();
-            var comment = $(checkbox).closest('tr').find('input[name="comment"]').val();
-            var confirmation = $(checkbox).is(':checked');
+    var name = $(checkbox).closest('tr').find('[data-name]').data('name');
+    var declaredQuantity = $(checkbox).closest('tr').find('[data-declared]').data('declared');
 
-            // Проверка значений полей "name" и "declared_quantity"
-            var name = $(checkbox).closest('tr').find('label:first').text();
-            var declaredQuantity = $(checkbox).closest('tr').find('label:eq(1)').text();
+    if (!name || !declaredQuantity) {
+        console.log('Name or declared quantity is empty');
+        return;
+    }
 
-            if (name.trim() === '' || declaredQuantity.trim() === '') {
-                console.log('Name or declared quantity is empty');
-                return;
-            }
+    var actualQuantity = $(checkbox).closest('tr').find('input[name="actual_quantity"]').val();
+    var comment = $(checkbox).closest('tr').find('input[name="comment"]').val();
+    var confirmation = $(checkbox).is(':checked');
 
-            $.ajax({
-                url: "{% url 'unpacking_update' 0 %}".replace('0', productId),
-                type: "POST",
-                data: {
-                    csrfmiddlewaretoken: "{{ csrf_token }}",
-                    actual_quantity: actualQuantity,
-                    comment: comment,
-                    confirmation: confirmation
-                },
-                success: function(response) {
-                    console.log('Update successful');
-                },
-                error: function(xhr, status, error) {
-                    console.log('Error occurred:', error);
-                }
-            });
+    $.ajax({
+        url: "{% url 'unpacking_update' 0 %}".replace('0', productId),
+        type: "POST",
+        data: {
+            csrfmiddlewaretoken: "{{ csrf_token }}",
+            actual_quantity: actualQuantity,
+            comment: comment,
+            confirmation: confirmation
+        },
+        success: function(response) {
+            console.log('Update successful');
+        },
+        error: function(xhr, status, error) {
+            console.log('Error occurred:', error);
         }
+    });
+}
     </script>
         <script src="{% static 'js/tables.js' %}"></script>
 
 
 {% endblock %}
+

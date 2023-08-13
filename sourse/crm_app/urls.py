@@ -6,6 +6,7 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('closed/orders/', ClosedOrderListView.as_view(), name='closed_order_list'),
     path('order/detail/<int:pk>/', OrderDetailView.as_view(), name='order_detail'),
+    path('date_arrival_shipment/<int:pk>', ArrivalShipmentUpdate.as_view(), name='date_arrival_shipment'),
     path('order/add/service/', AddServiceView.as_view(), name='add_service'),
     path('order/add/service/employer/', AddServiceEmployerView.as_view(), name='add_service_employer'),
 

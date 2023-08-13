@@ -50,6 +50,9 @@
                     <p><span>Себестоимость:</span> {{ order.cost_price }}</p>
                     <p><span>Выручка:</span> {{ revenue }}</p>
                     <p><span>Сумма заказа:</span> {{ order.amount }}</p>
+                    <p><span>Дата прибытия:</span> {{ order.date_of_actual_arrival }}</p>
+                    <p><span>Дата отправки:</span> {{ order.actual_shipment_date }}</p>
+
 
                 </div>
                 {% if next_stage %}
@@ -64,6 +67,10 @@
                         {% csrf_token %}
                             <input type="submit" value="Скачать Счет">
                         </form>
+                <form action="{% url 'download_cargo_detail' order.id %}" method="post">
+                    {% csrf_token %}
+                    <input type="submit" value="Скачать Детализацию Груза">
+                </form>
                 <div class="pay">
                     <h5>Провести оплату</h5>
                     {% if order.amount != 0 %}
@@ -90,6 +97,19 @@
                 </div>
             </div>
         </div>
+    <div>
+        <h4>Дата прибытия | Дата отправки</h4>
+        <form action="{% url 'date_arrival_shipment' order.id %}" method="post">
+            {% csrf_token %}
+            <label>
+                <input type="date" value="{{ object.date_of_actual_arrival }}" name="date_of_actual_arrival">
+            </label>
+            <label>
+                <input type="date" value="{{ object.actual_shipment_date }}" name="actual_shipment_date">
+            </label>
+            <input type="submit" value="Изменить">
+        </form>
+    </div>
         <br>
      <div class="table-container">
      <h4>
@@ -112,15 +132,15 @@
             <tbody>
                 {% for product in products %}
                     <tr>
-                        <td data-label="Баркод>">{{ product.product.barcode }}</td>
-                        <td data-label="Артикул">{{ product.product.article }}</td>
-                        <td data-label="Продукт">{{ product.product.name }}</td>
-                        <td data-label="Размер">{{ product.product.color }}</td>
-                        <td data-label="Цвет">{{ product.product.size }}</td>
-                        <td data-label="Состав">{{ product.product.composition }}</td>
-                        <td data-label="Страна пр-ва">{{ product.product.country }}</td>
-                        <td data-label="К отправке">{{ product.product.good_quality }}</td>
-                        <td data-label="Брак">{{ product.product.defective }}</td>
+                        <td data-label="Баркод>">{{ product.barcode }}</td>
+                        <td data-label="Артикул">{{ product.article }}</td>
+                        <td data-label="Продукт">{{ product.name }}</td>
+                        <td data-label="Размер">{{ product.color }}</td>
+                        <td data-label="Цвет">{{ product.size }}</td>
+                        <td data-label="Состав">{{ product.composition }}</td>
+                        <td data-label="Страна пр-ва">{{ product.country }}</td>
+                        <td data-label="К отправке">{{ product.good_quality }}</td>
+                        <td data-label="Брак">{{ product.defective }}</td>
                 {% empty %}
                         <td>No order services found.</td>
                     </tr>
@@ -136,7 +156,6 @@
                     <th data-label="Услуга">Услуга</th>
                     <th data-label="Код">Код</th>
                     <th data-label="Количество">Количество</th>
-
                     <th data-label="Цена за ед">Цена за ед</th>
                     <th data-label="Общая цена">Общая цена</th>
                 </tr>

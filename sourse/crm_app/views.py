@@ -18,7 +18,7 @@ from crm_app.models import Order, Service, Cashbox, OrderService, CustomUser, Ca
 from datetime import date, timedelta
 from django.db.models import Sum, Count, Q
 
-from crm_warehouse.models import ProductService, EmployerProduct
+from crm_warehouse.models import ProductService, EmployerProduct, Product
 from users.models import DiscountType
 from users.permissions import WorkerRequiredMixin
 
@@ -138,8 +138,8 @@ class OrderDetailView(LockedView, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['services'] = ServiceOrder.objects.filter(order=self.object.id)
-        context['products'] = EmployerProduct.objects.filter(product__order_id=self.object.id)
-        context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object)
+        context['products'] = Product.objects.filter(order=self.object.id)
+        context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object.id)
         context['cashboxes'] = Cashbox.objects.all()
         if self.object.amount == 0 and self.object.stage == 'dispatched':
             context['next_stage'] = True
@@ -148,6 +148,19 @@ class OrderDetailView(LockedView, DetailView):
 
         context['revenue'] = revenue
         return context
+
+
+class ArrivalShipmentUpdate(View):
+    def post(self, request, pk):
+        order = Order.objects.get(id=pk)
+        date_of_actual_arrival = self.request.POST.get('date_of_actual_arrival') or None
+        actual_shipment_date = self.request.POST.get('actual_shipment_date') or None
+        order.date_of_actual_arrival = date_of_actual_arrival if date_of_actual_arrival is not None else order.date_of_actual_arrival
+        order.actual_shipment_date = actual_shipment_date if actual_shipment_date is not None else order.actual_shipment_date
+        order.save()
+        print(order.actual_shipment_date, order.date_of_actual_arrival)
+        print(self.request.META.get('HTTP_REFERER'))
+        return redirect(self.request.META.get('HTTP_REFERER'))
 
 
 class SertviceToOrderView(LockedView, View):

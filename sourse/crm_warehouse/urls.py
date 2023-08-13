@@ -19,6 +19,7 @@ urlpatterns = [
 
     path('invoice_generation/<int:pk>/', InvoiceGenerationView.as_view(), name='invoice_generation'),
     path('invoise_generation/create/<order_id>/', InvoiceGenerationViewGenerate.as_view(), name='invoise_create'),
+    path('download_cargo_detail/<order_id>/', DownloadCargoDetail.as_view(), name='download_cargo_detail'),
     path('set_of_service/create/<int:pk>/', SetOfServiceCreateView.as_view(), name='set_of_service_create'),
     path('apply_discount/', ApplyDiscountView.as_view(), name='apply_discount'),
     path('add_consumables/', AddConsumables.as_view(), name='add_consumables'),
