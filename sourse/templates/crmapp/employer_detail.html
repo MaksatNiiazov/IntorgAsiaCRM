@@ -47,7 +47,7 @@
           <tr>
             <td data-label="Номер заказа"><a href="{% url  'employer_order_detail' user.id order.order.id %}">№{{ order.order.id }}</a></td>
             <td data-label="Дата">{{ order.order.date }}</td>
-            <td data-label="Зарплата">{{ user.money }}</td>
+            <td data-label="Зарплата">{{ order.salary }}</td>
             <td data-label="Выплатить">
                 {% if order.salary == 0 %}
                     <input type="submit" disabled value="Выплаченно">
@@ -60,7 +60,7 @@
                                       <option value="{{ cashbox.id }}">{{ cashbox.name }}</option>
                                   {% endfor %}
                             </select>
-                            <input type="number" value="{{ user.money }}" name="num" max="{{ user.money }}" min="1">
+                            <input type="number" value="{{ order.salary }}" name="num" max="{{ order.salary }}" min="1">
 
                         </label>
                         <input type="submit" value="Выплатить">

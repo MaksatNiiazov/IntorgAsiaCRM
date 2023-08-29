@@ -24,7 +24,7 @@
                     <td data-label="Услуга">{{ object.product.name }} ({{ object.product.color }}/{{ object.product.size }})</td>
                     <td>
                         {% for service in object.product_service.all %}
-                            <p>{{ service.service }} - {{ service.count }}</p>
+                            <p>{{ service.service }}({{ service.price }}) - {{ service.count }} </p>
                         {% endfor %}
                     </td>
 

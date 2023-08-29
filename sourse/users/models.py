@@ -63,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     profit = models.IntegerField(default=0)
     product_count = models.IntegerField(default=0, blank=True, null=True)
     # service_count = models.IntegerField(default=0, blank=True, null=True)
-
+    referal_money = models.IntegerField(default=0, blank=True, null=True)
 
     referral = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
 

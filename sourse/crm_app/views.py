@@ -409,9 +409,10 @@ class EmployerListView(LockedView, ListView):
     model = CustomUser
     template_name = 'crmapp/employer_list.html'
     paginate_by = 20
+    ordering = 'count'
 
     def get_queryset(self):
-        return CustomUser.objects.filter(user_type='worker')
+        return CustomUser.objects.filter(user_type='worker').order_by('money')
 
 
 class EmployerDetailView(LockedView, DetailView):
@@ -434,6 +435,8 @@ class PayASalaryView(LockedView, View):
         cashbox = Cashbox.objects.get(id=int(self.request.POST.get('cashbox')))
         category = CashboxCategory.objects.get_or_create(category="Зарплата")[0]
         balance_check = cashbox.balance - num
+        client = emp_order.order.client
+
 
         if balance_check < 0:
             messages.error(self.request, "В кассе недостаточно средств!")
@@ -446,6 +449,22 @@ class PayASalaryView(LockedView, View):
         cashbox.save()
         user.save()
         emp_order.save()
+        if client.referral:
+            referal = client.referral
+            percent = 10
+            services = ServiceOrder.objects.filter(order=emp_order.order)
+            new_amount = 0
+            for sirvice in services:
+                if sirvice.service.discount:
+                    new_amount += (sirvice.price / 100) * percent
+                else:
+                    new_amount += sirvice.price
+                referal.referal_money = round(new_amount)
+                referal.save()
+
+            client.referral.referal_money = 2
+            client.referral.save()
+
         ModelChangeLog.add_log(model_name='зарплата', user_id=self.request.user.id, change_type='зарплата',
                                old_value=f'{user}', new_value=f'{num}')
 
