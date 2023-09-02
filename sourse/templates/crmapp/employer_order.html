@@ -13,7 +13,7 @@
         <thead>
             <tr>
                 <th data-label="ШК">ШК</th>
-                <th data-label="Услуга">Услуга</th>
+                <th data-label="Услуга">Услуга (цена за услугу)</th>
                 <th data-label="Общее Кол-во">Общее Кол-во</th>
                 <th data-label="Кол-во Брака">Кол-во Брака</th>
             </tr>
@@ -24,7 +24,7 @@
                     <td data-label="Услуга">{{ object.product.name }} ({{ object.product.color }}/{{ object.product.size }})</td>
                     <td>
                         {% for service in object.product_service.all %}
-                            <p>{{ service.service }}({{ service.price }}) - {{ service.count }} </p>
+                            <p>{{ service.service }} ({{ service.service.price }}) - {{ service.count }} </p>
                         {% endfor %}
                     </td>
 

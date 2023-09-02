@@ -1,6 +1,7 @@
 import math
 import os
 import time
+import requests
 from datetime import date
 from itertools import groupby
 from urllib.parse import quote
@@ -35,7 +36,10 @@ class DashboardView(Locked, ListView):
         return context
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        if self.request.user.user_type == 'client':
+            queryset = Order.objects.filter(client_id=self.request.user.id)
+        else:
+            queryset = super().get_queryset()
         queryset = queryset.annotate(total_declared_quantity=Sum('products__declared_quantity'))
         queryset = queryset.annotate(total_actual_quantity=Sum('products__actual_quantity'))
 
@@ -241,7 +245,6 @@ class ProductUpdateView(LockedView, UpdateView):
         return reverse('unpacking', self.object.order.id)
 
     def form_valid(self, form):
-
         product = self.object
         product.actual_quantity = form.cleaned_data['actual_quantity']
         product.good_quality = form.cleaned_data['actual_quantity']
@@ -382,7 +385,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 if service.discount:
                     discount = 0
                     if client.discount:
-                       discount = client.discount.percent
+                        discount = client.discount.percent
                     new_amount = (new_count * service.price / 100) * (100 - discount)
                 else:
                     new_amount = new_count * service.price
@@ -583,6 +586,17 @@ class AddConsumables(LockedView, View):
 
 class InvoiceGenerationViewGenerate(LockedView, View):
 
+    def convert_som_to_rub(self, amount):
+        API_URL = "https://open.er-api.com/v6/latest/KGS"
+        response = requests.get(API_URL)
+
+        if response.status_code == 200:
+            data = response.json()
+            rub_rate = data['rates']['RUB']
+            return amount * rub_rate
+        else:
+            raise Exception("API request failed")
+
     def post(self, request, order_id):
         file_name = 'blank.xlsx'
         root_directory = 'excel'
@@ -711,7 +725,7 @@ class InvoiceGenerationViewGenerate(LockedView, View):
         sheet[f'D{row}'].font = font_bold_2
         sheet[f'A{row}'] = f'Способ оплаты'
         sheet[f'C{row}'] = f'скидка {order_obj.discount}%'
-        sheet[f'D{row}'] = 'ИТОГО (руб):'
+        sheet[f'D{row}'] = 'ИТОГО:'
         row += 1
         sheet[f'A{row}'].font = font_bold_2
         sheet[f'A{row}'].border = thin_border
@@ -726,7 +740,8 @@ class InvoiceGenerationViewGenerate(LockedView, View):
 
         sheet[f'A{row}'] = f'Карта Optima Bank Visa: 4169 6151 8154 5793 (по номеру +996-500-920-908)'
         sheet[f'C{row}'] = ''
-        sheet[f'D{row}'] = f'{order_obj.amount}'
+        sheet[f'D{row}'] = f'{order_obj.amount} сом ({self.convert_som_to_rub(order_obj.amount)}руб)'
+
         row += 1
         sheet[f'A{row}'].font = font_2
         sheet[f'A{row}'].border = thin_border
@@ -795,8 +810,6 @@ class DownloadCargoDetail(View):
             row += 1
         sheet[f'E{row}'] = 'Итого:'
         sheet[f'F{row}'] = f'{total_count}шт'
-
-
 
         # Save the workbook
         new_file_path = f'excel/blank{order_id}.xlsx'

@@ -22,6 +22,7 @@ class Order(models.Model):
     cashbox = models.ForeignKey("Cashbox", on_delete=models.PROTECT, blank=True, null=True)
     amount = models.IntegerField(default=0)
     amount_paid = models.IntegerField(default=0)
+    referral_money = models.IntegerField(default=0)
     cost_price = models.IntegerField(default=0)
     count = models.IntegerField(default=0)
     date = models.DateField(default=timezone.now)

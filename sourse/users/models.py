@@ -68,7 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     referral = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True)
 
     class Meta:
-        ordering = ('disabled',)
+        ordering = ('disabled','-product_count')
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
@@ -80,3 +80,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+    def get_product_count(self):
+        from crm_app.models import EmployerOrder
+        order_services = EmployerOrder.objects.filter(user=self)
+        product_count = 0
+
+        for order_service in order_services:
+            product_count += order_service.product_count
+
+        return product_count
+
+

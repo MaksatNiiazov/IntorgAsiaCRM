@@ -412,7 +412,7 @@ class EmployerListView(LockedView, ListView):
     ordering = 'count'
 
     def get_queryset(self):
-        return CustomUser.objects.filter(user_type='worker').order_by('money')
+        return CustomUser.objects.filter(user_type='worker')
 
 
 class EmployerDetailView(LockedView, DetailView):
@@ -449,21 +449,6 @@ class PayASalaryView(LockedView, View):
         cashbox.save()
         user.save()
         emp_order.save()
-        if client.referral:
-            referal = client.referral
-            percent = 10
-            services = ServiceOrder.objects.filter(order=emp_order.order)
-            new_amount = 0
-            for sirvice in services:
-                if sirvice.service.discount:
-                    new_amount += (sirvice.price / 100) * percent
-                else:
-                    new_amount += sirvice.price
-                referal.referal_money = round(new_amount)
-                referal.save()
-
-            client.referral.referal_money = 2
-            client.referral.save()
 
         ModelChangeLog.add_log(model_name='зарплата', user_id=self.request.user.id, change_type='зарплата',
                                old_value=f'{user}', new_value=f'{num}')
@@ -544,6 +529,7 @@ class DiscountUpdateView(LockedView, UpdateView):
             return referer
         else:
             return reverse('/')
+
 
 class DiscountDeleteView(LockedView, DeleteView):
     model = DiscountType
@@ -847,6 +833,21 @@ class MakeAPaymentView(LockedView, View):
         order.amount -= money
         order.amount_paid += money
         order.save()
+        client = order.client
+        if client.referral:
+            referal = client.referral
+            percent = 10
+            services = ServiceOrder.objects.filter(order=order)
+            new_amount = 0
+            for sirvice in services:
+                if sirvice.service.discount:
+                    new_amount += (sirvice.price / 100) * percent
+                else:
+                    new_amount += sirvice.price
+                referal.referal_money = round(new_amount)
+                order.referral_money = new_amount
+                order.save()
+                referal.save()
         ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
                                change_type=f'оплата заказа №{order.id} ({money})', old_value=f'{old_v}',
                                new_value=f'{cashbox.balance}')

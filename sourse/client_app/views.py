@@ -42,3 +42,10 @@ class OrderDetailClientView(Locked, DetailView):
         context['revenue'] = revenue
         return context
 
+
+class ReferalListView(ListView):
+    model = Order
+    template_name = 'client/referal.html'
+
+    def get_queryset(self):
+        return Order.objects.filter(client__referral_id=self.request.user.id, stage='closed')

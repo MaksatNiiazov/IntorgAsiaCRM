@@ -97,4 +97,6 @@ a{
 }
 .page_title{
   font-size: 30px;
+  width: 800px;
+  max-height: 60px;
 }
