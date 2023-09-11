@@ -49,7 +49,8 @@
                     <p><span>Количество:</span> {{ order.count }}</p>
                     <p><span>Себестоимость:</span> {{ order.cost_price }}</p>
                     <p><span>Прибыль с заказа:</span> {{ revenue }}</p>
-                    <p><span>Сумма заказа:</span> {{ order.amount }}</p>
+                    <p><span>Не оплаченно:</span> {{ order.amount }}</p>
+                    <p><span>Oплаченно:</span> {{ order.amount_paid }}</p>
                     <p><span>Дата прибытия:</span> {{ order.date_of_actual_arrival }}</p>
                     <p><span>Дата отправки:</span> {{ order.actual_shipment_date }}</p>
 
@@ -98,14 +99,15 @@
             </div>
         </div>
     <div>
-        <h4>Дата прибытия | Дата отправки</h4>
+        <h4>Дата отправки | Дата прибытия </h4>
         <form action="{% url 'date_arrival_shipment' order.id %}" method="post">
             {% csrf_token %}
-            <label>
-                <input type="date" value="{{ object.date_of_actual_arrival }}" name="date_of_actual_arrival">
-            </label>
+
             <label>
                 <input type="date" value="{{ object.actual_shipment_date }}" name="actual_shipment_date">
+            </label>
+            <label>
+                <input type="date" value="{{ object.date_of_actual_arrival }}" name="date_of_actual_arrival">
             </label>
             <input type="submit" value="Изменить">
         </form>

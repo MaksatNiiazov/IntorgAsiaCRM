@@ -59,5 +59,8 @@ urlpatterns = [
          name='cashbox_operation_list_from'),
     path('cashbox/export/operation/', CashboxExport.as_view(), name='cashbox_export'),
 
+
+    path('referal_/', ReferalListView.as_view(), name='referal_'),
+
     path('show/logs/', ShowLogsView.as_view(), name='show_logs'),
 ]

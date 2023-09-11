@@ -102,7 +102,6 @@ class ImportExcelView(View):
             'products': products,
             'form': form
         }
-
         if form.is_valid():
             excel_file = form.cleaned_data['file']
 
@@ -116,9 +115,8 @@ class ImportExcelView(View):
 
                 # Fill NaN values with previous non-null values per column
                 columns_to_ffill = ['Цвет ', 'Название товара', 'Страна', 'Состав (Материал)', 'Бренд',
-                                    'Комментарий (Тех задание)']  # Specify the columns to apply ffill
+                                    'Комментарий (Тех задание)']
                 df[columns_to_ffill] = df[columns_to_ffill].ffill()
-
                 products_to_create = []
 
                 for _, row in df.iterrows():
@@ -138,7 +136,6 @@ class ImportExcelView(View):
                         country = row['Страна']
                         comment = row['Комментарий (Тех задание)']
 
-                        # Check if any field has the value "nan" and replace it with an empty string
                         size = '' if pd.isna(size) else size
                         color = '' if pd.isna(color) else color
                         composition = '' if pd.isna(composition) else composition
@@ -167,7 +164,6 @@ class ImportExcelView(View):
                             in_work=False
                         )
                         products_to_create.append(product)
-
                 Product.objects.bulk_create(products_to_create)
 
                 os.remove(file_full_path)
@@ -196,7 +192,6 @@ class ProductAddView(LockedView, CreateView):
     template_name = 'stages/database_loading.html'
 
     def form_valid(self, form):
-        print(form.cleaned_data)
         product = Product(
             barcode=form.cleaned_data['barcode'],
             article=form.cleaned_data['article'],
@@ -413,7 +408,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
 
                 employer_order.service_count += new_count
                 employer_order.product_count = new_count
-                employer_order.salary += new_amount
+                employer_order.salary += new_cost
 
                 order.save()
                 order_service.save()
@@ -472,7 +467,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 product_service.count = new_count
                 employer_order.service_count -= new_count
                 employer_order.product_count = new_count
-                employer_order.salary -= new_amount
+                employer_order.salary -= new_cost
 
                 order.save()
                 order_service.save()
@@ -740,7 +735,10 @@ class InvoiceGenerationViewGenerate(LockedView, View):
 
         sheet[f'A{row}'] = f'Карта Optima Bank Visa: 4169 6151 8154 5793 (по номеру +996-500-920-908)'
         sheet[f'C{row}'] = ''
-        sheet[f'D{row}'] = f'{order_obj.amount} сом ({self.convert_som_to_rub(order_obj.amount)}руб)'
+        if order_obj.amount == 0:
+            sheet[f'D{row}'] = f'{order_obj.amount_paid} сом ({round(self.convert_som_to_rub(order_obj.amount_paid), 2)}руб)'
+        else:
+            sheet[f'D{row}'] = f'{order_obj.amount} сом ({self.convert_som_to_rub(order_obj.amount)}руб)'
 
         row += 1
         sheet[f'A{row}'].font = font_2
@@ -938,7 +936,7 @@ class UnpackingNextStage(LockedView, View):
             employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user_id=self.request.user.id)
             employer_order.service_count += count
             employer_order.product_count += count
-            employer_order.salary += amount
+            employer_order.salary += cost_price
             employer_order.save()
             if order.stage == 'unpacking':
                 order.transition_to_next_stage()

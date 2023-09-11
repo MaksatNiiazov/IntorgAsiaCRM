@@ -19,9 +19,15 @@
             </tr>
         </thead>
         <tbody>
+            {% if obj.is_admin %}
+                <div>Этот объект имеет атрибут is_default со значением True</div>
+            {% else %}
+                <div>Этот объект НЕ имеет атрибут is_default со значением True</div>
+            {% endif %}
              {% for object in object_list %}
                 <tr>
                     <td data-label="Услуга">{{ object.product.name }} ({{ object.product.color }}/{{ object.product.size }})</td>
+
                     <td>
                         {% for service in object.product_service.all %}
                             <p>{{ service.service }} ({{ service.service.price }}) - {{ service.count }} </p>
@@ -32,7 +38,6 @@
                     <td data-label="Кол-во Брака">{{ object.product.defective }}</td>
                 </tr>
             {% endfor %}
-
         </tbody>
     </table>
 

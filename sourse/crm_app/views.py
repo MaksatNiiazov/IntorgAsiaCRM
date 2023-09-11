@@ -144,7 +144,7 @@ class OrderDetailView(LockedView, DetailView):
         if self.object.amount == 0 and self.object.stage == 'dispatched':
             context['next_stage'] = True
         order = self.get_object()
-        revenue = order.amount - order.cost_price
+        revenue = order.amount_paid - order.cost_price
 
         context['revenue'] = revenue
         return context
@@ -158,8 +158,7 @@ class ArrivalShipmentUpdate(View):
         order.date_of_actual_arrival = date_of_actual_arrival if date_of_actual_arrival is not None else order.date_of_actual_arrival
         order.actual_shipment_date = actual_shipment_date if actual_shipment_date is not None else order.actual_shipment_date
         order.save()
-        print(order.actual_shipment_date, order.date_of_actual_arrival)
-        print(self.request.META.get('HTTP_REFERER'))
+
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 
@@ -463,7 +462,10 @@ class EmployerOrderView(LockedView, ListView):
     def get_queryset(self):
         order = Order.objects.get(id=self.kwargs['order_id'])
         query_set = EmployerProduct.objects.filter(product__order=order, employer_id=self.kwargs['pk'])
-
+        if not query_set:
+            query_set = EmployerProduct.objects.filter(product__order=order)
+            for obj in query_set:
+                obj.is_admin = True
         return query_set
 
     def get_context_data(self, *, object_list=None, **kwargs):
@@ -629,68 +631,62 @@ class CashBoxAddOperationView(LockedView, CreateView):
     template_name = 'crmapp/cashbox_detail.html'
 
     def form_valid(self, form):
-        cashbox_to = form.cleaned_data['cashbox_to']
-        if not cashbox_to:
-            cashbox_to = None
-        cashbox_from = form.cleaned_data['cashbox_from']
-        if not cashbox_from:
-            cashbox_from = None
-        category = form.cleaned_data['category']
-        if self.request.POST.get('check') == 'to':
-            money = form.cleaned_data['money']
-            if money <= 0:
-                messages.error(self.request, "Вы пытаетесь сделать приход на 0!")
-                return redirect(self.request.META.get('HTTP_REFERER'))
-            comment = form.cleaned_data['comment']
-            if not comment:
-                comment = ''
-            operation = CashboxOperation.objects.create(
-                user_id=self.request.user.id,
-                category=category,
-                money=form.cleaned_data['money'],
-                comment=comment,
-                cashbox_from=cashbox_from,
-                cashbox_to=cashbox_to,
-            )
-            cashbox = Cashbox.objects.get(id=cashbox_to.id)
-            old_v = cashbox.balance
-            cashbox.balance += money
-            cashbox.save()
-            ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
-                                   change_type=f'приход({money})', old_value=f'{old_v}', new_value=f'{cashbox.balance}')
+        cashbox_to = form.cleaned_data.get('cashbox_to')
+        cashbox_from = form.cleaned_data.get('cashbox_from')
+        category = form.cleaned_data.get('category')
+        money = form.cleaned_data.get('money')
+        comment = form.cleaned_data.get('comment', '')
 
-        elif self.request.POST.get('check') == 'from':
-            money = form.cleaned_data['money']
-            if money <= 0:
-                messages.error(self.request, "Вы пытаетесь сделать расход на 0!")
-                return redirect(self.request.META.get('HTTP_REFERER'))
-            comment = form.cleaned_data['comment']
-            if not comment:
-                comment = ''
+        check = self.request.POST.get('check')
 
-            cashbox = Cashbox.objects.get(id=cashbox_from.id)
-            result = cashbox.balance - money
-            if result < 0:
-                messages.error(self.request, "В кассе недостаточно средств!")
-                return redirect(self.request.META.get('HTTP_REFERER'))
-            old_v = cashbox.balance
-            cashbox.balance = result
-            operation = CashboxOperation.objects.create(
-                user_id=self.request.user.id,
-                category=form.cleaned_data['category'],
-                money=money,
-                comment=comment,
-                cashbox_from=cashbox_from,
-                cashbox_to=cashbox_to,
-            )
-            cashbox.save()
-            ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
-                                   change_type=f'расход({money})', old_value=f'{old_v}', new_value=f'{result}')
+        if money <= 0:
+            messages.error(self.request, "Сумма должна быть больше 0!")
+            return redirect(self.request.META.get('HTTP_REFERER'))
+
+        if check == 'to':
+            self.handle_operation(cashbox_to, money, category, comment, add=True)
+            if cashbox_from:
+                self.handle_operation(cashbox_from, money, category, comment, add=False)
+        elif check == 'from':
+            self.handle_operation(cashbox_from, money, category, comment, add=False)
+            if cashbox_to:
+                self.handle_operation(cashbox_to, money, category, comment, add=True)
 
         return redirect(self.request.META.get('HTTP_REFERER'))
 
+    def handle_operation(self, cashbox, money, category, comment, add=True):
+        old_balance = cashbox.balance
+
+        if add:
+            cashbox.balance += money
+            change_type = f'приход({money})'
+        else:
+            if cashbox.balance < money:
+                messages.error(self.request, "В кассе недостаточно средств!")
+                return redirect(self.request.META.get('HTTP_REFERER'))
+            cashbox.balance -= money
+            change_type = f'расход({money})'
+
+        cashbox.save()
+
+        CashboxOperation.objects.create(
+            user_id=self.request.user.id,
+            category=category,
+            money=money,
+            comment=comment,
+            cashbox_from=cashbox if not add else None,
+            cashbox_to=cashbox if add else None,
+        )
+
+        ModelChangeLog.add_log(
+            model_name=f'касса {cashbox.name}',
+            user_id=self.request.user.id,
+            change_type=change_type,
+            old_value=f'{old_balance}',
+            new_value=f'{cashbox.balance}'
+        )
+
     def form_invalid(self, form):
-        print(form.errors)
         return redirect(self.request.META.get('HTTP_REFERER'))
 
 
@@ -834,8 +830,8 @@ class MakeAPaymentView(LockedView, View):
         order.amount_paid += money
         order.save()
         client = order.client
-        if client.referral:
-            referal = client.referral
+        if client.referal:
+            referal = client.referal
             percent = 10
             services = ServiceOrder.objects.filter(order=order)
             new_amount = 0
@@ -853,6 +849,15 @@ class MakeAPaymentView(LockedView, View):
                                new_value=f'{cashbox.balance}')
 
         return redirect('order_detail', order.id)
+
+
+class ReferalListView(ListView):
+    model = Order
+    template_name = 'crmapp/referal.html'
+
+    def get_queryset(self):
+        orders = Order.objects.filter(stage='closed', client__referal__isnull=False)
+        return orders
 
 
 class ShowLogsView(LockedView, ListView):
