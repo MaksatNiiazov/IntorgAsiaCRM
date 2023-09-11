@@ -938,6 +938,8 @@ class UnpackingNextStage(LockedView, View):
             employer_order.product_count += count
             employer_order.salary += cost_price
             employer_order.save()
+            for product in products:
+                employer_product, _ = EmployerProduct.objects.get_or_create(product=product, employer=employer, product_count=count, service_count=count)
             if order.stage == 'unpacking':
                 order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))
