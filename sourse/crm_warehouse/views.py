@@ -346,8 +346,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
         employer = CustomUser.objects.get(id=form.cleaned_data['employer_id'])
         order = product.order
         client = order.client
-        print(order.amount)
-        print(client.money)
         multiplier = 1 if not product.defective_check else -1
 
         with transaction.atomic():
@@ -369,8 +367,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
 
             employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
             employer_product, _ = EmployerProduct.objects.get_or_create(product=product, employer=employer)
-            print(employer_order)
-            print(employer_product)
 
             client.product_count = order.count
 
@@ -400,6 +396,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 order_service.count += multiplier * new_count
                 order_service.salary += multiplier * new_count * service_obj.price
 
+
                 employer.money += multiplier * new_cost
                 employer.product_count += multiplier * new_count
 
@@ -415,11 +412,13 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
 
 
             order.save()
+            order_service.save()
+            service_order.save()
             employer.save()
-            print(employer.money)
-
+            employer_product.save()
+            employer_order.save()
+            product_service.save()
             client.save()
-        print(employer.money)
 
         return redirect('quality_check', self.object.order.id)
 
