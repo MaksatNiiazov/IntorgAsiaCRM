@@ -48,4 +48,4 @@ class ReferalListView(ListView):
     template_name = 'client/referal.html'
 
     def get_queryset(self):
-        return Order.objects.filter(client__referral_id=self.request.user.id, stage='closed')
+        return Order.objects.filter(client__referral_id=self.request.user.id,)# stage='closed')

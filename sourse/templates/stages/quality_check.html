@@ -49,6 +49,23 @@
         .service-added {
             background-color: #ff0; /* Or any other highlight color */
         }
+       #loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+        }
+
+        #loading img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
     </style>
 {% endblock %}
 {% block title %}
@@ -149,7 +166,7 @@
             <tbody>
                 {% for product in products_in_work %}
                 <tr>
-                    <td data-label="Сотрудник">{{ product.employer_product.first.employer }}</td>
+                    <td data-label="Сотрудник">{{ product.employer_product.last.employer }}</td>
                     <td data-label="Продукт">{{ product.name }}</td>
                     <td data-label="Штрихкод">{{ product.barcode }}</td>
                     <td data-label="Цвет"><label>{{ product.color }}</label></td>
@@ -158,25 +175,25 @@
                         <button onclick="openPopup('{{ product.id }}')" >Добавить услугу ({{ product.service_count }})</button>
                     </td>
                     <form id="update-form-{{ product.id }}" data-product-id="{{ product.id }}" method="post" action="{% url 'defective_check_update' product.id %}">
-                            {% csrf_token %}
-                    <td data-label="Выбрать набор">
-                            <label for="set-{{ product.id }}"></label>
-                            <select name="set" id="set-{{ product.id }}" required>
-                                {% for service in sets_of_services %}
-                                <option value="{{ service.id }}">{{ service.name }}</option>
-                                {% endfor %}
-                            </select>
+                        {% csrf_token %}
+                        <td data-label="Выбрать набор">
+                                <label for="set-{{ product.id }}"></label>
+                                <select name="set" id="set-{{ product.id }}" required>
+                                    {% for service in sets_of_services %}
+                                    <option value="{{ service.id }}">{{ service.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td data-label="Общ кол-во">{{ product.actual_quantity }}</td>
+                            <td data-label="Кол-во брака">
+                                <label>
+                                <input type="hidden" value="{{ product.employer_product.first.employer.id }}" name="employer_id">
+                                <input type="number" max="{{ product.actual_quantity }}" name="defective"
+                                    value="0" onchange="updateDefectiveQuantity({{ product.id }})">
+                                <input type="checkbox" class="submit-checkbox" {% if product.defective_check %}checked{% endif %}
+                                    data-form-id="update-form-{{ product.id }}">
+                            </label>
                         </td>
-                        <td data-label="Общ кол-во">{{ product.actual_quantity }}</td>
-                        <td data-label="Кол-во брака">
-                            <label>
-                            <input type="hidden" value="{{ product.employer_product.first.employer.id }}" name="employer_id">
-                            <input type="number" max="{{ product.actual_quantity }}" name="defective"
-                                value="{{ product.defective }}" onchange="updateDefectiveQuantity({{ product.id }})">
-                            <input type="checkbox" class="submit-checkbox" {% if product.defective_check %}checked{% endif %}
-                                data-form-id="update-form-{{ product.id }}">
-                        </label>
-                    </td>
                     </form>
                 </tr>
                 {% endfor %}
@@ -218,64 +235,61 @@
             </form>
         </div>
     </div>
+        <div id="loading">
+        <img src="{% static 'imgs/icons/spinner.gif' %}" alt="Loading...">
+    </div>
 
 {% endblock %}
 
-{% block js %}
-<script>
-    // Add event listeners to the checkboxes
-    const checkboxes = document.querySelectorAll('.submit-checkbox');
-    checkboxes.forEach((checkbox) => {
-        checkbox.addEventListener('change', function () {
-            const formId = this.getAttribute('data-form-id');
-            const form = document.getElementById(formId);
-            submitFormViaAjax(form);
-        });
-    });
 
-    // Function to submit the form via AJAX
-    function submitFormViaAjax(form) {
-        const formData = new FormData(form);
-        fetch(form.action, {
-            method: 'POST',
-            body: formData
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then((data) => {
-                console.log(data);
-                // Handle the response data here
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    async function submitFormViaAjax(form) {
+        showLoading();
+        try {
+            const formData = new FormData(form);
+            const response = await axios.post(form.action, formData);
+
+            if (response.data.message) {
+                alert(response.data.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка, попробуйте снова.');
+        } finally {
+            hideLoading();
+        }
     }
 
-    // Function to update the defective quantity
-    function updateDefectiveQuantity(productId) {
-        const formId = `update-form-${productId}`;
+    function handleCheckboxChange(checkbox) {
+        const formId = checkbox.getAttribute('data-form-id');
         const form = document.getElementById(formId);
         submitFormViaAjax(form);
     }
 
-    // Function to open the popup and set the product ID
+    document.querySelectorAll('.submit-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', () => handleCheckboxChange(checkbox));
+    });
+
     function openPopup(productId) {
         const popup = document.getElementById('popup');
-        const productIdInput = document.getElementById('product-id-input');
-        productIdInput.value = productId;
+        document.getElementById('product-id-input').value = productId;
         popup.style.display = 'block';
     }
 
-    // Function to close the popup and clear the product ID
     function closePopup() {
         const popup = document.getElementById('popup');
-        const productIdInput = document.getElementById('product-id-input');
-        productIdInput.value = '';
+        document.getElementById('product-id-input').value = '';
         popup.style.display = 'none';
+    }
+
+    function showLoading() {
+        document.getElementById('loading').style.display = 'block';
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
     }
 </script>
 {% endblock %}

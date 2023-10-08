@@ -25,7 +25,6 @@ from users.permissions import WorkerRequiredMixin
 class Locked(LoginRequiredMixin):
     login_url = "login"
 
-
 class LockedView(LoginRequiredMixin, WorkerRequiredMixin):
     login_url = "login"
 
@@ -828,20 +827,17 @@ class MakeAPaymentView(LockedView, View):
         order.amount_paid += money
         order.save()
         client = order.client
-        if client.referal:
-            referal = client.referal
+        if client.referral:
+            referral = client.referral
             percent = 10
             services = ServiceOrder.objects.filter(order=order)
             new_amount = 0
-            for sirvice in services:
-                if sirvice.service.discount:
-                    new_amount += (sirvice.price / 100) * percent
-                else:
-                    new_amount += sirvice.price
-                referal.referal_money = round(new_amount)
-                order.referral_money = new_amount
-                order.save()
-                referal.save()
+
+            new_amount += (order.amount / 100) * percent
+            referral.referal_money += round(new_amount)
+            order.referral_money += new_amount
+            order.save()
+            referral.save()
         ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
                                change_type=f'оплата заказа №{order.id} ({money})', old_value=f'{old_v}',
                                new_value=f'{cashbox.balance}')
@@ -854,7 +850,7 @@ class ReferalListView(ListView):
     template_name = 'crmapp/referal.html'
 
     def get_queryset(self):
-        orders = Order.objects.filter(stage='closed', client__referal__isnull=False)
+        orders = Order.objects.all()
         return orders
 
 
