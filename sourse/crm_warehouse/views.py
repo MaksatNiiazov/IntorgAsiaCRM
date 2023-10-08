@@ -6,6 +6,7 @@ from datetime import date
 from itertools import groupby
 from urllib.parse import quote
 import pandas as pd
+from django.db import transaction
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -339,160 +340,96 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
 
     def form_valid(self, form):
         set_id = self.request.POST.get('set')
-        set = SetOfServices.objects.get(id=set_id)
-        services = set.services.all()
+        set_obj = SetOfServices.objects.get(id=set_id)
+        services = set_obj.services.all()
         product = self.object
         employer = CustomUser.objects.get(id=form.cleaned_data['employer_id'])
         order = product.order
         client = order.client
+        print(order.amount)
+        print(client.money)
+        multiplier = 1 if not product.defective_check else -1
 
-        if not product.defective_check:
+        with transaction.atomic():
             good_quality = product.actual_quantity - form.cleaned_data['defective']
-            product.good_quality = good_quality
-            product.defective = form.cleaned_data['defective']
-            product.count = good_quality + product.defective
-            product.save()
-            order_items = Product.objects.filter(order=order)
-            total_good_quality = sum(item.good_quality for item in order_items)
-            total_defective = sum(item.defective for item in order_items)
-            count = total_good_quality + total_defective
-            order.good_quality = total_good_quality
-            order.defective = total_defective
-            order.count = count
-            order.save()
-            employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
-            employer_product = EmployerProduct.objects.get(product=product, employer=employer)
-
-            client.product_count = count
-
-            for service in services:
-                service = Service.objects.get(id=service.service.id)
-                order_service, _ = OrderService.objects.get_or_create(order=order, service=service)
-                service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
-                order_service.confirmed_switch()
-                product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product,
-                                                                          service=service)
-                if service.before_defective:
-                    new_count = product.good_quality + product.defective
-                else:
-                    new_count = product.good_quality
-
-                if service.discount:
-                    discount = 0
-                    if client.discount:
-                        discount = client.discount.percent
-                    new_amount = (new_count * service.price / 100) * (100 - discount)
-                else:
-                    new_amount = new_count * service.price
-
-                new_cost = new_count * service.cost_price
-
-                order.amount += new_amount
-                order.cost_price += new_cost
-
-                service_order.count += new_count
-                service_order.price += new_amount
-                service_order.save()
-
-                order_service.count += new_count
-                order_service.salary += new_count * service.price
-
-                employer.money += new_cost
-                employer.product_count += new_count
-
-                client.money += new_amount
-                client.profit += float(new_amount) - float(new_cost)
-
-                employer_product.service_count += new_count
-                product_service.count = new_count
-
-                employer_order.service_count += new_count
-                employer_order.product_count = new_count
-                employer_order.salary += new_cost
-
-                order.save()
-                order_service.save()
-                employer.save()
-                client.save()
-                product_service.save()
-                employer_product.save()
-                employer_order.save()
-        else:
-            product.good_quality += form.cleaned_data['defective']
-            product.defective = 0
+            product.defective = form.cleaned_data['defective'] if not product.defective_check else 0
+            product.good_quality = good_quality if not product.defective_check else good_quality + form.cleaned_data[
+                'defective']
             product.count = product.good_quality + product.defective
+            product.defective_check = not product.defective_check
+            product.save()
+
             order_items = Product.objects.filter(order=order)
             total_good_quality = sum(item.good_quality for item in order_items)
-            total_defective = sum(item.defective for item in order_items)
-            count = total_good_quality + total_defective
+            total_defective = sum(item.defective if item.defective is not None else 0 for item in order_items)
+
             order.good_quality = total_good_quality
             order.defective = total_defective
-            order.count = count
-            product.save()
-            order.save()
-            employer_order = EmployerOrder.objects.get(order=order, user=employer)
-            employer_product = EmployerProduct.objects.get(product=product, employer=employer)
-            client.product_count = count
+            order.count = total_good_quality + total_defective
+
+            employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
+            employer_product, _ = EmployerProduct.objects.get_or_create(product=product, employer=employer)
+            print(employer_order)
+            print(employer_product)
+
+            client.product_count = order.count
 
             for service in services:
-                service = Service.objects.get(id=service.service.id)
-                order_service = OrderService.objects.get(order=order, service=service)
-                service_order = ServiceOrder.objects.get(order=order, service=service)
-                product_service = ProductService.objects.get(employer_product=employer_product, service=service)
+                service_obj = Service.objects.get(id=service.service.id)
+                order_service, _ = OrderService.objects.get_or_create(order=order, service=service_obj)
+                service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service_obj)
+                product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product,
+                                                                          service=service_obj)
 
-                if service.before_defective:
-                    new_count = product.good_quality + product.defective
+                new_count = product.good_quality if not service.service.before_defective else product.good_quality + product.defective
+
+                if service.service.discount:
+                    discount = client.discount.percent if client.discount else 0
+                    new_amount = (new_count * service_obj.price / 100) * (100 - discount)
                 else:
-                    new_count = product.good_quality
+                    new_amount = new_count * service_obj.price
 
-                new_amount = new_count * service.price
-                new_cost = new_count * service.cost_price
+                new_cost = new_count * service_obj.cost_price
 
-                order.amount -= new_amount
-                order.cost_price -= new_cost
+                order.amount += multiplier * new_amount
+                order.cost_price += multiplier * new_cost
 
-                service_order.count -= new_count
-                service_order.price -= new_amount
+                service_order.count += multiplier * new_count
+                service_order.price += multiplier * new_amount
 
-                order_service.count -= new_count
-                order_service.salary -= new_count * service.price
+                order_service.count += multiplier * new_count
+                order_service.salary += multiplier * new_count * service_obj.price
 
-                employer.money -= new_cost
-                employer.product_count -= new_count
+                employer.money += multiplier * new_cost
+                employer.product_count += multiplier * new_count
 
-                client.money -= new_amount
-                client.profit -= float(new_amount) - float(new_cost)
+                client.money += multiplier * new_amount
+                client.profit += multiplier * (float(new_amount) - float(new_cost))
 
-                employer_product.service_count -= new_count
+                employer_product.service_count += multiplier * new_count
                 product_service.count = new_count
-                employer_order.service_count -= new_count
+
+                employer_order.service_count += multiplier * new_count
                 employer_order.product_count = new_count
-                employer_order.salary -= new_cost
+                employer_order.salary += multiplier * new_cost
 
-                order.save()
-                order_service.save()
-                service_order.save()
-                employer.save()
-                client.save()
-                product_service.save()
-                employer_product.save()
-                employer_order.save()
 
-        if product.defective_check:
-            product.defective_check = False
-        else:
-            product.defective_check = True
-        product.save()
+            order.save()
+            employer.save()
+            print(employer.money)
+
+            client.save()
+        print(employer.money)
+
         return redirect('quality_check', self.object.order.id)
 
     def form_invalid(self, form):
-        print(form.errors)
+        print(form.errors)  # В идеале следует использовать логирование
         return redirect('quality_check', self.object.order.id)
 
     def get_object(self, queryset=None):
         obj = get_object_or_404(Product, pk=self.kwargs['pk'])
         return obj
-
 
 class InvoiceGenerationView(LockedView, DetailView):
     model = Order
