@@ -13,6 +13,7 @@
   <thead>
     <tr>
         <th data-label="Счет">Счет</th>
+        <th data-label="Реферал">Реферал</th>
         <th data-label="Дата">Дата</th>
         <th data-label="Стадия">Стадия</th>
         <th data-label="Сумма">Сумма</th>
@@ -25,6 +26,7 @@
     {% for order in order_list %}
       <tr>
         <td data-label="Счет">{{ order.id }}</td>
+        <td data-label="Реферал">{{ order.client.referral }}</td>
         <td data-label="Дата">{{ order.date }}</td>
         <td data-label="Стадия">{{ order.get_stage_display }}</td>
         <td data-label="Сумма">{{ order.referral_money }}</td>
