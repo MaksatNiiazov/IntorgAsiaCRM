@@ -396,7 +396,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 order_service.count += multiplier * new_count
                 order_service.salary += multiplier * new_count * service_obj.price
 
-
                 employer.money += multiplier * new_cost
                 employer.product_count += multiplier * new_count
 
@@ -409,7 +408,6 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 employer_order.service_count += multiplier * new_count
                 employer_order.product_count = new_count
                 employer_order.salary += multiplier * new_cost
-
 
             order.save()
             order_service.save()
@@ -429,6 +427,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
     def get_object(self, queryset=None):
         obj = get_object_or_404(Product, pk=self.kwargs['pk'])
         return obj
+
 
 class InvoiceGenerationView(LockedView, DetailView):
     model = Order
@@ -672,7 +671,8 @@ class InvoiceGenerationViewGenerate(LockedView, View):
         sheet[f'A{row}'] = f'Карта Optima Bank Visa: 4169 6151 8154 5793 (по номеру +996-500-920-908)'
         sheet[f'C{row}'] = ''
         if order_obj.amount == 0:
-            sheet[f'D{row}'] = f'{order_obj.amount_paid} сом ({round(self.convert_som_to_rub(order_obj.amount_paid), 2)}руб)'
+            sheet[
+                f'D{row}'] = f'{order_obj.amount_paid} сом ({round(self.convert_som_to_rub(order_obj.amount_paid), 2)}руб)'
         else:
             sheet[f'D{row}'] = f'{order_obj.amount} сом ({self.convert_som_to_rub(order_obj.amount)}руб)'
 
@@ -875,7 +875,8 @@ class UnpackingNextStage(LockedView, View):
             employer_order.salary += cost_price
             employer_order.save()
             for product in products:
-                employer_product, _ = EmployerProduct.objects.get_or_create(product=product, employer=employer, product_count=count, service_count=count)
+                employer_product, _ = EmployerProduct.objects.get_or_create(product=product, employer=employer,
+                                                                            product_count=count, service_count=count)
             if order.stage == 'unpacking':
                 order.transition_to_next_stage()
                 return redirect(reverse('dashboard'))

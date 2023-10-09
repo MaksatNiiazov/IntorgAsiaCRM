@@ -822,22 +822,20 @@ class MakeAPaymentView(LockedView, View):
         old_v = cashbox.balance
         cashbox.balance += money
         cashbox.save()
-
-        order.amount -= money
-        order.amount_paid += money
-        order.save()
         client = order.client
         if client.referral:
             referral = client.referral
             percent = 10
-            services = ServiceOrder.objects.filter(order=order)
             new_amount = 0
-
             new_amount += (order.amount / 100) * percent
             referral.referal_money += round(new_amount)
             order.referral_money += new_amount
             order.save()
             referral.save()
+        order.amount -= money
+        order.amount_paid += money
+        order.save()
+
         ModelChangeLog.add_log(model_name=f'касса {cashbox.name}', user_id=self.request.user.id,
                                change_type=f'оплата заказа №{order.id} ({money})', old_value=f'{old_v}',
                                new_value=f'{cashbox.balance}')
