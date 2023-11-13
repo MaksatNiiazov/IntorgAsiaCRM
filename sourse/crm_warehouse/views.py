@@ -387,36 +387,36 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
 
                 new_cost = new_count * service_obj.cost_price
 
-                order.amount += multiplier * new_amount
-                order.cost_price += multiplier * new_cost
+                order.amount += int(multiplier * new_amount)
+                order.cost_price += int(multiplier * new_cost)
 
-                service_order.count += multiplier * new_count
-                service_order.price += multiplier * new_amount
+                service_order.count += int(multiplier * new_count)
+                service_order.price += int(multiplier * new_amount)
 
-                order_service.count += multiplier * new_count
-                order_service.salary += multiplier * new_count * service_obj.price
+                order_service.count += int(multiplier * new_count)
+                order_service.salary += int(multiplier * new_count * service_obj.price)
 
-                employer.money += multiplier * new_cost
-                employer.product_count += multiplier * new_count
+                employer.money += int(multiplier * new_cost)
+                employer.product_count += int(multiplier * new_count)
 
-                client.money += multiplier * new_amount
-                client.profit += multiplier * (float(new_amount) - float(new_cost))
+                client.money += int(multiplier * new_amount)
+                client.profit += int(multiplier * (float(new_amount) - float(new_cost)))
 
-                employer_product.service_count += multiplier * new_count
-                product_service.count = new_count
+                employer_product.service_count += int(multiplier * new_count)
+                product_service.count = int(new_count)
 
-                employer_order.service_count += multiplier * new_count
-                employer_order.product_count = new_count
-                employer_order.salary += multiplier * new_cost
+                employer_order.service_count += int(multiplier * new_count)
+                employer_order.product_count = int(new_count)
+                employer_order.salary += int(multiplier * new_cost)
 
-            order.save()
-            order_service.save()
-            service_order.save()
-            employer.save()
-            employer_product.save()
-            employer_order.save()
-            product_service.save()
-            client.save()
+                order.save()
+                order_service.save()
+                service_order.save()
+                employer.save()
+                employer_product.save()
+                employer_order.save()
+                product_service.save()
+                client.save()
 
         return redirect('quality_check', self.object.order.id)
 
