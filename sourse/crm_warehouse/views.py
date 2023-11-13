@@ -409,14 +409,14 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 employer_order.product_count = new_count
                 employer_order.salary += multiplier * new_cost
 
-            order.save()
-            order_service.save()
-            service_order.save()
-            employer.save()
-            employer_product.save()
-            employer_order.save()
-            product_service.save()
-            client.save()
+                order.save()
+                order_service.save()
+                service_order.save()
+                employer.save()
+                employer_product.save()
+                employer_order.save()
+                product_service.save()
+                client.save()
 
         return redirect('quality_check', self.object.order.id)
 
