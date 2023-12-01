@@ -475,9 +475,9 @@ class ApplyDiscountView(LockedView, View):
                 new_amount += sirvice.price
         for consumable in consumables:
             new_amount += consumable.price
-            order.amount = round(new_amount)
-            order.discount = percent
-            order.save()
+        order.amount = round(new_amount)
+        order.discount = percent
+        order.save()
 
         return redirect('invoice_generation', order.id)
 

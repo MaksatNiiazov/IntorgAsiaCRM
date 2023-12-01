@@ -51,6 +51,7 @@
                     <p><span>Прибыль с заказа:</span> {{ revenue }}</p>
                     <p><span>Не оплаченно:</span> {{ order.amount }}</p>
                     <p><span>Oплаченно:</span> {{ order.amount_paid }}</p>
+                    <p><span>Реферал:</span> {{ order.referral_money }}</p>
                     <p><span>Дата прибытия:</span> {{ order.date_of_actual_arrival }}</p>
                     <p><span>Дата отправки:</span> {{ order.actual_shipment_date }}</p>
 
@@ -169,7 +170,7 @@
                         <td data-label="Код">{{ order_service.service.id }}</td>
                         <td data-label="Количество">{{ order_service.count }}</td>
                         <td data-label="Цена за ед">{{ order_service.service.price }}</td>
-                        <td data-label="Общая цена">{{ order_service.price }}</td>
+                        <td data-label="Общая цена">{{ order_service.salary }}</td>
                 {% empty %}
                         <td>No order services found.</td>
                     </tr>

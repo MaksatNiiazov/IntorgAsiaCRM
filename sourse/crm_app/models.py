@@ -128,6 +128,9 @@ class ServiceOrder(models.Model):
     cost_price = models.IntegerField(default=0)
     price = models.IntegerField(default=0)
 
+    def __str__(self):
+        return f'{self.order}. {self.service.name} - {self.count}'
+
 
 class OrderConsumables(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -144,6 +147,9 @@ class EmployerOrder(models.Model):
     service_count = models.IntegerField(default=0)
     product_count = models.IntegerField(default=0)
     salary = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.order.id}, {self.user}"
 
 
 class Cashbox(models.Model):

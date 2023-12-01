@@ -22,13 +22,13 @@ from crm_warehouse.models import ProductService, EmployerProduct, Product
 from users.models import DiscountType
 from users.permissions import WorkerRequiredMixin
 
+
 class Locked(LoginRequiredMixin):
     login_url = "login"
 
+
 class LockedView(LoginRequiredMixin, WorkerRequiredMixin):
     login_url = "login"
-
-
 
 
 class StatisticView(LockedView, ListView):
@@ -136,7 +136,7 @@ class OrderDetailView(LockedView, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['services'] = ServiceOrder.objects.filter(order=self.object.id)
+        context['services'] = OrderService.objects.filter(order=self.object.id)
         context['products'] = Product.objects.filter(order=self.object.id)
         context['consumables_in_order'] = OrderConsumables.objects.filter(order=self.object.id)
         context['cashboxes'] = Cashbox.objects.all()
@@ -225,7 +225,6 @@ class AddServiceView(LockedView, CreateView):
 
 
 class AddServiceEmployerView(LockedView, CreateView):
-
     form_class = AddServiceEmployerForm
     template_name = 'crmapp/service_add.html'
 
@@ -239,12 +238,12 @@ class AddServiceEmployerView(LockedView, CreateView):
         price = service.price * count
         cost_price = service.cost_price * count
 
-        employer_product, _ = EmployerProduct.objects.get_or_create(employer=employer, product=product,)
+        employer_product, _ = EmployerProduct.objects.get_or_create(employer=employer, product=product, )
         employer_product.service_count = count
         employer_product.save()
 
         product_service = ProductService.objects.create(service=service, employer_product=employer_product,
-                                                        count=count,)
+                                                        count=count, )
         employer_order, _ = EmployerOrder.objects.get_or_create(order=order, user=employer)
         service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=service)
         service_order.count += count
@@ -272,7 +271,6 @@ class AddServiceEmployerView(LockedView, CreateView):
         return redirect('quality_check', pk=order.pk)
 
     def form_invalid(self, form):
-
         print(form.errors)
         return redirect('invoice_generation', pk=form.product.order.pk)
 
@@ -434,7 +432,6 @@ class PayASalaryView(LockedView, View):
         category = CashboxCategory.objects.get_or_create(category="Зарплата")[0]
         balance_check = cashbox.balance - num
         client = emp_order.order.client
-
 
         if balance_check < 0:
             messages.error(self.request, "В кассе недостаточно средств!")
@@ -830,6 +827,7 @@ class MakeAPaymentView(LockedView, View):
             new_amount += (order.amount / 100) * percent
             referral.referal_money += round(new_amount)
             order.referral_money += new_amount
+            order.amount -= new_amount
             order.save()
             referral.save()
         order.amount -= money
