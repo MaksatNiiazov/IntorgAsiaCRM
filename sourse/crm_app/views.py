@@ -822,14 +822,9 @@ class MakeAPaymentView(LockedView, View):
         client = order.client
         if client.referral:
             referral = client.referral
-            percent = 10
-            new_amount = 0
-            new_amount += (order.amount / 100) * percent
-            referral.referal_money += round(new_amount)
-            order.referral_money += new_amount
-            order.amount -= new_amount
+            order.referral_money += referral.referral_money
+            order.amount -= referral.referral_money
             order.save()
-            referral.save()
         order.amount -= money
         order.amount_paid += money
         order.save()

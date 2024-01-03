@@ -346,6 +346,7 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
         employer = CustomUser.objects.get(id=form.cleaned_data['employer_id'])
         order = product.order
         client = order.client
+        referral = client.referral
         multiplier = 1 if not product.defective_check else -1
 
         with transaction.atomic():
@@ -384,6 +385,10 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 if service.service.discount:
                     discount = client.discount.percent if client.discount else 0
                     new_amount = (new_count * service_obj.price / 100) * (100 - discount)
+                    if referral:
+                        referral.referal_money += (int(new_amount * multiplier) / 100 * 10)
+                        referral.save()
+
                 else:
                     new_amount = new_count * service_obj.price
 
