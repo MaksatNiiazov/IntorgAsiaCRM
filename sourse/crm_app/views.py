@@ -143,8 +143,7 @@ class OrderDetailView(LockedView, DetailView):
         if self.object.amount == 0 and self.object.stage == 'dispatched':
             context['next_stage'] = True
         order = self.get_object()
-        revenue = order.amount_paid - order.cost_price
-
+        revenue = order.amount_paid - order.cost_price - order.referral_money
         context['revenue'] = revenue
         return context
 
@@ -822,8 +821,7 @@ class MakeAPaymentView(LockedView, View):
         client = order.client
         if client.referral:
             referral = client.referral
-            order.referral_money += referral.referral_money
-            order.amount -= referral.referral_money
+            order.referral_money += referral.referal_money
             order.save()
         order.amount -= money
         order.amount_paid += money
