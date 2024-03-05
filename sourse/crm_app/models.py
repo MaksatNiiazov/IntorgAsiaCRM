@@ -30,7 +30,7 @@ class Order(models.Model):
     month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)], default=1)
     year = models.IntegerField(validators=[MaxValueValidator(2070), MinValueValidator(2020)], default=2023)
     time = models.TimeField(default=timezone.now)
-    client = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+    client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
     defective = models.IntegerField(default=0, blank=True)
     good_quality = models.IntegerField(default=0, blank=True)
     discount = models.IntegerField(default=0)
@@ -142,7 +142,7 @@ class OrderConsumables(models.Model):
 
 class EmployerOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_orders')
-    user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING, related_name='employer_orders')
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, related_name='employer_orders')
     date = models.DateField(blank=True, null=True)
     service_count = models.IntegerField(default=0)
     product_count = models.IntegerField(default=0)
@@ -168,7 +168,7 @@ class CashboxCategory(models.Model):
 
 
 class CashboxOperation(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT, blank=True, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, blank=True, null=True)
     category = models.ForeignKey(CashboxCategory, on_delete=models.PROTECT, blank=True, null=True)
     money = models.IntegerField()
     comment = models.CharField(max_length=255, blank=True, null=True)
@@ -181,7 +181,7 @@ class CashboxOperation(models.Model):
 
 class ModelChangeLog(models.Model):
     model_name = models.CharField(max_length=100)
-    user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
     change_type = models.CharField(max_length=50)
     old_value = models.CharField(max_length=100, blank=True)
     new_value = models.CharField(max_length=100, blank=True)
