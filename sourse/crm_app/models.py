@@ -30,7 +30,7 @@ class Order(models.Model):
     month = models.IntegerField(validators=[MaxValueValidator(12), MinValueValidator(1)], default=1)
     year = models.IntegerField(validators=[MaxValueValidator(2070), MinValueValidator(2020)], default=2023)
     time = models.TimeField(default=timezone.now)
-    client = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
+    client = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     defective = models.IntegerField(default=0, blank=True)
     good_quality = models.IntegerField(default=0, blank=True)
     discount = models.IntegerField(default=0)
@@ -142,7 +142,7 @@ class OrderConsumables(models.Model):
 
 class EmployerOrder(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='employer_orders')
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, related_name='employer_orders')
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, related_name='employer_orders', null=True)
     date = models.DateField(blank=True, null=True)
     service_count = models.IntegerField(default=0)
     product_count = models.IntegerField(default=0)
@@ -181,7 +181,7 @@ class CashboxOperation(models.Model):
 
 class ModelChangeLog(models.Model):
     model_name = models.CharField(max_length=100)
-    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL)
+    user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     change_type = models.CharField(max_length=50)
     old_value = models.CharField(max_length=100, blank=True)
     new_value = models.CharField(max_length=100, blank=True)

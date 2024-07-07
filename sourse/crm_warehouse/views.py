@@ -380,19 +380,19 @@ class DefectiveCheckUpdateView(LockedView, UpdateView):
                 product_service, _ = ProductService.objects.get_or_create(employer_product=employer_product,
                                                                           service=service_obj)
 
-                new_count = product.good_quality if not service.service.before_defective else product.good_quality + product.defective
+                new_count = product.good_quality if not service.service.before_defective else product.good_quality + \
+                                                                                              product.defective
 
                 if service.service.discount:
                     discount = client.discount.percent if client.discount else 0
                     new_amount = (new_count * service_obj.price / 100) * (100 - discount)
                     if referral:
-                        referral.referal_money += (int(new_amount * multiplier) / 100 * 10)
-                        referral.save()
-
+                        referral_money = ((service_obj.price / 100) * 10) * new_count
+                        order.referral_money += int(multiplier * referral_money)
                 else:
                     new_amount = new_count * service_obj.price
 
-                new_cost = new_count * service_obj.cost_price
+                new_cost = int(new_count * service_obj.cost_price)
 
                 order.amount += int(multiplier * new_amount)
                 order.cost_price += int(multiplier * new_cost)
@@ -675,19 +675,23 @@ class InvoiceGenerationViewGenerate(LockedView, View):
         sheet[f'D{row}'].fill = fill_2
         sheet[f'D{row}'].border = thin_border
 
-        sheet[f'A{row}'] = f'Карта Optima Bank Visa: 4169 6151 8154 5793 (по номеру +996-500-920-908)'
+        sheet[f'A{row}'] = f'Компаньон банк (г.Бишкек) по номеру телефона: +996-507-150-957 П. Жанна Николаевна'
         sheet[f'C{row}'] = ''
         if order_obj.amount == 0:
             sheet[
                 f'D{row}'] = f'{order_obj.amount_paid} сом ({round(self.convert_som_to_rub(order_obj.amount_paid), 2)}руб)'
         else:
             sheet[f'D{row}'] = f'{order_obj.amount} сом ({self.convert_som_to_rub(order_obj.amount)}руб)'
-
         row += 1
         sheet[f'A{row}'].font = font_2
         sheet[f'A{row}'].border = thin_border
         sheet[f'A{row}'].fill = fill_2
-        sheet[f'A{row}'] = f'Золотая Корона: Камалетдинова Алла Ивановна, КР, г. Бишкек'
+        sheet[f'A{row}'] = 'Карта Сбер: 2202-2036-6274-4590 (номер телефона +7-961-226-32-25) К. Алла Ивановна'
+        row += 1
+        sheet[f'A{row}'].font = font_2
+        sheet[f'A{row}'].border = thin_border
+        sheet[f'A{row}'].fill = fill_2
+        sheet[f'A{row}'] = 'Золотая корона: Камалетдинова Алла Ивановна, КР, г. Бишкек (+996-500-920-908)'
 
         # Save the workbook
         new_file_path = f'excel/blank{order_id}.xlsx'
@@ -850,24 +854,28 @@ class UnpackingNextStage(LockedView, View):
             order.count = count
             acceptance = Service.objects.get(acceptance=True)
             price = acceptance.price * count
-            cost_price = acceptance.cost_price + count
+            cost_price = acceptance.cost_price * count
             service_order, _ = ServiceOrder.objects.get_or_create(order=order, service=acceptance)
             service_order.count = count
             service_order.price = price
             service_order.save()
             amount = 0
-            if acceptance.discount:
-                amount += (price / 100) * (100 - order.discount)
-            else:
-                amount += price
-            order.amount += amount
-            order.cost_price += cost_price
-            order.save()
             client = order.client
             client.money = amount
             client.product_count = count
             client.profit += float(amount) - float(cost_price)
             client.save()
+            if acceptance.discount:
+                amount += (price / 100) * (100 - order.discount)
+                if client.referral:
+                    order.referral_money += (price / 100) * 10
+            else:
+                amount += price
+
+            order.amount += amount
+            order.cost_price += cost_price
+            order.save()
+
             employer = CustomUser.objects.get(id=self.request.user.id)
             employer.money += cost_price
             employer.product_count += count
@@ -892,6 +900,7 @@ class UnpackingNextStage(LockedView, View):
             messages.error(self.request, "Не все продукты в заказе подтверждены.")
 
             return redirect("unpacking", order.id)
+
 
 
 class QualityCheckNextStage(LockedView, View):

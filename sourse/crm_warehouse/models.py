@@ -46,7 +46,7 @@ class ServiceInSet(models.Model):
 class EmployerProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='employer_product')
     product_count = models.IntegerField(default=0)
-    employer = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, related_name='employer_product')
+    employer = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, related_name='employer_product', null=True)
     service_count = models.IntegerField(default=0)
 
 
